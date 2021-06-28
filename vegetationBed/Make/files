@@ -1,0 +1,9 @@
+biomassParticle/biomassParticle.C
+biomassParticle/biomassParticleIO.C
+biomassParticle/biomassCloud.C
+particle_1D/calcConvection.C
+particle_1D/particle_1D.C
+particle_1D/VegReaction.C
+particle_1D/TDMA.C
+
+LIB = $(FOAM_USER_LIBBIN)/libbiomassParticle

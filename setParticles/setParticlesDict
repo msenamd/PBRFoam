@@ -1,0 +1,29 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  xx                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setParticlesDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+boxMin 		(20.0 -1000 0); 		// mimmum coordinates of the vegettion bed
+boxMax 		(1000 1000 0.7);		// maximum coordinates of the vegettion bed
+
+ignMin 		(20.0 -1000 0); 		// mimmum coordinates for ignition zone
+ignMax 		(22.0 1000 0.7);		// maximum coordinates for ignition zone
+
+ignTemp 300;
+ambientTemp 300;
+
+// ************************************************************************* //

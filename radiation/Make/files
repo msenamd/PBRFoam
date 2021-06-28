@@ -1,0 +1,13 @@
+/* Radiation model */
+radiationModel/fvDOM/fvDOMVeg/fvDOMVeg.C
+radiationModel/fvDOM/radiativeIntensityRayVeg/radiativeIntensityRayVeg.C
+
+/* Absorption/Emission model */
+submodels/absorptionEmissionModel/biomassCloudAbsorptionEmission/biomassCloudAbsorptionEmission.C
+submodels/absorptionEmissionModel/greyMeanAbsorptionEmission/greyMeanAbsorptionEmissionVeg.C
+submodels/absorptionEmissionModel/binaryAbsorptionEmission/binaryAbsorptionEmissionVeg.C
+
+/* Boundary conditions */
+derivedFvPatchFields/greyDiffusiveRadiationVeg/greyDiffusiveRadiationVegMixedFvPatchScalarField.C
+
+LIB = $(FOAM_USER_LIBBIN)/libradiationModelVeg
