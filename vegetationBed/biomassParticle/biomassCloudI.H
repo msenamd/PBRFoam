@@ -60,6 +60,16 @@ inline Foam::scalar Foam::biomassCloud::mu() const
     return mu_;
 }
 
+inline Foam::word Foam::biomassCloud::dragModel() const
+{
+    return dragModel_;
+}
+
+inline Foam::scalar Foam::biomassCloud::dragCoeff() const
+{
+    return dragCoeff_;
+}
+
 inline Foam::word Foam::biomassCloud::geometry() const
 {
     return geometry_;

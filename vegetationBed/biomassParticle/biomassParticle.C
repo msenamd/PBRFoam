@@ -404,7 +404,6 @@ Foam::vector Foam::biomassParticle::calcVelocity
     // Reynolds number
     scalar Re = rhoc*mag(Urel)*(2.0*delta_)/muc;
 
-    scalar CD = 0.0;
     scalar Astar = 0.0;
     scalar C_s = 0.0;
 
@@ -414,7 +413,7 @@ Foam::vector Foam::biomassParticle::calcVelocity
         Astar = td.cloud().rectangleWidth() * td.cloud().rectangleLength();
         surfToVol_ = 1.0/delta_p; 
         scalar AR = td.cloud().rectangleWidth() / (2.0*delta_p);
-        CD = 1.98 - 0.8 * (1-Foam::exp(-20.0/AR));
+        CD_ = 1.98 - 0.8 * (1-Foam::exp(-20.0/AR));
     }
     else if(td.cloud().geometry() == "cylinder")
     {
@@ -428,19 +427,19 @@ Foam::vector Foam::biomassParticle::calcVelocity
         //safety capping of the drag coefficient
         if(Re <= 0.001)
         {
-            CD = 1000; 
+            CD_ = 1000; 
         }
         else if(Re <= 1.0)
         {
-            CD = 10.0 / Foam::pow(Re,0.8);
+            CD_ = 10.0 / Foam::pow(Re,0.8);
         }
         else if(Re >1.0 && Re <=1000)
         {
-        	CD = 10*(0.6+0.4*Foam::pow(Re,0.8))/Re;
+        	CD_ = 10*(0.6+0.4*Foam::pow(Re,0.8))/Re;
         }
         else
         {
-        	CD = 1.0;
+        	CD_ = 1.0;
         }
     }
     else if(td.cloud().geometry() == "sphere")
@@ -453,32 +452,36 @@ Foam::vector Foam::biomassParticle::calcVelocity
 
         if(Re <= 0.001)
         {
-            CD = 100; 
+            CD_ = 100; 
         }
         else if(Re <= 1.0)
         {
-            CD = 24.0/Re;
+            CD_ = 24.0/Re;
         }
         else if(Re >1.0 && Re <=1000)
         {
-            CD = 24.0/Re*(0.85+0.15*Foam::pow(Re,0.687));
+            CD_ = 24.0/Re*(0.85+0.15*Foam::pow(Re,0.687));
         }
         else
         {
-            CD = 0.44;
+            CD_ = 0.44;
         }
     }
-    
+
+    if(td.cloud().dragModel() == "constant")
+    {
+        CD_ = td.cloud().dragCoeff();
+
+    }  
+
     vector Unew = Zero;
     
     if (moveParticle == "on")
     {
-    	scalar B = 0.5*rhoc*CD*Astar/mass_p * mag(Urel);
+    	scalar B = 0.5*rhoc*CD_*Astar/mass_p * mag(Urel);
 
         Unew = (U_ + dt_*(B*Uc+ td.g()))/ (1.0+B*dt_);
     }
-
-    CD_ = CD;
 
     dUTrans = 0.5 * rhoc * CD_ * C_s * mag(Uc-Unew)*(Uc-Unew);
 

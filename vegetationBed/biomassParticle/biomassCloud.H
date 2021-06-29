@@ -76,6 +76,9 @@ class biomassCloud
         scalar e_;                    //particle elasticity
         scalar mu_;                   //particle viscosity
 
+        word dragModel_;              //drag model
+        scalar dragCoeff_;            //particle drag coefficient
+
         word geometry_;               //particle geometry
         scalar resolution_;            //particle grid resolution
 		scalar cylinderLength_;       //length of cylindeical particles
@@ -189,15 +192,23 @@ public:
             inline const fvMesh& mesh() const;
 
             inline scalar nParticles() const;
+
             inline word fuel() const;
+
             inline word firebrands() const;
+
             inline scalar e() const;
             inline scalar mu() const;
+
+            inline word dragModel() const;
+            inline scalar dragCoeff() const;
+
             inline word geometry() const;
             inline scalar resolution() const;
             inline scalar cylinderLength() const;
             inline scalar rectangleLength() const;
             inline scalar rectangleWidth() const;
+
             inline scalar eta_c() const;
             inline scalar rho_m() const;
             inline scalar rho_vs() const;

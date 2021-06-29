@@ -62,6 +62,9 @@ Foam::biomassCloud::biomassCloud
     firebrands_(particleProperties_.lookup("firebrands")),
     e_(readScalar(particleProperties_.lookup("e"))),
     mu_(readScalar(particleProperties_.lookup("mu"))),
+
+    dragModel_(particleProperties_.lookup("dragModel")),
+    dragCoeff_(readScalar(particleProperties_.lookup("dragCoeff"))),
     
     geometry_(particleProperties_.lookup("particleGeometry")),
     resolution_(readScalar(particleProperties_.lookup("resolution"))),
@@ -272,6 +275,7 @@ Foam::biomassCloud::biomassCloud
         )
     )
 {
+
     if (readFields)
     {
         biomassParticle::readFields(*this);
