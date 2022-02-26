@@ -4,6 +4,8 @@ biomassCloud particles
     mesh,
     "vegetationBed",
     rho,
+    Y[O2Index],
+    G_projected,
     U,
     g,
     slgThermo,

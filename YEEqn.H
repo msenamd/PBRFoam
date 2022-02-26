@@ -65,8 +65,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
         }
     }
 
-    // Y[inertIndex] = scalar(1) - Yt;
-    Y[inertIndex] == scalar(1) - Yt; // kvm
+    Y[inertIndex] == scalar(1) - Yt;
     Y[inertIndex].max(0.0);
 
     forAll(Y, i){
@@ -76,8 +75,24 @@ tmp<fv::convectionScheme<scalar>> mvConvection
              << setw(12) << setprecision(5) << gMax(Y[i]) << nl;
     }
 
+
+
     radiation->correct();
  
+    const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
+    const volScalarField::Internal rad = radiation->Ru() - radiation->Rp().ref()*T4;
+    volScalarField::Internal& radField = dQrad.ref();
+    radField = rad;
+
+    const volScalarField::Internal radRu = radiation->Ru();
+    volScalarField::Internal& radFieldRu = dQradabs.ref();
+    radFieldRu = radRu;
+
+    if (mesh.foundObject<volScalarField>("G"))
+    {
+        G_projected == mesh.lookupObject<volScalarField>("G")/4.0;
+    }
+
     volScalarField& he = thermo.he();
 
     fvScalarMatrix EEqn
@@ -98,7 +113,6 @@ tmp<fv::convectionScheme<scalar>> mvConvection
      ==
         combustion->Sh()
       + radiation->Sh(thermo)
-      + particles.Qr3()
       + particles.Qconv()
       + fvOptions(rho, he)
     );

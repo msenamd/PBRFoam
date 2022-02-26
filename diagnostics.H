@@ -17,11 +17,6 @@ flameHeight = dimensionedScalar("zero",dimLength,0.0);
 PyrolysisFront = dimensionedScalar("zero",dimLength,0.0);
 
 
-if (mesh.foundObject<volScalarField>("G"))
-{
-	G_tot = mesh.lookupObject<volScalarField>("G");
-}
-
 // Pyrolysis front is where MLR_fuel > 1e-5
 // Flame front and height is where dQ >= threshold
 forAll (mesh.C(),cellI)
@@ -32,7 +27,7 @@ forAll (mesh.C(),cellI)
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 
-	if (particles.rhoYTrans()[fuelIndex][cellI] / runTime.deltaTValue() > 1e-5) 
+	if (particles.rhoYTrans()[fuelIndex][cellI] > ROOTVSMALL) 
 	{ 
 	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
@@ -45,6 +40,7 @@ scalar maxPyrolysisFront = max(PyrolysisFront).value();
 outFlameHeightFront <<  runTime.value() << " " << maxFlameHeight << " " << maxFlameFront << endl;
 outPyrolysisFront <<  runTime.value() << " " << maxPyrolysisFront << endl;
 
+/*
 //limit heat transfer diagnostic to cells ahead of the flame only
 forAll (mesh.C(),cellI)
 {
@@ -66,21 +62,10 @@ forAll (mesh.C(),cellI)
 											); 					
 	}
 }
-
+*/
 
 convectiveHeatFlux_L = 
          - fvc::interpolate(turbulence->alpha())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
 
 convectiveHeatFlux_T = 
          - fvc::interpolate(turbulence->alphaEff())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
-
-
-const volScalarField::Internal k_sgs_int = turbulence->k();
-volScalarField::Internal & ksgsField = k_SGS.ref();
-ksgsField = k_sgs_int;
-
-
-const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
-const volScalarField::Internal rad = radiation->Ru() - radiation->Rp().ref()*T4;
-volScalarField::Internal & radField = dQrad.ref();
-radField = rad;

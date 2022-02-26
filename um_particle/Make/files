@@ -1,0 +1,15 @@
+air.cpp
+fluid.cpp
+solidMaterial.cpp
+particle.cpp
+particle_1D.cpp
+solidReaction.cpp
+TDMA.cpp
+particleShape.cpp
+cylinder.cpp
+slab.cpp
+sphere.cpp
+
+
+LIB = $(FOAM_USER_LIBBIN)/libUMParticle
+

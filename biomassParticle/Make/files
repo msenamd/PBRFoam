@@ -1,0 +1,6 @@
+biomassParticle.C
+biomassParticleIO.C
+biomassCloud.C
+
+LIB = $(FOAM_USER_LIBBIN)/libbiomassParticle
+

@@ -27,7 +27,8 @@ EXE_INC = \
     -I$(LIB_SRC)/thermophysicalModels/radiation/lnInclude \
     -I$(LIB_SRC)/combustionModels/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
--I./vegetationBed/lnInclude \
+-I./biomassParticle/lnInclude \
+-I./um_particle/lnInclude \
 -I./radiation/lnInclude
 
 EXE_LIBS = \
@@ -56,4 +57,5 @@ EXE_LIBS = \
     -lliquidProperties \
 -L$(FOAM_USER_LIBBIN) \
 		-lbiomassParticle \
-		-lradiationModelVeg
+    		-lUMParticle \
+		-lbiomassRadiation

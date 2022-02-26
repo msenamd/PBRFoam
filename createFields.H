@@ -18,6 +18,9 @@ SLGThermo slgThermo(mesh, thermo);
 basicMultiComponentMixture& composition = thermo.composition();
 PtrList<volScalarField>& Y = composition.Y();
 
+scalar  YO2Inf = readScalar(thermo.lookup("YO2Inf"));
+scalar  YFInf = readScalar(thermo.lookup("YFInf"));
+
 const word inertSpecie(thermo.lookup("inertSpecie"));
 if (!composition.species().found(inertSpecie))
 {
@@ -27,7 +30,7 @@ if (!composition.species().found(inertSpecie))
         << exit(FatalIOError);
 }
 
-#include "readAdditionalThermo.H" // kvm
+#include "readAdditionalThermo.H"
 
 Info<< "Creating field rho\n" << endl;
 volScalarField rho
@@ -98,8 +101,8 @@ volScalarField p_rgh
     mesh
 );
 
-thermo.correct(); // kvm
-rho = thermo.rho(); // kvm
+thermo.correct();
+rho = thermo.rho();
 
 mesh.setFluxRequired(p_rgh.name());
 
@@ -114,28 +117,6 @@ forAll(Y, i)
 }
 fields.add(thermo.he());
 
-IOdictionary additionalControlsDict
-(
-    IOobject
-    (
-        "additionalControls",
-        runTime.constant(),
-        mesh,
-        IOobject::MUST_READ_IF_MODIFIED,
-        IOobject::NO_WRITE
-    )
-);
-
-Switch solvePrimaryRegion
-(
-    additionalControlsDict.lookup("solvePrimaryRegion")
-);
-
-Switch solvePyrolysisRegion
-(
-    additionalControlsDict.lookupOrDefault<bool>("solvePyrolysisRegion", true)
-);
-
 volScalarField dQ
 (
     IOobject
@@ -148,6 +129,20 @@ volScalarField dQ
     ),
     mesh,
     dimensionedScalar("dQ", dimEnergy/dimTime/dimVolume, 0.0) // kvm
+);
+
+volScalarField dQsoot
+(
+    IOobject
+    (
+        "dQsoot",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("dQsoot", dimEnergy/dimTime/dimVolume, 0.0)  
 );
 
 
@@ -168,7 +163,7 @@ Info<< "Creating field kinetic energy K\n" << endl;
 volScalarField K("K", 0.5*magSqr(U));
 
 
-volScalarField kappa // kvm
+volScalarField kappa
 (
     IOobject
     (
@@ -181,7 +176,7 @@ volScalarField kappa // kvm
     thermo.Cp()*thermo.alpha()
 );
 
-volScalarField cp // kvm
+volScalarField cp
 (
     IOobject
     (
@@ -194,51 +189,63 @@ volScalarField cp // kvm
     thermo.Cp()
 );
 
-singleStepReactingMixture<gasHThermoPhysics>& singleMixture // kvm
+singleStepReactingMixture<gasHThermoPhysics>& singleMixture
 (
     dynamic_cast<singleStepReactingMixture<gasHThermoPhysics>&>
     (thermo)
 );
 
 // stoichiometric O2 to fuel ratio
-scalar s(singleMixture.s().value()); // kvm
+scalar s(singleMixture.s().value());
 
-// stoichiometric air to fuel ratio
-scalar stoicRatio(singleMixture.stoicRatio().value());   // kvm
+Info <<"s = " << s << endl;
 
 
 // heat of combustion [J/kg]
-//scalar qFuel(singleMixture.qFuel().value());   // kvm
+scalar qFuel(singleMixture.qFuel().value());
 
-label fuelIndex(singleMixture.fuelIndex()); // kvm
+label fuelIndex(singleMixture.fuelIndex());
+
+const label O2Index(composition.species()["O2"]);
+
 const label inertIndex(composition.species()[inertSpecie]);
-// label inertIndex(singleMixture.inertIndex()); // kvm
-
+// label inertIndex(singleMixture.inertIndex());
 
 const volScalarField* O2Ptr = &Y[inertIndex]; //dummy ptr when O2 is not available 
-if (thermo.composition().contains("O2"))  // kvm
+if (thermo.composition().contains("O2"))   
 {
-    O2Ptr = &thermo.composition().Y("O2"); // kvm
+    O2Ptr = &thermo.composition().Y("O2");  
 }
-const volScalarField& O2 = *O2Ptr; // kvm
+const volScalarField& O2 = *O2Ptr;  
 
-const volScalarField& fu = Y[fuelIndex];  // kvm
+const volScalarField* CO2Ptr = &Y[inertIndex]; //dummy ptr when O2 is not available 
+if (thermo.composition().contains("CO2"))   
+{
+    CO2Ptr = &thermo.composition().Y("CO2");  
+}
+const volScalarField& CO2 = *CO2Ptr;  
 
-scalar YO2Inf = 0.23301; //hardcode for now
-
+const volScalarField& fu = Y[fuelIndex];
 
 // Fuel molecular weight
-scalar Wu_ = singleMixture.speciesData()[fuelIndex].W();
-Info << "fuel molecular weight = " << Wu_ << nl; 
-
+scalar Wu_ = singleMixture.speciesData()[fuelIndex].W();  
 // Fuel enthalpy of formation
-scalar Hu_ = singleMixture.speciesData()[fuelIndex].hc();
-Info << "fuel chemical enthalpy in (J/kmol) = " << Hu_ << nl; 
+scalar Hu_ = singleMixture.speciesData()[fuelIndex].hc();  
 
+// Enthalpy of formation of fuel in [J/kg]
+dimensionedScalar h0_F("h0_F", dimEnergy/dimMass, Hu_/Wu_);
+
+// Enthalpy of formation of CO in [J/kg]
+dimensionedScalar h0_CO("h0_CO", dimEnergy/dimMass, -3945.0e3);
+
+Info << "fuel enthalphy of formation = " << h0_F.value() << endl;
+Info << "CO enthalphy of formation = " << h0_CO.value() << endl;
 
 // compute stoichiometric mixture fraction
-scalar ftSt = 1.0 / ( 1.0 + stoicRatio );
-Info << "stoichiometric mixture fraction = " << ftSt << nl; 
+scalar ftSt = (YO2Inf/s) / ( YFInf + YO2Inf/s );  
+Info << "stoichiometric mixture fraction = " << ftSt << nl;  
+
+Info << "specie stoich. coeffs. = " << singleMixture.specieStoichCoeffs() << endl;
 
 
 // create fileds for mixture fraction
@@ -252,7 +259,63 @@ volScalarField ft // kvm
         IOobject::NO_READ,
         IOobject::AUTO_WRITE
     ),
-    (fu*s-O2+YO2Inf)/(s+YO2Inf)
+(fu-O2/s+YO2Inf/s)/(YFInf+YO2Inf/s)
 );
 
 #include "createRadiationModel.H"
+
+volScalarField dQrad
+(
+ IOobject
+ (
+  "dQrad",
+  runTime.timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+ ),
+ mesh,
+ dimensionedScalar("dQrad", dimEnergy/dimTime/dimVolume,0.0)
+ );
+
+volScalarField dQradabs
+(
+ IOobject
+ (
+  "dQradabs",
+  runTime.timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+ ),
+ mesh,
+ dimensionedScalar("dQradabs", dimEnergy/dimTime/dimVolume,0.0)
+ );
+
+volScalarField dQradem
+(
+ IOobject
+ (
+  "dQradem",
+  runTime.timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+ ),
+ mesh,
+ dimensionedScalar("dQradem", dimEnergy/dimTime/dimVolume,0.0)
+ );
+
+volScalarField G_projected
+(
+ IOobject
+ (
+  "G_projected",
+  runTime.timeName(),
+  mesh,
+  IOobject::NO_READ,
+  IOobject::AUTO_WRITE
+ ),
+ mesh,
+ dimensionedScalar("G_projected", dimMass/pow3(dimTime),0.0)
+ );
