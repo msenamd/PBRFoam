@@ -66,13 +66,13 @@ Foam::biomassCloud::biomassCloud
     p_(thermo.thermo().p()),
     g_(g),
 
-    massTrans_
+    rhoTrans_
     (
         new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
-                this->name() + "_massTrans",
+                this->name() + "_rhoTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -82,17 +82,17 @@ Foam::biomassCloud::biomassCloud
             dimensionedScalar("zero", dimMass/dimVol, 0.0)
         )
     ),
-    speciesMassTrans_
+    rhoYTrans_
     (
         thermo.carrier().species().size()
     ),
-    momentumTrans_
+    UTrans_
     (
         new DimensionedField<vector, volMesh>
         (
             IOobject
             (
-                this->name() + "_momentumTrans",
+                this->name() + "_UTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -379,17 +379,17 @@ Foam::biomassCloud::biomassCloud
                                 );
 
     // Set storage for mass source fields and initialise to zero
-    forAll(speciesMassTrans_, i)
+    forAll(rhoYTrans_, i)
     {
         const word& specieName = thermo.carrier().species()[i];
-        speciesMassTrans_.set
+        rhoYTrans_.set
         (
             i,
             new DimensionedField<scalar, volMesh>
             (
                 IOobject
                 (
-                    this->name() + "_speciesMassTrans_" + specieName,
+                    this->name() + "_rhoYTrans_" + specieName,
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::NO_READ,
@@ -439,14 +439,14 @@ void Foam::biomassCloud::evolve()
 
 void Foam::biomassCloud::resetSourceTerms()
 {
-    massTrans().field() = 0.0;
+    rhoTrans().field() = 0.0;
 
-    forAll(speciesMassTrans_, i)
+    forAll(rhoYTrans_, i)
     {
-        speciesMassTrans_[i].field() = 0.0;
+        rhoYTrans_[i].field() = 0.0;
     }
 
-    momentumTrans().field() = Zero;
+    UTrans().field() = Zero;
 
     QconvTrans().field() = 0.0;
 

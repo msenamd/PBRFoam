@@ -27,7 +27,7 @@ forAll (mesh.C(),cellI)
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 
-	if (particles.speciesMassTrans()[fuelIndex][cellI] > ROOTVSMALL) 
+	if (particles.rhoYTrans()[fuelIndex][cellI] > ROOTVSMALL) 
 	{ 
 	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}

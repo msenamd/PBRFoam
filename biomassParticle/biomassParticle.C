@@ -294,18 +294,18 @@ void Foam::biomassParticle::updateParticle
     td.cloud().gasVolRatio[celli] = 1.0 - td.cloud().packingRatio[celli];
 
     // Mass (kg/s/m3 *s = kg/m3)
-    td.cloud().massTrans()[celli] +=  p1D.globalMassLossRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans()[celli] +=  p1D.globalMassLossRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
 
     // Species (kg/s/m3 *s = kg/m3)
-    td.cloud().speciesMassTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().speciesMassTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().speciesMassTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoYTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoYTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoYTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
 
-    td.cloud().speciesMassTrans(indexO2)[celli]   -= p1D.h_mass * (externalO2MassFraction - p1D.surfaceO2MassFrac)
+    td.cloud().rhoYTrans(indexO2)[celli]   -= p1D.h_mass * (externalO2MassFraction - p1D.surfaceO2MassFrac)
                                             * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
 
     // Momentum (N/m3 *s)
-    td.cloud().momentumTrans()[celli] -= 0.5 * CD_ * p1D.projectedAreaRatio * externalGasDensity * mag(relativeVelo) * relativeVelo
+    td.cloud().UTrans()[celli] -= 0.5 * CD_ * p1D.projectedAreaRatio * externalGasDensity * mag(relativeVelo) * relativeVelo
                                 * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
 
     // Energy (W/m3 *s)

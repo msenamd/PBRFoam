@@ -96,13 +96,13 @@ class biomassCloud
     // Sources
 
         //- Mass Transfer - Total [kg/m3]
-        autoPtr<DimensionedField<scalar, volMesh>> massTrans_;
+        autoPtr<DimensionedField<scalar, volMesh>> rhoTrans_;
 
         //- Mass Transfer - one per carrier phase specie [kg/m3]
-        PtrList<DimensionedField<scalar, volMesh>> speciesMassTrans_;
+        PtrList<DimensionedField<scalar, volMesh>> rhoYTrans_;
 
         //- Momentum Transfer [kg m/s /m3 = N.s/m3]
-        autoPtr<DimensionedField<vector, volMesh>> momentumTrans_;
+        autoPtr<DimensionedField<vector, volMesh>> UTrans_;
 
         //- Convective Energy Transfer [J/m3]
         autoPtr<DimensionedField<scalar, volMesh>> QconvTrans_;
@@ -255,10 +255,10 @@ public:
             	// Mass
 
                     //- Return reference to mass transfer fields [kg/m3]
-                    inline DimensionedField<scalar, volMesh>& massTrans();
+                    inline DimensionedField<scalar, volMesh>& rhoTrans();
 
                     //- Return const access to mass transfer fields [kg/m3]
-                    inline const DimensionedField<scalar, volMesh>& massTrans() const;
+                    inline const DimensionedField<scalar, volMesh>& rhoTrans() const;
 
                     //- Return total mass source term [kg/s/m3]
                     // - fully explicit    
@@ -267,13 +267,13 @@ public:
                 // Species Mass
 
                     //- Return reference to mass transfer for field i [kg/m3]
-                    inline DimensionedField<scalar, volMesh>& speciesMassTrans(const label i);
+                    inline DimensionedField<scalar, volMesh>& rhoYTrans(const label i);
 
                     //- Return reference to mass transfer fields [kg/m3]
-                    inline PtrList<DimensionedField<scalar, volMesh>>& speciesMassTrans();
+                    inline PtrList<DimensionedField<scalar, volMesh>>& rhoYTrans();
 
                     //- Return const access to mass transfer fields [kg/m3]
-                    inline const PtrList<DimensionedField<scalar, volMesh>>&  speciesMassTrans() const;
+                    inline const PtrList<DimensionedField<scalar, volMesh>>&  rhoYTrans() const;
 
                     //- Return mass source term for specie i - specie eqn [kg/s/m3]   
                     // - fully explicit                        
@@ -282,10 +282,10 @@ public:
                 // Momentum
 
                     //- Return reference to momentum source [kg m/s /m3]
-                    inline DimensionedField<vector, volMesh>& momentumTrans();
+                    inline DimensionedField<vector, volMesh>& UTrans();
 
                     //- Return const reference to momentum source [kg m/s /m3]
-                    inline const DimensionedField<vector, volMesh>& momentumTrans() const;
+                    inline const DimensionedField<vector, volMesh>& UTrans() const;
 
                     //- Return momentum source term [kg m/s^2 /m3 = N/m3]
                     inline tmp<DimensionedField<vector, volMesh>> SU() const;

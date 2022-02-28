@@ -41,27 +41,27 @@ inline const Foam::SLGThermo& Foam::biomassCloud::thermo() const
 //---------------------------Mass Source-----------------------------
 
 inline Foam::DimensionedField<Foam::scalar, Foam::volMesh>&
-Foam::biomassCloud::massTrans()
+Foam::biomassCloud::rhoTrans()
 {
-    return massTrans_();
+    return rhoTrans_();
 }
 
 inline const Foam::DimensionedField<Foam::scalar, Foam::volMesh>&
-Foam::biomassCloud::massTrans() const
+Foam::biomassCloud::rhoTrans() const
 {
-    return massTrans_();
+    return rhoTrans_();
 }
 
 inline Foam::tmp<Foam::DimensionedField<Foam::scalar, Foam::volMesh>>
 Foam::biomassCloud::Srho() const
 {
-    tmp<DimensionedField<scalar, volMesh>> tmassTrans
+    tmp<DimensionedField<scalar, volMesh>> trhoTrans
     (
         new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
-                this->name() + "_massTrans",
+                this->name() + "_rhoTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -78,44 +78,44 @@ Foam::biomassCloud::Srho() const
         )
     );
 
-    scalarField& sourceField = tmassTrans.ref();
+    scalarField& sourceField = trhoTrans.ref();
     
-    sourceField = massTrans() / (this->db().time().deltaT());
+    sourceField = rhoTrans() / (this->db().time().deltaT());
 
-    return tmassTrans;
+    return trhoTrans;
 }
 
 
 //---------------------------Species Source-----------------------------
 
 inline Foam::DimensionedField<Foam::scalar, Foam::volMesh>&
-Foam::biomassCloud::speciesMassTrans(const label i)
+Foam::biomassCloud::rhoYTrans(const label i)
 {
-    return speciesMassTrans_[i];
+    return rhoYTrans_[i];
 }
 
 inline const Foam::PtrList<Foam::DimensionedField<Foam::scalar, Foam::volMesh>>&
-Foam::biomassCloud::speciesMassTrans() const
+Foam::biomassCloud::rhoYTrans() const
 {
-    return speciesMassTrans_;
+    return rhoYTrans_;
 }
 
 inline Foam::PtrList<Foam::DimensionedField<Foam::scalar, Foam::volMesh>>&
-Foam::biomassCloud::speciesMassTrans()
+Foam::biomassCloud::rhoYTrans()
 {
-    return speciesMassTrans_;
+    return rhoYTrans_;
 }
 
 inline Foam::tmp<Foam::DimensionedField<Foam::scalar, Foam::volMesh>>
 Foam::biomassCloud::SYi(const label i) const
 {
-    tmp<DimensionedField<scalar, volMesh>> tspeciesMassTrans
+    tmp<DimensionedField<scalar, volMesh>> trhoYTrans
     (
         new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
-                this->name() + "_speciesMassTrans",
+                this->name() + "_rhoYTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -132,38 +132,38 @@ Foam::biomassCloud::SYi(const label i) const
         )
     );
 
-    scalarField& sourceField = tspeciesMassTrans.ref();
+    scalarField& sourceField = trhoYTrans.ref();
     
-    sourceField = speciesMassTrans()[i] / (this->db().time().deltaT());
+    sourceField = rhoYTrans()[i] / (this->db().time().deltaT());
 
-    return tspeciesMassTrans;
+    return trhoYTrans;
 }
 
 
 //---------------------------Momentum Source-----------------------------
 
 inline Foam::DimensionedField<Foam::vector, Foam::volMesh>&
-Foam::biomassCloud::momentumTrans()
+Foam::biomassCloud::UTrans()
 {
-    return momentumTrans_();
+    return UTrans_();
 }
 
 inline const Foam::DimensionedField<Foam::vector, Foam::volMesh>&
-Foam::biomassCloud::momentumTrans() const
+Foam::biomassCloud::UTrans() const
 {
-    return momentumTrans_();
+    return UTrans_();
 }
 
 inline Foam::tmp<Foam::DimensionedField<Foam::vector, Foam::volMesh>>
 Foam::biomassCloud::SU() const
 {
-    tmp<DimensionedField<vector, volMesh>> tmomentumTrans
+    tmp<DimensionedField<vector, volMesh>> tUTrans
     (
         new DimensionedField<vector, volMesh>
         (
             IOobject
             (
-                this->name() + "_momentumTrans",
+                this->name() + "_UTrans",
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
@@ -180,11 +180,11 @@ Foam::biomassCloud::SU() const
         )
     );
 
-    vectorField& sourceField = tmomentumTrans.ref();
+    vectorField& sourceField = tUTrans.ref();
     
-    sourceField = momentumTrans() / (this->db().time().deltaT());
+    sourceField = UTrans() / (this->db().time().deltaT());
 
-    return tmomentumTrans;
+    return tUTrans;
 }
 
 
