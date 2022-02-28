@@ -1,8 +1,9 @@
 #include "constants.H"
 
+// Mixture fraction
 if (thermo.composition().contains("O2")) 
 {
-    ft = (fu*s-O2+YO2Inf)/(s+YO2Inf);
+    ft = (s*fu-O2+YO2Inf)/(s*YFInf+YO2Inf);
 }
 else
 {
@@ -13,6 +14,14 @@ ft.max(0.0);
 ft.min(1.0);
 
 
+// Convective heat flux
+convectiveHeatFlux_L = 
+         - fvc::interpolate(turbulence->alpha())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
+
+convectiveHeatFlux_T = 
+         - fvc::interpolate(turbulence->alphaEff())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
+
+
 flameHeight = dimensionedScalar("zero",dimLength,0.0);
 PyrolysisFront = dimensionedScalar("zero",dimLength,0.0);
 
@@ -21,13 +30,15 @@ PyrolysisFront = dimensionedScalar("zero",dimLength,0.0);
 // Flame front and height is where dQ >= threshold
 forAll (mesh.C(),cellI)
 {
+	// HRR > threshold
 	if (dQ[cellI] >= 1.0)
 	{ 
 	    flameHeight[cellI] = mesh.C()[cellI].z();
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 
-	if (particles.rhoYTrans()[fuelIndex][cellI] > ROOTVSMALL) 
+	// volumetric production rate of fuel > threshold
+	if (particles.rhoYTrans()[fuelIndex][cellI] / runTime.deltaTValue() > ROOTVSMALL) 
 	{ 
 	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
@@ -39,6 +50,7 @@ scalar maxPyrolysisFront = max(PyrolysisFront).value();
 
 outFlameHeightFront <<  runTime.value() << " " << maxFlameHeight << " " << maxFlameFront << endl;
 outPyrolysisFront <<  runTime.value() << " " << maxPyrolysisFront << endl;
+
 
 /*
 //limit heat transfer diagnostic to cells ahead of the flame only
@@ -63,9 +75,3 @@ forAll (mesh.C(),cellI)
 	}
 }
 */
-
-convectiveHeatFlux_L = 
-         - fvc::interpolate(turbulence->alpha())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
-
-convectiveHeatFlux_T = 
-         - fvc::interpolate(turbulence->alphaEff())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
