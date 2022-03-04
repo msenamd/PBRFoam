@@ -5,6 +5,7 @@ slab::slab() : particleShape()
     initialHalfThickness = 0.0;
     length = 0.0;
     width = 0.0;
+    currentSize = initialHalfThickness;
 }
 
 slab::slab(double& halfThickness_, double& length_, double& width_) : particleShape()

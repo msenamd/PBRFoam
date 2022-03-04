@@ -44,7 +44,6 @@ bool Foam::biomassParticle::move
 	const scalar trackTime
 )
 {
-
     td.switchProcessor = false;
     td.keepParticle = true;
 
@@ -55,12 +54,11 @@ bool Foam::biomassParticle::move
 
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
    	{
-        // set the lagrangian time-step
+        // Set the Lagrangian time-step
         scalar dt = min(dtMax, tEnd);
 
-        // remember which cell the parcel is in
-        // since this will change if a face is hit
-        label celli = cell();
+        // Cache the parcel current cell as this will change if a face is hit
+        const label celli = cell();
 
         // Track particle to a given position and returns 1.0 if the
         // trajectory is completed without hitting a face otherwise
@@ -69,12 +67,15 @@ bool Foam::biomassParticle::move
         dt *= trackToFace(position() + dt*particleVelo_, td);
 
         tEnd -= dt;
-        stepFraction() = 1.0 - tEnd/trackTime;        
+        stepFraction() = 1.0 - tEnd/trackTime;      
 
-        // update particle variables
-        updateParticle(td, dt, celli);
+        // Update particle variables (avoid extremely small time-steps)
+        if (dt > ROOTVSMALL)
+        {
+            updateParticle(td, dt, celli);
+        }
 
-        // check if a patch is hit 
+        // Check if a patch is hit 
         if (onBoundary() && td.keepParticle)
         {
             if (isA<processorPolyPatch>(pbMesh[patch(face())]))
@@ -82,6 +83,12 @@ bool Foam::biomassParticle::move
                 td.switchProcessor = true;
             }
         }
+
+        // Remove particle if status is burned
+        /*if(particleState_ == 2)
+        {
+            td.keepParticle = false;
+        }*/
     }
     
     return td.keepParticle;
@@ -171,10 +178,9 @@ void Foam::biomassParticle::updateParticle
     const label celli
 )
 {
-    // get the external gas phase properties of this cell
-    // Note: density and pressure are of gas only (not gas and solid)
-    // solution obtained from continuum solver is for bulk density
-
+    // Get the external gas phase properties of this cell
+    // Note: divide density and pressure by (1-packing ratio)
+    // to get the gas properties (not the gas bulk properties)
     cellPointWeight cpw(mesh_, position(), celli, face());
 
     label indexFuel = (td.cloud().thermo()).carrier().species()[td.cloud().fuel];
@@ -189,23 +195,18 @@ void Foam::biomassParticle::updateParticle
     scalar externalO2MassFraction = td.YO2Interp().interpolate(cpw);
     scalar externalIrradiation    = td.GInterp().interpolate(cpw);
 
-    // relative velocity
-    vector relativeVelo = externalGasVelo - particleVelo_;
+    // Copy current particle data to the particle model
+    p1D = td.cloud().superParticle;
 
-    // copy material, reaction and solution data
-    p1D = td.cloud().testParticle;
+    p1D.shape->currentSize = particleSize_;
 
-    // update geometrical properties
-    p1D.setGeometry(td.cloud().shapeName, particleSize_, td.cloud().length, td.cloud().width);
-
-    // initialize fields to particle model std vector format
-    particleTemp_std.resize(particleTemp_.size());
-    wetSolidVolFraction_std.resize(wetSolidVolFraction_.size());
-    drySolidVolFraction_std.resize(drySolidVolFraction_.size());
-    charVolFraction_std.resize(charVolFraction_.size());
-    ashVolFraction_std.resize(ashVolFraction_.size());
-    particleO2MassFraction_std.resize(particleO2MassFraction_.size());
-    particlePressure_std.resize(particlePressure_.size());
+    particleTemp_std.resize(particleTemp_.size(), 0.0);
+    wetSolidVolFraction_std.resize(wetSolidVolFraction_.size(), 0.0);
+    drySolidVolFraction_std.resize(drySolidVolFraction_.size(), 0.0);
+    charVolFraction_std.resize(charVolFraction_.size(), 0.0);
+    ashVolFraction_std.resize(ashVolFraction_.size(), 0.0);
+    particleO2MassFraction_std.resize(particleO2MassFraction_.size(), 0.0);
+    particlePressure_std.resize(particlePressure_.size(), 0.0);
 
     for (int j=0 ; j<particleTemp_.size() ; j++)
     {
@@ -228,23 +229,24 @@ void Foam::biomassParticle::updateParticle
                     particlePressure_std
                 );
 
-    // compute thermo-chemical degradation
+    // Compute thermo-chemical degradation
     p1D.stepForward(
                     dt_,
                     externalGasTemp,
-                    mag(relativeVelo),
+                    mag(externalGasVelo - particleVelo_),
                     externalO2MassFraction,
                     externalGasPressure,
                     externalIrradiation
                 );
 
-    particleTemp_.resize(p1D.numCells);
-    particlePressure_.resize(p1D.numCells);
-    particleO2MassFraction_.resize(p1D.numCells);
-    wetSolidVolFraction_.resize(p1D.numCells);
-    drySolidVolFraction_.resize(p1D.numCells);
-    charVolFraction_.resize(p1D.numCells);
-    ashVolFraction_.resize(p1D.numCells);
+    // Update current particle data from model outputs
+    particleTemp_.resize(p1D.numCells, 0.0);
+    particlePressure_.resize(p1D.numCells, 0.0);
+    particleO2MassFraction_.resize(p1D.numCells, 0.0);
+    wetSolidVolFraction_.resize(p1D.numCells, 0.0);
+    drySolidVolFraction_.resize(p1D.numCells, 0.0);
+    charVolFraction_.resize(p1D.numCells, 0.0);
+    ashVolFraction_.resize(p1D.numCells, 0.0);
 
     for (int j=0 ; j<particleTemp_.size() ; j++)
     {
@@ -259,10 +261,13 @@ void Foam::biomassParticle::updateParticle
 
     particleState_     = p1D.state;
     particleSize_      = p1D.particleSize;
+    particleMass_      = p1D.particleMass;
+    particleVol_       = p1D.particleVol;
     surfaceTemp_       = p1D.surfaceTemp;
     surfaceO2MassFrac_ = p1D.surfaceO2MassFrac;
     hConv_             = p1D.h_conv;
 
+    // update particle velocity
     if(td.cloud().dragModel == "constant")
     {
         CD_ = td.cloud().dragCoeff;
@@ -276,7 +281,7 @@ void Foam::biomassParticle::updateParticle
     {
         scalar B = 0.5 * externalGasDensity * CD_
                  * p1D.projectedAreaRatio * p1D.particleSurfToVolRatio * p1D.particleVol 
-                 / p1D.particleMass * mag(relativeVelo);
+                 / p1D.particleMass * mag(externalGasVelo - particleVelo_);
 
         particleVelo_ = (particleVelo_ + dt_ * (B * externalGasVelo + td.g())) / (1.0 + B * dt_);
     }
@@ -291,7 +296,6 @@ void Foam::biomassParticle::updateParticle
 
     // Packing Ratio (-)
     td.cloud().packingRatio[celli] = td.cloud().nParticles * p1D.particleVol / mesh_.cellVolumes()[celli];
-    td.cloud().gasVolRatio[celli] = 1.0 - td.cloud().packingRatio[celli];
 
     // Mass (kg/s/m3 *s = kg/m3)
     td.cloud().rhoTrans()[celli] +=  p1D.globalMassLossRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
@@ -305,7 +309,8 @@ void Foam::biomassParticle::updateParticle
                                             * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
 
     // Momentum (N/m3 *s)
-    td.cloud().UTrans()[celli] -= 0.5 * CD_ * p1D.projectedAreaRatio * externalGasDensity * mag(relativeVelo) * relativeVelo
+    td.cloud().UTrans()[celli] -= 0.5 * externalGasDensity * CD_ * p1D.projectedAreaRatio 
+                                * mag(externalGasVelo - particleVelo_) * (externalGasVelo - particleVelo_)
                                 * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
 
     // Energy (W/m3 *s)
@@ -323,15 +328,20 @@ void Foam::biomassParticle::updateParticle
     //  Additional diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    //Surface temperature (K)
+    // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
-    //Surface O2 mass fraction (-)
+    // Surface emissivity (-)
+    td.cloud().surfaceEmissivity[celli] = p1D.surfaceEmissivity;
+
+    // Convective heat transfer coeff (W/m2/K)
+    td.cloud().convHeatTransCeoff[celli] = hConv_;
+
+    // Surface O2 mass fraction (-)
     td.cloud().surfaceO2MassFrac[celli] = surfaceO2MassFrac_;
 
-    //Momentum (kg m/s)
+    // Momentum (kg m/s)
     td.cloud().momentum[celli] = td.cloud().nParticles * p1D.particleMass * particleVelo_;
-
 
 }
 

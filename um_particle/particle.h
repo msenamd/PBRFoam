@@ -118,7 +118,7 @@ public:
 // Public member Functions:
 
     //set geometry and dimensions
-    void setGeometry(std::string geometry_, double& radius_, double& length, double& width);
+    void setGeometry(std::string geometry_, double radius_, double length, double width);
 
     //function initializing particle
     virtual void initialize() = 0;

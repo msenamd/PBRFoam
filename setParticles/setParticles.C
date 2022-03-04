@@ -7,34 +7,64 @@
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
-
     OpenFOAM is free software; you can redistribute it and/or modify it
     under the terms of the GNU General Public License as published by the
     Free Software Foundation; either version 2 of the License, or (at your
     option) any later version.
-
     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
     for more details.
-
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
 Application
     setParticles -- written by Mohamed Ahmed
-
 Description
     outputs locations of lagrangian particles
-
     Reads in initLOVDict.
-
 \*---------------------------------------------------------------------------*/
 
 
 #include "fvCFD.H"
 #include "IOstreams.H"
+#include "fvMesh.H"
+
+void writeHeader(OFstream& os, word className, word objectName)
+{
+    os << "FoamFile" << nl;
+    os << "{" << nl;
+    os << "     version     2.0;" << nl;
+    os << "     format      ascii;" << nl;
+    os << "     class       "<< className << ";" << nl;
+    os << "     location    0;" << nl;
+    os << "     object      "<< objectName << ";" << nl;
+    os << "}" << nl;
+    os << nl;
+}
+
+template <typename objectType>
+void writeData(
+                OFstream& os, fvMesh& mesh, objectType init, int numSuperParticles, 
+                scalar xMin, scalar yMin, scalar zMin,
+                scalar xMax, scalar yMax, scalar zMax
+                )
+{
+    os  << numSuperParticles << nl;
+    os  << '(' << nl;
+    forAll(mesh.C(), celli)
+    {
+        if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
+            && mesh.C()[celli][0] <= xMax && mesh.C()[celli][1] <= yMax && mesh.C()[celli][2] <= zMax
+            )
+        {
+
+            os  << init << nl;
+            
+        }
+    }
+    os  << ')' << nl;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -45,30 +75,30 @@ int main(int argc, char *argv[])
 #   include "createTime.H"
 #   include "createMesh.H"
 
-	OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
+    OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
+    OFstream os_state(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleState");
+    OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
+    OFstream os_velo(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleVelo");
+    OFstream os_T(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleTemp");
+    OFstream os_p(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particlePressure");
+    OFstream os_O2(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleO2MassFraction");
+    OFstream os_wetSolid(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"wetSolidVolFraction");
+    OFstream os_drySolid(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"drySolidVolFraction");
+    OFstream os_char(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"charVolFraction");
+    OFstream os_ash(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"ashVolFraction");
 
-	os_pos << "FoamFile" << nl;
-	os_pos << "{" << nl;
-	os_pos << "		version     2.0;" << nl;
-	os_pos << "		format      ascii;" << nl;
-	os_pos << "		class       Cloud<solidParticle>;" << nl;
-	os_pos << "		location    0;" << nl;
-	os_pos << "		object      positions;" << nl;
-	os_pos << "}" << nl;
-	os_pos << nl;
- 
+    writeHeader(os_pos, "Cloud<solidParticle>", "positions");
+    writeHeader(os_state, "labelField", "particleState");
+    writeHeader(os_size, "scalarField", "particleSize");
+    writeHeader(os_velo, "vectorField", "particleVelo");
+    writeHeader(os_T, "scalarFieldField", "particleTemp");
+    writeHeader(os_p, "scalarFieldField", "particlePressure");
+    writeHeader(os_O2, "scalarFieldField", "particleO2MassFraction");
+    writeHeader(os_wetSolid, "scalarFieldField", "wetSolidVolFraction");
+    writeHeader(os_drySolid, "scalarFieldField", "drySolidVolFraction");
+    writeHeader(os_char, "scalarFieldField", "charVolFraction");
+    writeHeader(os_ash, "scalarFieldField", "ashVolFraction");
 
-    OFstream os_T(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"T");
-
-    os_T << "FoamFile" << nl;
-    os_T << "{" << nl;
-    os_T << "     version     2.0;" << nl;
-    os_T << "     format      ascii;" << nl;
-    os_T << "     class       scalarFieldField;" << nl;
-    os_T << "     location    0;" << nl;
-    os_T << "     object      T;" << nl;
-    os_T << "}" << nl;
-    os_T << nl;
 
     IOdictionary setParticlesDict
     (
@@ -87,11 +117,22 @@ int main(int argc, char *argv[])
     const vector boxMax(vector(setParticlesDict.lookup("boxMax")));
     const vector ignMin(vector(setParticlesDict.lookup("ignMin")));
     const vector ignMax(vector(setParticlesDict.lookup("ignMax")));
-    const scalar ignTemp(readScalar(setParticlesDict.lookup("ignTemp")));
-    const scalar ambientTemp(readScalar(setParticlesDict.lookup("ambientTemp")));
+
+    const label initState(readLabel(setParticlesDict.lookup("initState")));
+    const scalar initSize(readScalar(setParticlesDict.lookup("initSize")));
+    const vector initVelo(vector(setParticlesDict.lookup("initVelo")));
+
+    const scalarField ignTemp(1, readScalar(setParticlesDict.lookup("ignTemp")));
+    const scalarField initTemp(1, readScalar(setParticlesDict.lookup("initTemp")));
+    const scalarField initGaugeP(1,readScalar(setParticlesDict.lookup("initGaugeP")));
+    const scalarField initYO2(1, readScalar(setParticlesDict.lookup("initYO2")));
+    const scalarField initWetSolid(1, readScalar(setParticlesDict.lookup("initWetSolid")));
+    const scalarField initDrySolid(1, readScalar(setParticlesDict.lookup("initDrySolid")));
+    const scalarField initChar(1, readScalar(setParticlesDict.lookup("initChar")));
+    const scalarField initAsh(1, readScalar(setParticlesDict.lookup("initAsh")));
 
     Info << "box minimum  [m]          = " << boxMin << nl
-		 << "box miaximum [m]          = " << boxMax << nl
+         << "box miaximum [m]          = " << boxMax << nl
          << endl;
 
     scalar xMin=boxMin[0];
@@ -111,40 +152,22 @@ int main(int argc, char *argv[])
     scalar zMax_ign=ignMax[2];
 
 
-    int numParticles = 0;
+    int numSuperParticles = 0;
     forAll(mesh.C(), celli)
     {
-    	if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
-    		&& mesh.C()[celli][0] <= xMax && mesh.C()[celli][1] <= yMax && mesh.C()[celli][2] <= zMax
-    		)
-    	{
-    		numParticles += 1;
-    	}
+        if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
+            && mesh.C()[celli][0] <= xMax && mesh.C()[celli][1] <= yMax && mesh.C()[celli][2] <= zMax
+            )
+        {
+            numSuperParticles += 1;
+        }
     }
+    Info << "total number of super particles = " << numSuperParticles << endl;
+    
 
-    Info << "numParticles = " << numParticles << endl;
-	Info << "Writing particles positions " << endl;
-
-	os_pos  << numParticles << nl;
-	os_pos  << '(' << nl;
-
-    forAll(mesh.C(), celli)
-    {
-    	if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
-    		&& mesh.C()[celli][0] <= xMax && mesh.C()[celli][1] <= yMax && mesh.C()[celli][2] <= zMax
-    		)
-    	{
-    		os_pos  << mesh.C()[celli] << token::SPACE << 0 << nl;
-    	}
-    }
-
-	os_pos  << ')' << nl;
-
-
-
-    os_pos  << numParticles << nl;
+    Info << "Writing particles positions " << endl;
+    os_pos  << numSuperParticles << nl;
     os_pos  << '(' << nl;
-
     forAll(mesh.C(), celli)
     {
         if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
@@ -154,14 +177,12 @@ int main(int argc, char *argv[])
             os_pos  << mesh.C()[celli] << token::SPACE << 0 << nl;
         }
     }
-
     os_pos  << ')' << nl;
 
-    Info << "Finished setting particles positions" << endl;
 
-    os_T  << numParticles << nl;
+    Info << "Setting ignition temperature" << endl;
+    os_T  << numSuperParticles << nl;
     os_T  << '(' << nl;
-
     forAll(mesh.C(), celli)
     {
         if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
@@ -172,20 +193,68 @@ int main(int argc, char *argv[])
             && mesh.C()[celli][0] <= xMax_ign && mesh.C()[celli][1] <= yMax_ign && mesh.C()[celli][2] <= zMax_ign
             )
             {
-                os_T  << '(' << ignTemp << ')' << nl;
+                os_T  << ignTemp << nl;
             }
             else
             {
-                os_T  << '(' << ambientTemp << ')' << nl;
+                os_T   << initTemp << nl;
             }
             
         }
     }
-
     os_T  << ')' << nl;
 
 
-	Info << "Finished setting ignition temperature" << endl;
+    Info << "Writing other particle data" << endl;
+
+    writeData( os_state, mesh, initState, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_size, mesh, initSize, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_velo, mesh, initVelo, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_p, mesh, initGaugeP, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_O2, mesh, initYO2, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_wetSolid, mesh, initWetSolid, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_drySolid, mesh, initDrySolid, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_char, mesh, initChar, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_ash, mesh, initAsh, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+
+    Info << "Done setting particles" << endl;
+
     return(0);
 }
 

@@ -126,7 +126,7 @@ public:
     // Public data
 
         // Reactions and Material classes
-            particle_1D testParticle;
+            particle_1D superParticle;
             solidMaterial wetSolid, drySolid, Char, ash;
             Air air;
             solidReaction R1, R2, R3, R4;
@@ -217,8 +217,9 @@ public:
            // Diagnostic Fields  
 
             volScalarField packingRatio;        // Packing Ratio [-]
-            volScalarField gasVolRatio;         // 1-Packing Ratio [-]
-            volScalarField surfaceTemp;         // Surface temperature [K]         
+            volScalarField surfaceTemp;         // Surface temperature [K]   
+            volScalarField surfaceEmissivity;   // Surface emissivity [-]
+            volScalarField convHeatTransCeoff;  // Convective heat transfer coeff [W/m2/K]        
             volScalarField surfaceO2MassFrac;   // Surface O2 mass fraction [-]
             volVectorField momentum;            // Momentum [kg m/s]          
 
@@ -296,7 +297,7 @@ public:
                     inline DimensionedField<scalar, volMesh>& QconvTrans();
 
                     //- Return const reference to convective heat transfer [J/m3]
-                    inline const DimensionedField<scalar, volMesh>&QconvTrans() const;
+                    inline const DimensionedField<scalar, volMesh>& QconvTrans() const;
 
                     //- Return conevtive heat transfer source term [W/m3]
                     inline tmp<DimensionedField<scalar, volMesh>> Qconv() const; 

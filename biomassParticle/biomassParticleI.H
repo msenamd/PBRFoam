@@ -82,7 +82,9 @@ inline Foam::biomassParticle::biomassParticle
     drySolidVolFraction_(drySolidVolFraction),
     charVolFraction_(charVolFraction),
     ashVolFraction_(ashVolFraction),
-     
+    
+    particleMass_(0.0),
+    particleVol_(0.0), 
     surfaceTemp_(0.0),
     surfaceO2MassFrac_(0.0),
     hConv_(0.0),

@@ -44,25 +44,9 @@
         mesh,
         dimensionedScalar("zero",dimLength,0.0)
     );
+    
 
-
-
-// Field diagnostics
-    volScalarField MLR
-    (
-        IOobject
-        (
-            "MLR",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
-    );
-
-
+// Radiative surface heat flux to the particles [W/m2]
     volScalarField QradToFreshParticles
     (
         IOobject
@@ -74,10 +58,10 @@
             IOobject::AUTO_WRITE
         ),
         mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
     );
 
-
+// Convective surface heat flux to the particles [W/m2]
     volScalarField QconvToFreshParticles
     (
         IOobject
@@ -89,10 +73,11 @@
             IOobject::AUTO_WRITE
         ),
         mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
     );
 
 
+// Momentum of the flow [kg m/s]
     volVectorField fluidMomentum
     (
         IOobject
@@ -108,6 +93,7 @@
     );
 
 
+// Convective heat flux at boundary surfaces [W/m2]
     surfaceScalarField convectiveHeatFlux_L
     (
         IOobject
@@ -119,7 +105,7 @@
             IOobject::NO_WRITE
         ),
         mesh,
-        dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0),0.0)
+        dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0), 0.0)
     );
 
     surfaceScalarField convectiveHeatFlux_T
@@ -133,5 +119,5 @@
             IOobject::AUTO_WRITE
         ),
         mesh,
-        dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0),0.0)
+        dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0), 0.0)
     );

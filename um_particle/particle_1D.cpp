@@ -21,7 +21,7 @@ particle_1D::particle_1D() : Particle()
 
     iter = 0;
     iterMaxError = 0.0;
-    maxIter = 0;
+    maxIter = 1000;
     defaultMeshResolution = 100e-6;
     timeStepThreshold = 0.1;
     temperatureThreshold = 0.1;
@@ -167,6 +167,8 @@ particle_1D& particle_1D::operator=(const particle_1D& rhs)
 {
     if (&rhs != this)
     {
+        Particle::operator=(rhs);
+
         numCells = rhs.numCells;
         localTimeStepIndex = rhs.localTimeStepIndex;
         finalTimeStepIndex = rhs.finalTimeStepIndex;
@@ -359,6 +361,9 @@ void particle_1D::initialize(
         particlePressure = particlePressure_;
     }
 
+    surfaceTemp = Temp.back();
+    coreTemp = Temp.front();
+
     // Set the mesh and particle size
     shape->air = air;
     particleSize = shape->currentSize;
@@ -380,7 +385,6 @@ void particle_1D::initialize(
         integralDrySolidMass[j] = max(drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j] * cellVolume[j], 1e-14);
         integralCharMass[j] = max(Char->get_bulkDensity(Temp[j]) * charVolFraction[j] * cellVolume[j], 1e-14);
     }
-
 }
 
 /**
@@ -410,7 +414,9 @@ void particle_1D::writeCoordLine(FILE* outfile)
 {
     fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", xCellCenter[i]);
+    }
     fprintf(outfile, "\n");
 }
 
@@ -423,7 +429,9 @@ void particle_1D::writeTempLine(FILE* outfile)
 {
 	fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
-		fprintf(outfile, "\t%.6f", Temp[i]);
+    {
+        fprintf(outfile, "\t%.6f", Temp[i]);
+    }
 	fprintf(outfile, "\n");
 }
 
@@ -436,7 +444,9 @@ void particle_1D::writeWetSolidLine(FILE* outfile)
 {
 	fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", wetSolidVolFraction[i]);
+    }
 	fprintf(outfile, "\n");
 }
 
@@ -449,7 +459,9 @@ void particle_1D::writeDrySolidLine(FILE* outfile)
 {
 	fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", drySolidVolFraction[i]);
+    }
 	fprintf(outfile, "\n");
 }
 
@@ -462,7 +474,9 @@ void particle_1D::writeCharLine(FILE* outfile)
 {
 	fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", charVolFraction[i]);
+    }
 	fprintf(outfile, "\n");
 }
 
@@ -475,7 +489,9 @@ void particle_1D::writeAshLine(FILE* outfile)
 {
     fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", ashVolFraction[i]);
+    }
     fprintf(outfile, "\n");
 }
 
@@ -488,7 +504,9 @@ void particle_1D::writeO2Line(FILE* outfile)
 {
     fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", particleO2MassFraction[i]);
+    }
     fprintf(outfile, "\n");
 }
 
@@ -501,7 +519,9 @@ void particle_1D::writePressureLine(FILE* outfile)
 {
     fprintf(outfile, "%.6f", *pCurrentTime);
     for (int i = 0; i < numCells; i++)
+    {
         fprintf(outfile, "\t%.6f", particlePressure[i]);
+    }
     fprintf(outfile, "\n");
 }
 
@@ -688,7 +708,8 @@ void particle_1D::stepForward(
         // Re-mesh the particle due to size change
         remeshing();
 
-        // check prints (TODO: remove)
+        // check prints
+        #if defined _DEBUG
         cout.precision(12);
         cout << "--local time (s) = " << localTime << endl;
         cout << "   --local time step size (s) = " << localTimeStepSize << endl;
@@ -702,7 +723,7 @@ void particle_1D::stepForward(
         cout << "   --ash error = " << ashError << endl;
         cout << "   --O2 error = " << O2Error << endl;
         cout << "   --pressure error = " << pressureError << endl;
-
+        #endif      
     } //end time loop
 }
 
@@ -1268,7 +1289,7 @@ void particle_1D::set_heatCFL_L(const int& i, const double& dt_)
 {
     // Case for which mass flux > 0, CFL_L > 0
     if ( 
-        (i == numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i]) 
+        ((i == numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i])) 
         ||
         ((i != numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i])
           && (particlePressure_old[i] > particlePressure_old[i+1])) 
@@ -1295,7 +1316,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
 {
     // Case for which mass flux > 0, CFL_L > 0
     if (
-        (i == numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i])
+        ((i == numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i]))
         ||
         ((i != numCells_old - 1) && (particlePressure_old[i-1] > particlePressure_old[i])
             && (particlePressure_old[i] > particlePressure_old[i+1]))
@@ -1322,7 +1343,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
 {
     // Case for which mass flux < 0, CFL_R < 0
     if (
-        (i == 0) && (particlePressure_old[i] < particlePressure_old[i+1])
+        ((i == 0) && (particlePressure_old[i] < particlePressure_old[i+1]))
         ||
         ((i != 0) && (particlePressure_old[i-1] < particlePressure_old[i])
             && (particlePressure_old[i] < particlePressure_old[i+1]))
@@ -1349,7 +1370,7 @@ void particle_1D::set_massCFL_R(const int& i, const double& dt_)
 {
     // Case for which mass flux < 0, CFL_R < 0
     if (
-        (i == 0) && (particlePressure_old[i] < particlePressure_old[i+1])
+        ((i == 0) && (particlePressure_old[i] < particlePressure_old[i+1]))
         ||
         ((i != 0) && (particlePressure_old[i-1] < particlePressure_old[i])
             && (particlePressure_old[i] < particlePressure_old[i+1]))
@@ -1426,7 +1447,7 @@ double particle_1D::maxAbsDifference(std::vector<double> vectX, std::vector<doub
     std::vector<double> difference;
     difference.resize(vectX.size(), 0.0);
 
-    for (int i = 0; i < vectX.size(); i++)
+    for (unsigned int i = 0; i < vectX.size(); i++)
     {
         difference[i] = abs(vectX[i] - vectY[i]);
     }
@@ -1690,8 +1711,8 @@ void particle_1D::updateOutputs()
         localCO2ReleaseRate_cell[j] = (1.0 + R4->get_O2Yield() - R4->get_productYield()) * R4reactionRate[j];
 
         localHeatReleaseRate_cell[j] = (1.0 - R1->get_productYield()) * R1reactionRate[j] * R1->get_deltaH()
-                                     + (1.0 - R2->get_productYield()) * R2reactionRate[j] * R2->get_deltaH();
-                                     + (1.0 - R3->get_productYield()) * R3reactionRate[j] * R3->get_deltaH();
+                                     + (1.0 - R2->get_productYield()) * R2reactionRate[j] * R2->get_deltaH()
+                                     + (1.0 - R3->get_productYield()) * R3reactionRate[j] * R3->get_deltaH()
                                      + (1.0 - R4->get_productYield()) * R4reactionRate[j] * R4->get_deltaH();
     }
 

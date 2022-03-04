@@ -108,6 +108,12 @@ class biomassParticle
             scalarField charVolFraction_;
             scalarField ashVolFraction_;
 
+            // Particle mass [kg]
+            scalar particleMass_;
+
+            // Particle volume [m3]
+            scalar particleVol_;
+
             // Surface temperature [K]
             scalar surfaceTemp_;
 

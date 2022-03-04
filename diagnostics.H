@@ -52,15 +52,13 @@ outFlameHeightFront <<  runTime.value() << " " << maxFlameHeight << " " << maxFl
 outPyrolysisFront <<  runTime.value() << " " << maxPyrolysisFront << endl;
 
 
-/*
+
 //limit heat transfer diagnostic to cells ahead of the flame only
 forAll (mesh.C(),cellI)
 {
 
-	fluidMomentum[cellI] = rho[cellI] * U[cellI] * mesh.V()[cellI];
-
-	MLR[cellI] = particles.rhoTrans()[cellI] / runTime.deltaTValue();
-
+	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];
+/*
 	QconvToFreshParticles[cellI] = 0.0;
 	QradToFreshParticles[cellI] = 0.0;
 
@@ -73,5 +71,5 @@ forAll (mesh.C(),cellI)
 												G_tot[cellI] - 4*5.670367e-8*Foam::pow(particles.surfaceTemp()[cellI],4.0)
 											); 					
 	}
-}
 */
+}

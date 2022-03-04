@@ -160,10 +160,10 @@ Foam::biomassCloud::biomassCloud
     R3(),
     R4(),
 
-    nParticles(readScalar(particleProperties_.lookup("nParticles"))),
+    nParticles(readScalar(particleProperties_.lookup("nParticlesPerCell"))),
     fuel(particleProperties_.lookup("fuelComposition")),
 
-    firebrands(particleProperties_.lookup("firebrands")),
+    firebrands(readBool(particleProperties_.lookup("firebrands"))),
     particleElasticity(readScalar(particleProperties_.lookup("particleElasticity"))),
     particleViscosity(readScalar(particleProperties_.lookup("particleViscosity"))),
     dragModel(particleProperties_.lookup("dragModel")),
@@ -246,19 +246,6 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
-    ),
-    gasVolRatio
-    (
-        IOobject
-        (
-            this->name() + "_gasVolRatio",
-            this->db().time().timeName(),
-            this->db(),
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
     ),    
     surfaceTemp
     (
@@ -272,7 +259,33 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 1, 0, 0 ,0) , 0.0)
-    ),    
+    ), 
+    surfaceEmissivity
+    (
+        IOobject
+        (
+            this->name() + "_surfaceEmissivity",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
+    ),
+    convHeatTransCeoff
+    (
+        IOobject
+        (
+            this->name() + "_convHeatTransCeoff",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea/dimTemperature , 0.0)
+    ),              
     surfaceO2MassFrac
     (
         IOobject
@@ -311,7 +324,7 @@ Foam::biomassCloud::biomassCloud
     Info << "   particle geometry is: " << shapeName << endl;
     Info << "   motion is: " << firebrands<< endl;
 
-    Info << "   setting solid material and reaction properties " << fuel << endl;
+    Info << "   setting solid material and reaction properties " << endl;
 
     wetSolid.set_bulkDensity(wetSolidDensity);
     drySolid.set_bulkDensity(drySolidDensity);
@@ -353,18 +366,22 @@ Foam::biomassCloud::biomassCloud
     R3.set_reaction("oxidative pyrolysis", oxidativeCharYield);
     R4.set_reaction("char oxidation", ashYield);
 
-    testParticle.air = &air;
-    testParticle.wetSolid = &wetSolid;
-    testParticle.drySolid = &drySolid;
-    testParticle.Char = &Char;
-    testParticle.ash = &ash;
+    superParticle.air = &air;
+    superParticle.wetSolid = &wetSolid;
+    superParticle.drySolid = &drySolid;
+    superParticle.Char = &Char;
+    superParticle.ash = &ash;
 
-    testParticle.R1 = &R1;
-    testParticle.R2 = &R2;
-    testParticle.R3 = &R3;
-    testParticle.R4 = &R4;
+    superParticle.R1 = &R1;
+    superParticle.R2 = &R2;
+    superParticle.R3 = &R3;
+    superParticle.R4 = &R4;
 
-    testParticle.setSolutionControl(
+    Info << "   setting particle geometry " << endl;
+    superParticle.setGeometry(shapeName, 1.0, length, width);
+
+    Info << "   setting particle solution control " << endl;
+    superParticle.setSolutionControl(
                                     maxIter,
                                     meshResolution,
                                     timeStepThreshold,
@@ -430,10 +447,10 @@ void Foam::biomassCloud::evolve()
     // evolve the cloud
     Cloud<biomassParticle>::move(td, mesh_.time().deltaTValue());
 
-	Info << "packing ratio: " << "min= " << min(packingRatio()).value() << endl;
-	Info << "packing ratio: " << "max= " << max(packingRatio()).value() << endl;
-	Info << "surface temperature: " << "min= " << min(surfaceTemp()).value() << endl;
-	Info << "surface temperature: " << "max= " << max(surfaceTemp()).value() << endl;
+	Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
+    << " , " << "max = " << max(packingRatio()).value() << endl;
+	Info << "surface temperature: " << "min = " << min(surfaceTemp()).value()
+	<< " , " << "max = " << max(surfaceTemp()).value() << endl;
 }
 
 

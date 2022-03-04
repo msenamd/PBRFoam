@@ -10,7 +10,6 @@ cylinder::cylinder() : particleShape()
 cylinder::cylinder(double& radius_, double& length_) : particleShape()
 {
     initialRadius = radius_;
-    initialRadius = radius_;
     length = length_;
     currentSize = initialRadius;
 }

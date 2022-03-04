@@ -128,7 +128,7 @@ volScalarField dQ
         IOobject::AUTO_WRITE
     ),
     mesh,
-    dimensionedScalar("dQ", dimEnergy/dimTime/dimVolume, 0.0) // kvm
+    dimensionedScalar("dQ", dimEnergy/dimTime/dimVolume, 0.0)
 );
 
 volScalarField dQsoot
@@ -200,35 +200,19 @@ scalar s(singleMixture.s().value());
 
 Info <<"s = " << s << endl;
 
-
-// heat of combustion [J/kg]
-scalar qFuel(singleMixture.qFuel().value());
-
 label fuelIndex(singleMixture.fuelIndex());
 
 const label O2Index(composition.species()["O2"]);
 
 const label inertIndex(composition.species()[inertSpecie]);
-// label inertIndex(singleMixture.inertIndex());
 
-const volScalarField* O2Ptr = &Y[inertIndex]; //dummy ptr when O2 is not available 
-if (thermo.composition().contains("O2"))   
-{
-    O2Ptr = &thermo.composition().Y("O2");  
-}
-const volScalarField& O2 = *O2Ptr;  
-
-const volScalarField* CO2Ptr = &Y[inertIndex]; //dummy ptr when O2 is not available 
-if (thermo.composition().contains("CO2"))   
-{
-    CO2Ptr = &thermo.composition().Y("CO2");  
-}
-const volScalarField& CO2 = *CO2Ptr;  
+const volScalarField& O2 = Y[O2Index];  
 
 const volScalarField& fu = Y[fuelIndex];
 
 // Fuel molecular weight
 scalar Wu_ = singleMixture.speciesData()[fuelIndex].W();  
+
 // Fuel enthalpy of formation
 scalar Hu_ = singleMixture.speciesData()[fuelIndex].hc();  
 
@@ -249,7 +233,7 @@ Info << "specie stoich. coeffs. = " << singleMixture.specieStoichCoeffs() << end
 
 
 // create fileds for mixture fraction
-volScalarField ft // kvm
+volScalarField ft
 (
     IOobject
     (
@@ -266,56 +250,41 @@ volScalarField ft // kvm
 
 volScalarField dQrad
 (
- IOobject
- (
-  "dQrad",
-  runTime.timeName(),
-  mesh,
-  IOobject::NO_READ,
-  IOobject::AUTO_WRITE
- ),
- mesh,
- dimensionedScalar("dQrad", dimEnergy/dimTime/dimVolume,0.0)
- );
+    IOobject
+    (
+        "dQrad",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("dQrad", dimEnergy/dimTime/dimVolume, 0.0)
+);
 
-volScalarField dQradabs
+volScalarField dQradAbsorption
 (
- IOobject
- (
-  "dQradabs",
-  runTime.timeName(),
-  mesh,
-  IOobject::NO_READ,
-  IOobject::AUTO_WRITE
- ),
- mesh,
- dimensionedScalar("dQradabs", dimEnergy/dimTime/dimVolume,0.0)
- );
-
-volScalarField dQradem
-(
- IOobject
- (
-  "dQradem",
-  runTime.timeName(),
-  mesh,
-  IOobject::NO_READ,
-  IOobject::AUTO_WRITE
- ),
- mesh,
- dimensionedScalar("dQradem", dimEnergy/dimTime/dimVolume,0.0)
+     IOobject
+     (
+      "dQradabs",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("dQradabs", dimEnergy/dimTime/dimVolume,0.0)
  );
 
 volScalarField G_projected
 (
- IOobject
- (
-  "G_projected",
-  runTime.timeName(),
-  mesh,
-  IOobject::NO_READ,
-  IOobject::AUTO_WRITE
- ),
- mesh,
- dimensionedScalar("G_projected", dimMass/pow3(dimTime),0.0)
+     IOobject
+     (
+      "G_projected",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE
+     ),
+     constant::physicoChemical::sigma * Foam::pow(thermo.T(), 4.0)
  );

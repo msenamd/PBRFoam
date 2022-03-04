@@ -46,7 +46,7 @@ Foam::biomassParticle::biomassParticle
 :
     particle(mesh, is, readFields),
 
-    particleState_(true),
+    particleState_(0),
     particleSize_(0.0),
     particleVelo_(Zero),    
 
@@ -58,6 +58,8 @@ Foam::biomassParticle::biomassParticle
     charVolFraction_(0.0),
     ashVolFraction_(0.0),
 
+    particleMass_(0.0),
+    particleVol_(0.0), 
     surfaceTemp_(0.0),
     surfaceO2MassFrac_(0.0),
     hConv_(0.0),
@@ -238,6 +240,8 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalarField> charVolFraction(c.fieldIOobject("charVolFraction", IOobject::NO_READ), np);
     IOField<scalarField> ashVolFraction(c.fieldIOobject("ashVolFraction", IOobject::NO_READ), np);
 
+    IOField<scalar> particleMass(c.fieldIOobject("particleMass", IOobject::NO_READ), np);
+    IOField<scalar> particleVol(c.fieldIOobject("particleVol", IOobject::NO_READ), np);
     IOField<scalar> surfaceTemp(c.fieldIOobject("surfaceTemp", IOobject::NO_READ), np);
     IOField<scalar> surfaceO2MassFrac(c.fieldIOobject("surfaceO2MassFrac", IOobject::NO_READ), np);
     IOField<scalar> hConv(c.fieldIOobject("hConv", IOobject::NO_READ), np);
@@ -260,6 +264,8 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
         charVolFraction[i]        = bp.charVolFraction_;
         ashVolFraction[i]         = bp.ashVolFraction_;
 
+        particleMass[i]      = bp.particleMass_;
+        particleVol[i]       = bp.particleVol_;
         surfaceTemp[i]       = bp.surfaceTemp_;
         surfaceO2MassFrac[i] = bp.surfaceO2MassFrac_;
         hConv[i]             = bp.hConv_;
@@ -280,6 +286,8 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     charVolFraction.write();
     ashVolFraction.write();
 
+    particleMass.write();
+    particleVol.write();
     surfaceTemp.write();
     surfaceO2MassFrac.write();
     hConv.write();

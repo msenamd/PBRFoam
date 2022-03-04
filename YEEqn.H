@@ -24,14 +24,10 @@ tmp<fv::convectionScheme<scalar>> mvConvection
         dEff = dEff - turbulence->alpha() + DM*rho;
     }
 
-    // radiation->correct();
     combustion->correct();
 
-    // dQ is only for diagnostic purposes.
-    // TODO: set dQ = combustoin->dQ(); once OpenCFD updates
-    //       greyAbsorptionEmission model in OpenFOAM source
-    dQ = combustion->Sh(); // kvm
-
+    dQ = combustion->Sh();
+    
     volScalarField Yt(0.0*Y[0]);
 
     forAll(Y, i)
@@ -44,7 +40,6 @@ tmp<fv::convectionScheme<scalar>> mvConvection
             (
                 fvm::ddt(rho, Yi)
               + mvConvection->fvmDiv(phi, Yi)
-              // FIXME: species uses dEff and energy uses alphaEff
               - fvm::laplacian(dEff, Yi)
               ==
                 particles.SYi(i)
@@ -75,22 +70,25 @@ tmp<fv::convectionScheme<scalar>> mvConvection
              << setw(12) << setprecision(5) << gMax(Y[i]) << nl;
     }
 
-
-
     radiation->correct();
  
     const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
-    const volScalarField::Internal rad = radiation->Ru() - radiation->Rp().ref()*T4;
+    const volScalarField::Internal rad = (radiation->Ru() - radiation->Rp().ref()*T4);
     volScalarField::Internal& radField = dQrad.ref();
     radField = rad;
 
     const volScalarField::Internal radRu = radiation->Ru();
-    volScalarField::Internal& radFieldRu = dQradabs.ref();
+    volScalarField::Internal& radFieldRu = dQradAbsorption.ref();
     radFieldRu = radRu;
 
     if (mesh.foundObject<volScalarField>("G"))
     {
         G_projected == mesh.lookupObject<volScalarField>("G")/4.0;
+    }
+    else
+    {
+        Info << "Warning: no rad field found. Updating G_projected using gas emission only" << endl;
+        G_projected == constant::physicoChemical::sigma * Foam::pow(thermo.T(), 4.0);
     }
 
     volScalarField& he = thermo.he();

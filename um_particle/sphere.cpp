@@ -3,6 +3,7 @@
 sphere::sphere() : particleShape()
 {
     initialRadius = 0.0;
+    currentSize = initialRadius;
 }
 
 sphere::sphere(double& radius_) : particleShape()
@@ -143,12 +144,11 @@ double sphere::get_convectiveHeatTransferCoefficient(double T_g , double T_surf 
 
     double Pr, nu_g, k_g;
     double D_eff, Re_D, Nu_D , h;
-    double nu_s, mu_g, mu_s;
+    double mu_g, mu_s;
 
     Pr = air->get_pr(T_g);
     nu_g = air->get_v(T_g);
     k_g = air->get_k(T_g);
-    nu_s = air->get_v(T_surf);
     mu_g = air->get_mu(T_g);
     mu_s = air->get_mu(T_surf);
 

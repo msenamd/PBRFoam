@@ -7,15 +7,17 @@ Particle::Particle()
 
     name = "";    
     shapeName = "";
+
     shape = NULL;
 
     pCurrentTime = NULL;
+
+    air = NULL;
 
     wetSolid = NULL;
     drySolid = NULL;
     Char = NULL;
     ash = NULL;
-    air = NULL;
 
     R1 = NULL;
     R2 = NULL;
@@ -61,7 +63,7 @@ Particle::Particle()
 
 Particle::~Particle()
 {
-    if(shape)
+    if (shape)
         delete shape;
     shape = NULL;
 }
@@ -75,42 +77,21 @@ Particle::Particle(const Particle& rhs)
 
     name = rhs.name;
     shapeName = rhs.shapeName;
-    if(shape)
-        delete shape;
+
     shape = rhs.shape->clone();
 
     pCurrentTime = rhs.pCurrentTime;
 
-    if (wetSolid)
-        delete wetSolid;
+    air = rhs.air;
+
     wetSolid = new solidMaterial(*rhs.wetSolid);
-
-    if (drySolid)
-        delete drySolid;
     drySolid = new solidMaterial(*rhs.drySolid);
-
-    if (Char)
-        delete Char;
     Char = new solidMaterial(*rhs.Char);
-
-    if (ash)
-        delete ash;
     ash = new solidMaterial(*rhs.ash);
 
-    if (R1)
-        delete R1;
     R1 = new solidReaction(*rhs.R1);
-
-    if (R2)
-        delete R2;
     R2 = new solidReaction(*rhs.R2);
-
-    if (R3)
-        delete R3;
     R3 = new solidReaction(*rhs.R3);
-
-    if (R4)
-        delete R4;
     R4 = new solidReaction(*rhs.R4);
 
     particleSize = rhs.particleSize;
@@ -164,6 +145,8 @@ Particle& Particle::operator=(const Particle& rhs)
         shape = rhs.shape->clone();
 
         pCurrentTime = rhs.pCurrentTime;
+
+        air = rhs.air;
 
         if (wetSolid)
             delete wetSolid;
@@ -233,7 +216,7 @@ Particle& Particle::operator=(const Particle& rhs)
 
         localTimeStepSize = rhs.localTimeStepSize;
 
-    } ; // handle self assignment
+    } // handle self assignment
     //assignment operator
     return *this;
 }
@@ -290,7 +273,7 @@ double Particle::getDiffusionTimescale(double cellSize_, double Temp_) {
 * @param width_ Width of slab (m).
 * @return
 */
-void Particle::setGeometry(std::string shapeName_, double& radius_, double& length_, double& width_)
+void Particle::setGeometry(std::string shapeName_, double radius_, double length_, double width_)
 {
     if (shapeName_ == "slab")
     {

@@ -17,13 +17,28 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-boxMin 		(20.0 -1000 0); 		// mimmum coordinates of the vegettion bed
-boxMax 		(1000 1000 0.7);		// maximum coordinates of the vegettion bed
+boxMin 		(-0.5 -0.5 0); 		// mimmum coordinates of the vegettion bed
+boxMax 		(0.5 0.5 1);		// maximum coordinates of the vegettion bed
 
-ignMin 		(20.0 -1000 0); 		// mimmum coordinates for ignition zone
-ignMax 		(22.0 1000 0.7);		// maximum coordinates for ignition zone
+ignMin 		(0 0 0); 		// mimmum coordinates for ignition zone
+ignMax 		(0 0 0);		// maximum coordinates for ignition zone
 
-ignTemp 300;
-ambientTemp 300;
+initTemp 	300;
+ignTemp 	300;
+
+initSize 	1e-3;
+
+initVelo 	(0 0 0);
+
+initYO2 	0.231;
+
+initGaugeP 	0.0;
+
+initWetSolid	1.0;
+initDrySolid	0.0;
+initChar	0.0;
+initAsh		0.0;
+
+initState	1;
 
 // ************************************************************************* //

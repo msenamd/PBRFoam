@@ -77,10 +77,14 @@ int main(int argc, char *argv[])
 
         runTime++;
 
-        Info<< "Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << endl;
 
-        Info<< "Evolving particles" << nl << endl;
+        Info<< "Evolving particles" << endl;
+        cpuTime executionTime;
+
         particles.evolve();
+
+        Info<< "particlesCPUTime = " << executionTime.elapsedCpuTime() << " s" << endl;
 
         #include "rhoEqn.H"
 
@@ -111,7 +115,8 @@ int main(int argc, char *argv[])
         runTime.write();
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
-            << "  ClockTime = " << runTime.elapsedClockTime() << " s";
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s" 
+            << endl << nl;
 
     }
 
