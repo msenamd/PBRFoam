@@ -68,6 +68,8 @@ class biomassCloud
         const fvMesh& mesh_;
 
         IOdictionary particleProperties_;
+        
+        IOdictionary setParticlesDict;
 
         //- Reference to external gas density [kg/m^3]
         const volScalarField& rho_;
@@ -83,12 +85,6 @@ class biomassCloud
 
         //- Reference to Thermo properties
         const SLGThermo& thermo_;
-
-        //- Reference to external gas temperature [K]
-        const volScalarField& T_;
-
-        //- Reference to external gas pressure [Pa]
-        const volScalarField& p_;
 
         //- Reference to gravity [m/s2]
         const dimensionedVector& g_;
@@ -162,7 +158,6 @@ public:
 
         // Particle components density and yield
 
-            scalar moistureContent;             // Moisture content [-]
             scalar wetSolidDensity;             // Measured density of the wet solid [kg/m3]
             scalar drySolidDensity;             // Density of the dry solid [kg/m3]
             scalar charDensity;                 // Mass density of char [kg/m3]
@@ -215,14 +210,16 @@ public:
 
 
            // Diagnostic Fields  
-
             volScalarField packingRatio;        // Packing Ratio [-]
+            volScalarField size;                // Particle size [m]
+            volScalarField massLossRate;        // Total mass loss rate [kg/s]
+            volScalarField gasFuelReleaseRate;  // Fuel mass production rate [kg/s]
+            volScalarField CO2ReleaseRate;      // CO2 mass production rate [kg/s]
             volScalarField surfaceTemp;         // Surface temperature [K]   
-            volScalarField surfaceEmissivity;   // Surface emissivity [-]
-            volScalarField convHeatTransCeoff;  // Convective heat transfer coeff [W/m2/K]        
+            volScalarField surfaceHeatFluxConv; // Net surface convective heat flux [W/m2]   
+            volScalarField surfaceHeatFluxRad;  // Net surface radiative heat flux [W/m2]   
             volScalarField surfaceO2MassFrac;   // Surface O2 mass fraction [-]
             volVectorField momentum;            // Momentum [kg m/s]          
-
 
     // Constructors
 

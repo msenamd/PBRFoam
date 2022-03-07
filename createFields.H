@@ -203,7 +203,7 @@ Info <<"s = " << s << endl;
 label fuelIndex(singleMixture.fuelIndex());
 
 const label O2Index(composition.species()["O2"]);
-
+const label CO2Index(composition.species()["CO2"]);
 const label inertIndex(composition.species()[inertSpecie]);
 
 const volScalarField& O2 = Y[O2Index];  

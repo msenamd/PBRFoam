@@ -31,6 +31,7 @@ slab::slab(const slab& rhs) : particleShape(rhs)
     initialHalfThickness = rhs.initialHalfThickness;
     length = rhs.length;
     width = rhs.width;
+    currentSize = initialHalfThickness;
 }
 
 slab& slab::operator=(const slab& rhs)
@@ -40,7 +41,7 @@ slab& slab::operator=(const slab& rhs)
         initialHalfThickness = rhs.initialHalfThickness;
         length = rhs.length;
         width = rhs.width;
-
+        currentSize = initialHalfThickness;
     } ; // handle self assignment
     //assignment operator
     return *this;
@@ -119,15 +120,6 @@ void slab::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive, st
 double slab::correctForShape()
 {
     return 2.0;
-}
-
-/**
-* Initialize shape object.
-* @return
-*/
-void slab::initialize()
-{
-    currentSize = initialHalfThickness;
 }
 
 /**

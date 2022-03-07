@@ -47,6 +47,8 @@ Particle::Particle()
     coreTemp = 0.0;
     surfaceO2MassFrac = 0.0;
     surfaceHeatFlux = 0.0;
+    surfaceHeatFluxConv = 0.0;
+    surfaceHeatFluxRad = 0.0;
     surfaceMassFlux = 0.0;
     h_conv = 0.0;
     h_mass = 0.0;
@@ -117,6 +119,8 @@ Particle::Particle(const Particle& rhs)
     coreTemp = rhs.coreTemp;
     surfaceO2MassFrac = rhs.surfaceO2MassFrac;
     surfaceHeatFlux = rhs.surfaceHeatFlux;
+    surfaceHeatFluxConv = rhs.surfaceHeatFluxConv;
+    surfaceHeatFluxRad = rhs.surfaceHeatFluxRad;
     surfaceMassFlux = rhs.surfaceMassFlux;
     h_conv = rhs.h_conv;
     h_mass = rhs.h_mass;
@@ -203,6 +207,8 @@ Particle& Particle::operator=(const Particle& rhs)
         coreTemp = rhs.coreTemp;
         surfaceO2MassFrac = rhs.surfaceO2MassFrac;
         surfaceHeatFlux = rhs.surfaceHeatFlux;
+        surfaceHeatFluxConv = rhs.surfaceHeatFluxConv;
+        surfaceHeatFluxRad = rhs.surfaceHeatFluxRad;
         surfaceMassFlux = rhs.surfaceMassFlux;
         h_conv = rhs.h_conv;
         h_mass = rhs.h_mass;

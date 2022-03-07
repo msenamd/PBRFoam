@@ -77,28 +77,36 @@ int main(int argc, char *argv[])
 
     OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
     OFstream os_state(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleState");
+    OFstream os_dt(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particledt");
     OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
     OFstream os_velo(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleVelo");
     OFstream os_T(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleTemp");
     OFstream os_p(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particlePressure");
     OFstream os_O2(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleO2MassFraction");
-    OFstream os_wetSolid(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"wetSolidVolFraction");
-    OFstream os_drySolid(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"drySolidVolFraction");
-    OFstream os_char(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"charVolFraction");
-    OFstream os_ash(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"ashVolFraction");
+    OFstream os_wetSolidVolFrac(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"wetSolidVolFraction");
+    OFstream os_drySolidVolFrac(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"drySolidVolFraction");
+    OFstream os_charVolFrac(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"charVolFraction");
+    OFstream os_ashVolFrac(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"ashVolFraction");
+    OFstream os_wetSolidMass(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"integralWetSolidMass");
+    OFstream os_drySolidMass(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"integralDrySolidMass");
+    OFstream os_charMass(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"integralCharMass");
+
 
     writeHeader(os_pos, "Cloud<solidParticle>", "positions");
     writeHeader(os_state, "labelField", "particleState");
+    writeHeader(os_dt, "scalarField", "particledt");
     writeHeader(os_size, "scalarField", "particleSize");
     writeHeader(os_velo, "vectorField", "particleVelo");
     writeHeader(os_T, "scalarFieldField", "particleTemp");
     writeHeader(os_p, "scalarFieldField", "particlePressure");
     writeHeader(os_O2, "scalarFieldField", "particleO2MassFraction");
-    writeHeader(os_wetSolid, "scalarFieldField", "wetSolidVolFraction");
-    writeHeader(os_drySolid, "scalarFieldField", "drySolidVolFraction");
-    writeHeader(os_char, "scalarFieldField", "charVolFraction");
-    writeHeader(os_ash, "scalarFieldField", "ashVolFraction");
-
+    writeHeader(os_wetSolidVolFrac, "scalarFieldField", "wetSolidVolFraction");
+    writeHeader(os_drySolidVolFrac, "scalarFieldField", "drySolidVolFraction");
+    writeHeader(os_charVolFrac, "scalarFieldField", "charVolFraction");
+    writeHeader(os_ashVolFrac, "scalarFieldField", "ashVolFraction");
+    writeHeader(os_wetSolidMass, "scalarFieldField", "integralWetSolidMass");
+    writeHeader(os_drySolidMass, "scalarFieldField", "integralDrySolidMass");
+    writeHeader(os_charMass, "scalarFieldField", "integralCharMass");
 
     IOdictionary setParticlesDict
     (
@@ -110,26 +118,47 @@ int main(int argc, char *argv[])
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
+    );    
+
+    IOdictionary biomassProperties
+    (
+        IOobject
+        (
+            "biomassProperties",
+            mesh.time().constant(),
+            mesh,
+            IOobject::MUST_READ_IF_MODIFIED,
+            IOobject::NO_WRITE
+        )
     );
 
-    Info<< "Reading the parameters from the setParticlesDict file" << endl;
+    Info<< "Reading inputs" << endl;
     const vector boxMin(vector(setParticlesDict.lookup("boxMin")));
     const vector boxMax(vector(setParticlesDict.lookup("boxMax")));
     const vector ignMin(vector(setParticlesDict.lookup("ignMin")));
     const vector ignMax(vector(setParticlesDict.lookup("ignMax")));
 
     const label initState(readLabel(setParticlesDict.lookup("initState")));
+    const scalar initTimeStep(readScalar(setParticlesDict.lookup("initTimeStep")));
     const scalar initSize(readScalar(setParticlesDict.lookup("initSize")));
     const vector initVelo(vector(setParticlesDict.lookup("initVelo")));
 
-    const scalarField ignTemp(1, readScalar(setParticlesDict.lookup("ignTemp")));
-    const scalarField initTemp(1, readScalar(setParticlesDict.lookup("initTemp")));
-    const scalarField initGaugeP(1,readScalar(setParticlesDict.lookup("initGaugeP")));
-    const scalarField initYO2(1, readScalar(setParticlesDict.lookup("initYO2")));
-    const scalarField initWetSolid(1, readScalar(setParticlesDict.lookup("initWetSolid")));
-    const scalarField initDrySolid(1, readScalar(setParticlesDict.lookup("initDrySolid")));
-    const scalarField initChar(1, readScalar(setParticlesDict.lookup("initChar")));
-    const scalarField initAsh(1, readScalar(setParticlesDict.lookup("initAsh")));
+    const scalar meshResolution(readScalar(biomassProperties.lookup("meshResolution")));
+
+    int numCells = round(initSize / meshResolution);
+    numCells = max(5, numCells);
+
+    Info<< "Setting initial particle fields" << endl;
+    const scalarField ignTemp(numCells, readScalar(setParticlesDict.lookup("ignTemp")));
+    const scalarField initTemp(numCells, readScalar(setParticlesDict.lookup("initTemp")));
+    const scalarField initGaugeP(numCells,readScalar(setParticlesDict.lookup("initGaugeP")));
+    const scalarField initYO2(numCells, readScalar(setParticlesDict.lookup("initYO2")));
+    const scalarField initWetSolid(numCells, readScalar(setParticlesDict.lookup("initWetSolid")));
+    const scalarField initDrySolid(numCells, readScalar(setParticlesDict.lookup("initDrySolid")));
+    const scalarField initChar(numCells, readScalar(setParticlesDict.lookup("initChar")));
+    const scalarField initAsh(numCells, readScalar(setParticlesDict.lookup("initAsh")));
+    const scalarField Zero(numCells, 0.0);   
+
 
     Info << "box minimum  [m]          = " << boxMin << nl
          << "box miaximum [m]          = " << boxMax << nl
@@ -212,6 +241,11 @@ int main(int argc, char *argv[])
                 xMax, yMax, zMax
             );
 
+    writeData( os_dt, mesh, initTimeStep, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
     writeData( os_size, mesh, initSize, numSuperParticles, 
                 xMin, yMin, zMin,
                 xMax, yMax, zMax
@@ -232,26 +266,40 @@ int main(int argc, char *argv[])
                 xMax, yMax, zMax
             );
 
-    writeData( os_wetSolid, mesh, initWetSolid, numSuperParticles, 
+    writeData( os_wetSolidVolFrac, mesh, initWetSolid, numSuperParticles, 
                 xMin, yMin, zMin,
                 xMax, yMax, zMax
             );
 
-    writeData( os_drySolid, mesh, initDrySolid, numSuperParticles, 
+    writeData( os_drySolidVolFrac, mesh, initDrySolid, numSuperParticles, 
                 xMin, yMin, zMin,
                 xMax, yMax, zMax
             );
 
-    writeData( os_char, mesh, initChar, numSuperParticles, 
+    writeData( os_charVolFrac, mesh, initChar, numSuperParticles, 
                 xMin, yMin, zMin,
                 xMax, yMax, zMax
             );
 
-    writeData( os_ash, mesh, initAsh, numSuperParticles, 
+    writeData( os_ashVolFrac, mesh, initAsh, numSuperParticles, 
                 xMin, yMin, zMin,
                 xMax, yMax, zMax
             );
 
+    writeData( os_wetSolidMass, mesh, Zero, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_drySolidMass, mesh, Zero, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
+
+    writeData( os_charMass, mesh, Zero, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
 
     Info << "Done setting particles" << endl;
 

@@ -58,6 +58,7 @@ inline Foam::biomassParticle::biomassParticle
     const label tetFacei,
     const label tetPtI,
     const label particleState,
+    const scalar particledt,
     const scalar particleSize,
     const vector& particleVelo,
     const scalarField particleTemp,
@@ -66,12 +67,16 @@ inline Foam::biomassParticle::biomassParticle
     const scalarField wetSolidVolFraction,
     const scalarField drySolidVolFraction,
     const scalarField charVolFraction,
-    const scalarField ashVolFraction
+    const scalarField ashVolFraction,
+    const scalarField integralWetSolidMass,
+    const scalarField integralDrySolidMass,
+    const scalarField integralCharMass
 )
 :
     particle(mesh, position, celli, tetFacei, tetPtI),
     
     particleState_(particleState),
+    particledt_(particledt),
     particleSize_(particleSize),
     particleVelo_(particleVelo),
 
@@ -82,6 +87,10 @@ inline Foam::biomassParticle::biomassParticle
     drySolidVolFraction_(drySolidVolFraction),
     charVolFraction_(charVolFraction),
     ashVolFraction_(ashVolFraction),
+
+    integralWetSolidMass_(integralWetSolidMass),
+    integralDrySolidMass_(integralDrySolidMass),
+    integralCharMass_(integralCharMass),
     
     particleMass_(0.0),
     particleVol_(0.0), 

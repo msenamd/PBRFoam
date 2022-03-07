@@ -21,15 +21,29 @@ public:
         virtual ~particle_1D();
 
 // Public member functions
-        void initialize();
         void initialize(
+                            double Temp_0,
+                            double wetSolidVolFraction_0,
+                            double drySolidVolFraction_0,
+                            double charVolFraction_0,
+                            double ashVolFraction_0,
+                            double particleO2MassFraction_0,
+                            double particlePressure_0
+                        );
+
+        void preStepForward(
+                            double localTimeStepSize_,            
+                            double particleSize_,
                             std::vector<double> Temp_,
                             std::vector<double> wetSolidVolFraction_,
                             std::vector<double> drySolidVolFraction_,
                             std::vector<double> charVolFraction_,
                             std::vector<double> ashVolFraction_,
                             std::vector<double> particleO2MassFraction_,
-                            std::vector<double> particlePressure_
+                            std::vector<double> particlePressure_,
+                            std::vector<double> integralWetSolidMass_,
+                            std::vector<double> integralDrySolidMass_,
+                            std::vector<double> integralCharMass_
                         );
 
         void stepForward(
@@ -69,7 +83,7 @@ public:
         void writePressureLine(FILE* outfile);
 
 // Public data
-        int numCells;                           // number of cells [-]
+        int numCells;                                // number of cells [-]
         std::vector<double> Temp;                    // particle temperature [K]
         std::vector<double> wetSolidVolFraction;     // volume fractions of wet solid [-]
         std::vector<double> drySolidVolFraction;     // volume fractions of dry solid [-]
@@ -77,14 +91,17 @@ public:
         std::vector<double> ashVolFraction;          // volume fractions of ash [-]
         std::vector<double> particleO2MassFraction;  // O2 mass fraction inside the particle pores [-]
         std::vector<double> particlePressure;        // Gauge pressure inside the particle pores [pa]
+        std::vector<double> integralWetSolidMass;    // Time integration of wet solid mass production [kg]
+        std::vector<double> integralDrySolidMass;    // Time integration of dry solid mass production [kg]
+        std::vector<double> integralCharMass;        // Time integration of char mass production [kg]
 
 protected:
 
 private:
 
         int localTimeStepIndex;         // local time loop index [-]
-        int finalTimeStepIndex;          // total number of particle local time-steps [-]
-        double initParticleVol;         // initial particle voulme before time loop [m3]
+        int finalTimeStepIndex;         // total number of particle local time-steps [-]
+        double initParticleSize;        // initial particle size before time loop [m]
 		double surfaceConductivity;     // surface thermal conductivity [W/m/K]
         double surfacePorosity;         // surface porosity [-]
         double surfacePermeability;     // surface permeability [m2]
@@ -136,9 +153,9 @@ private:
         double O2Error;                 // numerical error of oxygen mass conservation equation [-]
         double pressureError;           // numerical error of pressure equation [-]
 
-        std::vector<double> integralWetSolidMass;    // Time integration of wet solid mass production [kg]
-        std::vector<double> integralDrySolidMass;    // Time integration of dry solid mass production [kg]
-        std::vector<double> integralCharMass;        // Time integration of char mass production [kg]
+        std::vector<double> initWetSolidMass;        // Initial wet solid mass [kg]
+        std::vector<double> initDrySolidMass;        // Initial dry solid mass [kg]
+        std::vector<double> initCharMass;            // Initial char mass [kg]
 
         std::vector<double> cellSize;                // cell size [m] (length of rectlinear grid or radius of shperical and cylindrical shells)
         std::vector<double> cellVolume;              // cell volume [m3]

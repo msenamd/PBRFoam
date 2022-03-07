@@ -14,7 +14,6 @@ public:
     slab(const slab& rhs);
     slab& operator=(const slab& rhs);
 
-    void initialize();
     double get_convectiveHeatTransferCoefficient(double T_g , double T_surf , double u_g , double particleSize);
     double get_dragCoefficient(double T_g, double u_g, double particleSize);
     double get_volume();

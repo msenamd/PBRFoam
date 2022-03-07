@@ -1,0 +1,102 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5.x                                 |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      biomassProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+nParticlesPerCell   1; 		  //number of particles per grid cell
+
+fuelComposition CHO;
+
+firebrands  		off;
+particleElasticity    	0.0;  
+particleViscosity	0.0;
+dragModel		constant; //or auto
+dragCoeff		0.0;
+
+
+// Particle solution control
+maxIter  1000;                      // Max. number of iterations [-]
+meshResolution  100e-6;             // Spatial resolution of the 1-D partice [m]
+timeStepThreshold  0.1;             // Max. allowed time-step size [s]
+temperatureThreshold  0.1;          // Max. value of temperature variation during dt [K]
+solidSpeciesThreshold  0.01;        // Max.value of solid species vol. fraction variation during dt [-]
+O2Threshold  0.01;                  // Max.value of gaseous variation during dt[-]
+pressureThreshold  0.1;             // Max.value of pres variation during dt[Pa]
+temperatureURF  0.1;                // Under relaxation factor for temperature [-]
+solidSpeciesURF  0.0;               // Under relaxation factor for solid species [-]
+O2URF  0.1;                         // Under relaxation factor for O2 [-]
+pressureURF  0.0;                   // Under relaxation factor for pressure [-]                
+
+
+// Particle geometric properties
+shapeName  slab;          	// Particle shape: slab/cylinder/sphere
+length  1.0e-0;             	// Length of the particle [m]
+width  1.0e-0;              	// Width of the particle [m]
+
+
+// Particle physical properties (external input)
+wetSolidDensity  380;        // Measured density of the wet solid [kg/m3]
+drySolidDensity  361;	     // wetSolidDensity / (1.0 + moistureContent)
+charDensity  73;             // Mass density of char [kg/m3]
+ashDensity  5.7;             // Mass density of ash [kg/m3]
+
+
+// The reaction yields
+drySolidYield 		0.95;
+thermalCharYield 	0.2022;
+oxidativeCharYield 	0.2022;
+ashYield 		0.07808;
+
+
+// User-defined conductivity, heat capacity, emissivity, porosity & permeabiltiy  
+k0_ws  0.186;  // Conductivity of wet solid(at 300 K) [W/m/K]
+k0_ds  0.176;  // Conductivity of dry solid(at 300 K) [W/m/K]
+k0_c  0.065;   // Conductivity of char(at 300 K) [W/m/K]
+k0_a  0.058;   // Conductivity of ash(at 300 K) [W/m/K]
+nk_ws  0.185;  // Temperature exponent of conductivity of wet solid
+nk_ds  0.594;  // Temperature exponent of conductivity of dry solid
+nk_c  0.435;   // Temperature exponent of conductivity of char
+nk_a  0.353;   // Temperature exponent of conductivity of ash
+
+gamma_ws  0;    // Effective radiation conductivity of wet solid [m]
+gamma_ds  0;    // Effective radiation conductivity of dry solid [m]
+gamma_c  3.3e-3;    // Effective radiation conductivity of char [m]
+gamma_a  6.4e-3;    // Effective radiation conductivity of ash [m]
+
+c0_ws  1764;    // Heat capacity of wet solid [J/kg/K]
+c0_ds  1664;    // Heat capacity of dry solid [J/kg/K]
+c0_c  1219;     // Heat capacity of char [J/kg/K]
+c0_a  1244;     // Heat capacity of ash [J/kg/K]
+nc_ws  0.406;   // Temperature exponent of heat capacity of wet solid
+nc_ds  0.660;   // Temperature exponent of heat capacity of dry solid
+nc_c  0.283;    // Temperature exponent of heat capacity of char
+nc_a  0.315;    // Temperature exponent of heat capacity of ash
+
+eps_ws  0.757;  // Surface emissivity of wet solid [-]
+eps_ds  0.759;  // Surface emissivity of dry solid [-]
+eps_c  0.957;   // Surface emissivity of char [-]
+eps_a  0.955;   // Surface emissivity of ash [-]
+
+psi_ws  0.0256; // Porosity of the particle when pure wet solid [-]
+psi_ds  0.0744; // Porosity of the particle when pure solid [-]
+psi_c  0.8128;  // Porosity of the particle when pure char [-]
+psi_a  0.9854;  // Porosity of the particle when pure ash [-]
+
+Kperm_ws  1e-10;    // Permeability of the particle when pure wet solid [m2]
+Kperm_ds  1e-10;    // Permeability of the particle when pure solid [m2]
+Kperm_c  1e-10;     // Permeability of the particle when pure char [m2]
+Kperm_a  1e-10;     // Permeability of the particle when pure ash [m2]
+
+
+// ************************************************************************* //

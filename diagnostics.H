@@ -26,22 +26,29 @@ flameHeight = dimensionedScalar("zero",dimLength,0.0);
 PyrolysisFront = dimensionedScalar("zero",dimLength,0.0);
 
 
-// Pyrolysis front is where MLR_fuel > 1e-5
-// Flame front and height is where dQ >= threshold
 forAll (mesh.C(),cellI)
 {
-	// HRR > threshold
-	if (dQ[cellI] >= 1.0)
+	// Flame front is where HRR > threshold
+	if (dQ[cellI] >= 1e-9)
 	{ 
 	    flameHeight[cellI] = mesh.C()[cellI].z();
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 
-	// volumetric production rate of fuel > threshold
-	if (particles.rhoYTrans()[fuelIndex][cellI] / runTime.deltaTValue() > ROOTVSMALL) 
+	// Pyrolysis front is where mass production rate of fuel > threshold
+	if (particles.gasFuelReleaseRate[cellI] > 1e-9) 
 	{ 
 	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
+
+	// Smoldering front is where mass production rate of CO2 > threshold
+	if (particles.CO2ReleaseRate[cellI] > 1e-9) 
+	{ 
+	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
+	}
+
+	// Momentum of the gas phase
+	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];
 }
 
 scalar maxFlameHeight = max(flameHeight).value();
@@ -52,24 +59,15 @@ outFlameHeightFront <<  runTime.value() << " " << maxFlameHeight << " " << maxFl
 outPyrolysisFront <<  runTime.value() << " " << maxPyrolysisFront << endl;
 
 
-
 //limit heat transfer diagnostic to cells ahead of the flame only
 forAll (mesh.C(),cellI)
 {
-
-	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];
-/*
-	QconvToFreshParticles[cellI] = 0.0;
-	QradToFreshParticles[cellI] = 0.0;
+	convHeatFluxFreshFuel[cellI] = 0.0;
+	radHeatFluxFreshFuel[cellI] = 0.0;
 
 	if (mesh.C()[cellI].x() > maxPyrolysisFront) 
 	{ 
-	    	QconvToFreshParticles[cellI] = - particles.QconvTrans()[cellI] / runTime.deltaTValue();
-
-			QradToFreshParticles[cellI]  = particles.packingRatio()[cellI] * particles.surfaceToVolumeRatio()[cellI] / 4.0 * 
-											(
-												G_tot[cellI] - 4*5.670367e-8*Foam::pow(particles.surfaceTemp()[cellI],4.0)
-											); 					
+	    	convHeatFluxFreshFuel[cellI] = particles.surfaceHeatFluxConv[cellI];
+	    	radHeatFluxFreshFuel[cellI]  = particles.surfaceHeatFluxRad[cellI];				
 	}
-*/
 }

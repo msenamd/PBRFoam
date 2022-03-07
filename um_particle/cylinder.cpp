@@ -28,6 +28,7 @@ cylinder::cylinder(const cylinder& rhs) : particleShape(rhs)
 {
     initialRadius = rhs.initialRadius;
     length = rhs.length;
+    currentSize = initialRadius;
 }
 
 cylinder& cylinder::operator=(const cylinder& rhs)
@@ -36,7 +37,7 @@ cylinder& cylinder::operator=(const cylinder& rhs)
         particleShape::operator=(rhs);
         initialRadius = rhs.initialRadius;
         length = rhs.length;
-
+        currentSize = initialRadius;
     } ; // handle self assignment
     //assignment operator
     return *this;
@@ -116,15 +117,6 @@ void cylinder::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive
 double cylinder::correctForShape()
 {
     return 1.0;
-}
-
-/**
-* Initialize shape object.
-* @return
-*/
-void cylinder::initialize()
-{
-    currentSize = initialRadius;
 }
 
 /**

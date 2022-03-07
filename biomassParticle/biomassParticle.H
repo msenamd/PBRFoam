@@ -87,6 +87,9 @@ class biomassParticle
             // Particle state (0:ambient, 1:preheat, 2:burning, 3:burned)
             label particleState_;
 
+            // Particle time step size
+            scalar particledt_;
+
             // Radius or half thickness [m]
             scalar particleSize_;
 
@@ -107,6 +110,11 @@ class biomassParticle
             scalarField drySolidVolFraction_;
             scalarField charVolFraction_;
             scalarField ashVolFraction_;
+
+            // Integral mass [kg]
+            scalarField integralWetSolidMass_;
+            scalarField integralDrySolidMass_;
+            scalarField integralCharMass_;
 
             // Particle mass [kg]
             scalar particleMass_;
@@ -134,6 +142,10 @@ class biomassParticle
             std::vector<double> ashVolFraction_std;
             std::vector<double> particleO2MassFraction_std;
             std::vector<double> particlePressure_std;
+            std::vector<double> integralWetSolidMass_std;
+            std::vector<double> integralDrySolidMass_std;
+            std::vector<double> integralCharMass_std;
+
 public:
 
     friend class Cloud<biomassParticle>;
@@ -197,6 +209,7 @@ public:
             const label tetFacei,
             const label tetPtI,
             const label particleState,
+            const scalar particledt,
             const scalar particleSize,
             const vector& particleVelo,
             const scalarField particleTemp,
@@ -205,7 +218,10 @@ public:
             const scalarField wetSolidVolFraction,
             const scalarField drySolidVolFraction,
             const scalarField charVolFraction,
-            const scalarField ashVolFraction
+            const scalarField ashVolFraction,
+            const scalarField integralWetSolidMass,
+            const scalarField integralDrySolidMass,
+            const scalarField integralCharMass
         );
 
         //- Construct from Istream

@@ -5,7 +5,7 @@ particle_1D::particle_1D() : Particle()
     numCells = 0;
     localTimeStepIndex = 0;
     finalTimeStepIndex = 0;
-    initParticleVol = 0.0;
+    initParticleSize = 0.0;
     surfaceConductivity = 0.0;
     surfacePorosity = 0.0;
     surfacePermeability = 0.0;
@@ -96,7 +96,7 @@ particle_1D::particle_1D(const particle_1D& rhs) : Particle(rhs)
     numCells = rhs.numCells;
     localTimeStepIndex = rhs.localTimeStepIndex;
     finalTimeStepIndex = rhs.finalTimeStepIndex;
-    initParticleVol = rhs.initParticleVol;
+    initParticleSize = rhs.initParticleSize;
     surfaceConductivity = rhs.surfaceConductivity;
     surfacePorosity = rhs.surfacePorosity;
     surfacePermeability = rhs.surfacePermeability;
@@ -161,6 +161,10 @@ particle_1D::particle_1D(const particle_1D& rhs) : Particle(rhs)
     localMoistureReleaseRate = rhs.localMoistureReleaseRate;
     localCO2ReleaseRate = rhs.localCO2ReleaseRate;
     localHeatReleaseRate = rhs.localHeatReleaseRate;
+
+    initWetSolidMass = rhs.initWetSolidMass;
+    initDrySolidMass = rhs.initDrySolidMass;
+    initCharMass = rhs.initCharMass;
 }
 
 particle_1D& particle_1D::operator=(const particle_1D& rhs)
@@ -172,7 +176,7 @@ particle_1D& particle_1D::operator=(const particle_1D& rhs)
         numCells = rhs.numCells;
         localTimeStepIndex = rhs.localTimeStepIndex;
         finalTimeStepIndex = rhs.finalTimeStepIndex;
-        initParticleVol = rhs.initParticleVol;
+        initParticleSize = rhs.initParticleSize;
         surfaceConductivity = rhs.surfaceConductivity;
         surfacePorosity = rhs.surfacePorosity;
         surfacePermeability = rhs.surfacePermeability;
@@ -237,6 +241,10 @@ particle_1D& particle_1D::operator=(const particle_1D& rhs)
         localMoistureReleaseRate = rhs.localMoistureReleaseRate;
         localCO2ReleaseRate = rhs.localCO2ReleaseRate;
         localHeatReleaseRate = rhs.localHeatReleaseRate;
+
+        initWetSolidMass = rhs.initWetSolidMass;
+        initDrySolidMass = rhs.initDrySolidMass;
+        initCharMass = rhs.initCharMass;
     }
     return *this;
 }
@@ -323,76 +331,101 @@ void particle_1D::setMesh(
 * @param particlePressure_: gauge pressure inside the pores (pa).
 * @return
 */
-void particle_1D::initialize(
+void particle_1D::preStepForward(
+                                double localTimeStepSize_,
+                                double particleSize_,
                                 std::vector<double> Temp_,
                                 std::vector<double> wetSolidVolFraction_,
                                 std::vector<double> drySolidVolFraction_,
                                 std::vector<double> charVolFraction_,
                                 std::vector<double> ashVolFraction_,
                                 std::vector<double> particleO2MassFraction_,
-                                std::vector<double> particlePressure_
+                                std::vector<double> particlePressure_,
+                                std::vector<double> integralWetSolidMass_,
+                                std::vector<double> integralDrySolidMass_,
+                                std::vector<double> integralCharMass_
 )
 {
-    state = burning;
-    
-    // Read the particle variables
-    if (Temp_.size() == 1)
-    {
-        //set spatial resolution ~ 100-micron or at least 5 cells
-        numCells = round(shape->currentSize / defaultMeshResolution);
-        numCells = max(5, numCells);
-        Temp.assign(numCells, Temp_.back());
-        wetSolidVolFraction.assign(numCells, wetSolidVolFraction_.back());
-        drySolidVolFraction.assign(numCells, drySolidVolFraction_.back());
-        charVolFraction.assign(numCells, charVolFraction_.back());
-        ashVolFraction.assign(numCells, ashVolFraction_.back());
-        particleO2MassFraction.assign(numCells, particleO2MassFraction_.back());
-        particlePressure.assign(numCells, particlePressure_.back());
-    }
-    else
-    {
-        numCells = Temp_.size();
-        Temp = Temp_;
-        wetSolidVolFraction = wetSolidVolFraction_;
-        drySolidVolFraction = drySolidVolFraction_;
-        charVolFraction = charVolFraction_;
-        ashVolFraction = ashVolFraction_;
-        particleO2MassFraction = particleO2MassFraction_;
-        particlePressure = particlePressure_;
-    }
+    localTimeStepSize = localTimeStepSize_;
+
+    numCells = Temp_.size();
+    Temp = Temp_;
+    wetSolidVolFraction = wetSolidVolFraction_;
+    drySolidVolFraction = drySolidVolFraction_;
+    charVolFraction = charVolFraction_;
+    ashVolFraction = ashVolFraction_;
+    particleO2MassFraction = particleO2MassFraction_;
+    particlePressure = particlePressure_;
+    integralWetSolidMass =  integralWetSolidMass_;
+    integralDrySolidMass = integralDrySolidMass_;
+    integralCharMass = integralCharMass_;
 
     surfaceTemp = Temp.back();
     coreTemp = Temp.front();
 
-    // Set the mesh and particle size
+    cellSize.assign(numCells, particleSize_/numCells);
+    setMesh(numCells, cellSize);
+}
+
+/**
+* Set the particle temperature, composition, etc (at time 0)
+* @return
+*/
+void particle_1D::initialize(
+                            double Temp_0,
+                            double wetSolidVolFraction_0,
+                            double drySolidVolFraction_0,
+                            double charVolFraction_0,
+                            double ashVolFraction_0,
+                            double particleO2MassFraction_0,
+                            double particlePressure_0
+)
+{
+
+    state = burning;
+
+    // Set particle size
+    initParticleSize = shape->currentSize;
+    particleSize = initParticleSize;
     shape->air = air;
-    particleSize = shape->currentSize;
-    initParticleVol = shape->get_volume();
-    cellSize.assign(numCells, shape->currentSize/numCells);
+
+    //set spatial resolution ~ 100-micron or at least 5 cells
+    numCells = round(particleSize / defaultMeshResolution);
+    numCells = max(5, numCells);
+    Temp.assign(numCells, Temp_0);
+    wetSolidVolFraction.assign(numCells, wetSolidVolFraction_0);
+    drySolidVolFraction.assign(numCells, drySolidVolFraction_0);
+    charVolFraction.assign(numCells, charVolFraction_0);
+    ashVolFraction.assign(numCells, ashVolFraction_0);
+    particleO2MassFraction.assign(numCells, particleO2MassFraction_0);
+    particlePressure.assign(numCells, particlePressure_0);
+
+    surfaceTemp = Temp.back();
+    coreTemp = Temp.front();
+
+    // Set the mesh
+    cellSize.assign(numCells, particleSize/numCells);
     setMesh(numCells, cellSize);
 
     // Estimate the local time-step size based on the characteristic timescales
     localTimeStepSize = min(getChemicalTimescale(Temp.back()), getDiffusionTimescale(cellSize.back(), Temp.back()));
 
     // Calculate initial values of solid masses
-    integralWetSolidMass.assign(numCells, 0.0);
-    integralDrySolidMass.assign(numCells, 0.0);
-    integralCharMass.assign(numCells, 0.0);
+    initWetSolidMass.assign(numCells, 0.0);
+    initDrySolidMass.assign(numCells, 0.0);
+    initCharMass.assign(numCells, 0.0);
 
     for (int j = 0; j < numCells; j++)
     {
-        integralWetSolidMass[j] = max(wetSolid->get_bulkDensity(Temp[j]) * wetSolidVolFraction[j] * cellVolume[j], 1e-14);
-        integralDrySolidMass[j] = max(drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j] * cellVolume[j], 1e-14);
-        integralCharMass[j] = max(Char->get_bulkDensity(Temp[j]) * charVolFraction[j] * cellVolume[j], 1e-14);
+        initWetSolidMass[j] = max(wetSolid->get_bulkDensity(Temp[j]) * wetSolidVolFraction[j] * cellVolume[j], 1e-14);
+        initDrySolidMass[j] = max(drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j] * cellVolume[j], 1e-14);
+        initCharMass[j] = max(Char->get_bulkDensity(Temp[j]) * charVolFraction[j] * cellVolume[j], 1e-14);
     }
-}
 
-/**
-* Set the particle temperature, composition, etc (overloaded)
-* @return
-*/
-void particle_1D::initialize()
-{
+    // Initialize arrays for integration of solid masses
+    integralWetSolidMass.assign(numCells, 0.0);
+    integralDrySolidMass.assign(numCells, 0.0);
+    integralCharMass.assign(numCells, 0.0);
 }
 
 /**
@@ -752,23 +785,23 @@ void particle_1D::calcReactionThermo()
         particleO2MassFraction_old[i] = max(0.0, particleO2MassFraction_old[i]); //safety
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_old[i]) * wetSolidVolFraction_old[i] * cellVolume_old[i], R1->get_n())
-                            * pow(integralWetSolidMass[i], 1.0 - R1->get_n())
+                            * pow(integralWetSolidMass[i] + initWetSolidMass[i] , 1.0 - R1->get_n())
                             * R1->get_A()
                             * exp(-R1->get_Ta() / Temp_old[i]);
 
         R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_old[i]) * drySolidVolFraction_old[i] * cellVolume_old[i], R2->get_n())
-                            * pow(integralDrySolidMass[i], 1.0 - R2->get_n())
+                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R2->get_n())
                             * R2->get_A()
                             * exp(-R2->get_Ta() / Temp_old[i]);
 
         R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_old[i]) * drySolidVolFraction_old[i] * cellVolume_old[i], R3->get_n())
-                            * pow(integralDrySolidMass[i], 1.0 - R3->get_n())
+                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
                             * (pow(1.0 + particleO2MassFraction_old[i], R3->get_nO2()) - 1.0)
                             * R3->get_A()
                             * exp(-R3->get_Ta() / Temp_old[i]);
 
         R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_old[i]) * charVolFraction_old[i] * cellVolume_old[i], R4->get_n())
-                            * pow(integralCharMass[i], 1.0 - R4->get_n())
+                            * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
                             * (pow(1.0 + particleO2MassFraction_old[i], R4->get_nO2()) - 1.0)
                             * R4->get_A()
                             * exp(-R4->get_Ta() / Temp_old[i]);
@@ -856,26 +889,26 @@ void particle_1D::calcReaction_oldIter()
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_oldIter[i]) * wetSolidVolFraction_oldIter[i]
                             * cellVolume_old[i], R1->get_n())
-                            * pow(integralWetSolidMass[i], 1.0 - R1->get_n())
+                            * pow(integralWetSolidMass[i] + initWetSolidMass[i] , 1.0 - R1->get_n())
                             * R1->get_A()
                             * exp(-R1->get_Ta() / Temp_oldIter[i]);
 
         R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_oldIter[i]) * drySolidVolFraction_oldIter[i]
                             * cellVolume_old[i], R2->get_n())
-                            * pow(integralDrySolidMass[i], 1.0 - R2->get_n())
+                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R2->get_n())
                             * R2->get_A()
                             * exp(-R2->get_Ta() / Temp_oldIter[i]);
 
         R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_oldIter[i]) * drySolidVolFraction_oldIter[i]
                             * cellVolume_old[i], R3->get_n())
-                            * pow(integralDrySolidMass[i], 1.0 - R3->get_n())
+                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
                             * (pow(1.0 + particleO2MassFraction_oldIter[i], R3->get_nO2()) - 1.0)
                             * R3->get_A()
                             * exp(-R3->get_Ta() / Temp_oldIter[i]);
 
         R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_oldIter[i]) * charVolFraction_oldIter[i]
                             * cellVolume_old[i], R4->get_n())
-                            * pow(integralCharMass[i], 1.0 - R4->get_n())
+                            * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
                             * (pow(1.0 + particleO2MassFraction_oldIter[i], R4->get_nO2()) - 1.0)
                             * R4->get_A()
                             * exp(-R4->get_Ta() / Temp_old[i]);
@@ -1603,9 +1636,12 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
                     (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation)
                     * surfaceGridSpacing / surfaceConductivity) / (1.0 + Bi);
 
-    surfaceHeatFlux = surfaceEmissivity * externalIrradiation 
-                    - surfaceEmissivity * sigma * pow(surfaceTemp, 4.0)
-                    + h_conv * (externalTemperature - surfaceTemp);
+    surfaceHeatFluxConv = h_conv * (externalTemperature - surfaceTemp);
+
+    surfaceHeatFluxRad = surfaceEmissivity * externalIrradiation
+                        - surfaceEmissivity * sigma * pow(surfaceTemp, 4.0);
+
+    surfaceHeatFlux = surfaceHeatFluxConv + surfaceHeatFluxRad;
 
     // Calculate the oxygen mass flux at the exposed surface
 
@@ -1628,7 +1664,7 @@ Particle::eState particle_1D::checkState()
 {
     if ((R3->get_A() == 0) && (R4->get_A() == 0)) //no oxidation
     {
-        if ((R2->get_productYield() == 0) && ((shape->get_volume() / initParticleVol) < 0.01))
+        if ( (R2->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
         {
             cout << "particle is completely consumed to zero size" << endl;
             return burned;
@@ -1645,7 +1681,7 @@ Particle::eState particle_1D::checkState()
     }
     else
     {
-        if ((R4->get_productYield() == 0) && ((shape->get_volume() / initParticleVol) < 0.01))
+        if ( (R4->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
         {
             cout << "particle is completely consumed to zero size" << endl;
             return burned;
@@ -1806,6 +1842,10 @@ void particle_1D::interpolateOnNewMesh()
     std::vector<double> integralDrySolidMass_old = integralDrySolidMass; 
     std::vector<double> integralCharMass_old = integralCharMass;
 
+    std::vector<double> initWetSolidMass_old = initWetSolidMass;
+    std::vector<double> initDrySolidMass_old = initDrySolidMass;
+    std::vector<double> initCharMass_old = initCharMass;
+
     // allocate arrays for saving results on new mesh
     Temp.assign(numCells, 0.0);
     wetSolidVolFraction.assign(numCells, 0.0);
@@ -1814,9 +1854,14 @@ void particle_1D::interpolateOnNewMesh()
     ashVolFraction.assign(numCells, 0.0);
     particleO2MassFraction.assign(numCells, 0.0);
     particlePressure.assign(numCells, 0.0);
+
     integralWetSolidMass.assign(numCells, 0.0);
     integralDrySolidMass.assign(numCells, 0.0);
     integralCharMass.assign(numCells, 0.0);
+
+    initWetSolidMass.assign(numCells, 0.0);
+    initDrySolidMass.assign(numCells, 0.0);
+    initCharMass.assign(numCells, 0.0);
 
     // use linear interpolation to estimate the results on the new mesh
     int ii = -1;
@@ -1879,6 +1924,18 @@ void particle_1D::interpolateOnNewMesh()
 
             integralCharMass[i] = integralCharMass_old[ii]
                 + (integralCharMass_old[ii + 1] - integralCharMass_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
+                / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
+
+            initWetSolidMass[i] = initWetSolidMass_old[ii]
+                + (initWetSolidMass_old[ii + 1] - initWetSolidMass_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
+                / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
+
+            initDrySolidMass[i] = initDrySolidMass_old[ii]
+                + (initDrySolidMass_old[ii + 1] - initDrySolidMass_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
+                / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
+
+            initCharMass[i] = initCharMass_old[ii]
+                + (initCharMass_old[ii + 1] - initCharMass_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
                 / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
         }
         if (ii == -1)

@@ -44,38 +44,6 @@
         mesh,
         dimensionedScalar("zero",dimLength,0.0)
     );
-    
-
-// Radiative surface heat flux to the particles [W/m2]
-    volScalarField QradToFreshParticles
-    (
-        IOobject
-        (
-            "QradToFreshParticles",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
-    );
-
-// Convective surface heat flux to the particles [W/m2]
-    volScalarField QconvToFreshParticles
-    (
-        IOobject
-        (
-            "QconvToFreshParticles",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
-    );
-
 
 // Momentum of the flow [kg m/s]
     volVectorField fluidMomentum
@@ -120,4 +88,35 @@
         ),
         mesh,
         dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0), 0.0)
+    );
+
+
+    // Radiative surface heat flux to the particles [W/m2]
+    volScalarField convHeatFluxFreshFuel
+    (
+        IOobject
+        (
+            "convHeatFluxFreshFuel",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
+    );
+
+// Convective surface heat flux to the particles [W/m2]
+    volScalarField radHeatFluxFreshFuel
+    (
+        IOobject
+        (
+            "radHeatFluxFreshFuel",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea, 0.0)
     );

@@ -25,6 +25,7 @@ particleShape* sphere::clone() const
 sphere::sphere(const sphere& rhs) : particleShape(rhs)
 {
     initialRadius = rhs.initialRadius;
+    currentSize = initialRadius;
 }
 
 sphere& sphere::operator=(const sphere& rhs)
@@ -32,6 +33,7 @@ sphere& sphere::operator=(const sphere& rhs)
     if (&rhs != this){
         particleShape::operator=(rhs);
         initialRadius = rhs.initialRadius;
+        currentSize = initialRadius;
 
     } ; // handle self assignment
     //assignment operator
@@ -113,15 +115,6 @@ void sphere::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive, 
 double sphere::correctForShape()
 {
     return 1.0;
-}
-
-/**
-* Initialize shape object.
-* @return
-*/
-void sphere::initialize()
-{
-    currentSize = initialRadius;
 }
 
 /**

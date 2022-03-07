@@ -195,10 +195,8 @@ void Foam::biomassParticle::updateParticle
     scalar externalO2MassFraction = td.YO2Interp().interpolate(cpw);
     scalar externalIrradiation    = td.GInterp().interpolate(cpw);
 
-    // Copy current particle data to the particle model
+    // Pre-computing step
     p1D = td.cloud().superParticle;
-
-    p1D.shape->currentSize = particleSize_;
 
     particleTemp_std.resize(particleTemp_.size(), 0.0);
     wetSolidVolFraction_std.resize(wetSolidVolFraction_.size(), 0.0);
@@ -207,6 +205,9 @@ void Foam::biomassParticle::updateParticle
     ashVolFraction_std.resize(ashVolFraction_.size(), 0.0);
     particleO2MassFraction_std.resize(particleO2MassFraction_.size(), 0.0);
     particlePressure_std.resize(particlePressure_.size(), 0.0);
+    integralWetSolidMass_std.resize(integralWetSolidMass_.size(), 0.0); 
+    integralDrySolidMass_std.resize(integralDrySolidMass_.size(), 0.0); 
+    integralCharMass_std.resize(integralCharMass_.size(), 0.0); 
 
     for (int j=0 ; j<particleTemp_.size() ; j++)
     {
@@ -217,27 +218,35 @@ void Foam::biomassParticle::updateParticle
         ashVolFraction_std[j]         = ashVolFraction_[j];
         particleO2MassFraction_std[j] = particleO2MassFraction_[j];
         particlePressure_std[j]       = particlePressure_[j];
+        integralWetSolidMass_std[j]   = integralWetSolidMass_[j];
+        integralDrySolidMass_std[j]   = integralDrySolidMass_[j];
+        integralCharMass_std[j]       = integralCharMass_[j];
     }
 
-    p1D.initialize(
-                    particleTemp_std, 
-                    wetSolidVolFraction_std, 
-                    drySolidVolFraction_std, 
-                    charVolFraction_std, 
-                    ashVolFraction_std,
-                    particleO2MassFraction_std,
-                    particlePressure_std
-                );
+    p1D.preStepForward(
+                            particledt_,
+                            particleSize_,
+                            particleTemp_std, 
+                            wetSolidVolFraction_std, 
+                            drySolidVolFraction_std, 
+                            charVolFraction_std, 
+                            ashVolFraction_std,
+                            particleO2MassFraction_std,
+                            particlePressure_std,
+                            integralWetSolidMass_std,
+                            integralDrySolidMass_std,
+                            integralCharMass_std
+                        );
 
-    // Compute thermo-chemical degradation
+    // Compute thermo-chemical degradation for time step dt_
     p1D.stepForward(
-                    dt_,
-                    externalGasTemp,
-                    mag(externalGasVelo - particleVelo_),
-                    externalO2MassFraction,
-                    externalGasPressure,
-                    externalIrradiation
-                );
+                        dt_,
+                        externalGasTemp,
+                        mag(externalGasVelo - particleVelo_),
+                        externalO2MassFraction,
+                        externalGasPressure,
+                        externalIrradiation
+                    );
 
     // Update current particle data from model outputs
     particleTemp_.resize(p1D.numCells, 0.0);
@@ -247,6 +256,9 @@ void Foam::biomassParticle::updateParticle
     drySolidVolFraction_.resize(p1D.numCells, 0.0);
     charVolFraction_.resize(p1D.numCells, 0.0);
     ashVolFraction_.resize(p1D.numCells, 0.0);
+    integralWetSolidMass_.resize(p1D.numCells, 0.0);
+    integralDrySolidMass_.resize(p1D.numCells, 0.0);
+    integralCharMass_.resize(p1D.numCells, 0.0);
 
     for (int j=0 ; j<particleTemp_.size() ; j++)
     {
@@ -257,9 +269,13 @@ void Foam::biomassParticle::updateParticle
         drySolidVolFraction_[j]    = p1D.drySolidVolFraction[j];
         charVolFraction_[j]        = p1D.charVolFraction[j];
         ashVolFraction_[j]         = p1D.ashVolFraction[j];
+        integralWetSolidMass_[j]   = p1D.integralWetSolidMass[j];
+        integralDrySolidMass_[j]   = p1D.integralDrySolidMass[j];
+        integralCharMass_[j]       = p1D.integralCharMass[j];
     }
 
     particleState_     = p1D.state;
+    particledt_        = p1D.localTimeStepSize;
     particleSize_      = p1D.particleSize;
     particleMass_      = p1D.particleMass;
     particleVol_       = p1D.particleVol;
@@ -297,10 +313,10 @@ void Foam::biomassParticle::updateParticle
     // Packing Ratio (-)
     td.cloud().packingRatio[celli] = td.cloud().nParticles * p1D.particleVol / mesh_.cellVolumes()[celli];
 
-    // Mass (kg/s/m3 *s = kg/m3)
+    // Mass (kg/s *1/m3 *s = kg/m3)
     td.cloud().rhoTrans()[celli] +=  p1D.globalMassLossRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
 
-    // Species (kg/s/m3 *s = kg/m3)
+    // Species (kg/s *1/m3 *s = kg/m3)
     td.cloud().rhoYTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
     td.cloud().rhoYTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
     td.cloud().rhoYTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
@@ -328,14 +344,20 @@ void Foam::biomassParticle::updateParticle
     //  Additional diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    // Particle size (m)
+    td.cloud().size[celli] = particleSize_;
+
     // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
-    // Surface emissivity (-)
-    td.cloud().surfaceEmissivity[celli] = p1D.surfaceEmissivity;
+    // Mass rates (kg/s)
+    td.cloud().massLossRate[celli]       = p1D.globalMassLossRate;
+    td.cloud().gasFuelReleaseRate[celli] = p1D.globalGasFuelReleaseRate;
+    td.cloud().CO2ReleaseRate[celli]     = p1D.globalCO2ReleaseRate;
 
-    // Convective heat transfer coeff (W/m2/K)
-    td.cloud().convHeatTransCeoff[celli] = hConv_;
+    // Surface heat fluxes (W/m2)
+    td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv;
+    td.cloud().surfaceHeatFluxRad[celli]  = p1D.surfaceHeatFluxRad;
 
     // Surface O2 mass fraction (-)
     td.cloud().surfaceO2MassFrac[celli] = surfaceO2MassFrac_;

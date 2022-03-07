@@ -44,7 +44,9 @@ Foam::biomassCloud::biomassCloud
 )
 :
     Cloud<biomassParticle>(mesh, cloudName, false),
+
     mesh_(mesh),
+
     particleProperties_
     (
         IOobject
@@ -56,14 +58,24 @@ Foam::biomassCloud::biomassCloud
             IOobject::NO_WRITE
         )
     ),
+
+    setParticlesDict
+    (
+        IOobject
+        (
+            "setParticlesDict",
+            mesh_.time().system(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        )
+    ),
     
     rho_(rho),
     YO2_(YO2),
     G_(G),
     U_(U),
     thermo_(thermo),
-    T_(thermo.thermo().T()),
-    p_(thermo.thermo().p()),
     g_(g),
 
     rhoTrans_
@@ -185,7 +197,6 @@ Foam::biomassCloud::biomassCloud
     length(readScalar(particleProperties_.lookup("length"))),
     width(readScalar(particleProperties_.lookup("width"))),
     
-    moistureContent(readScalar(particleProperties_.lookup("moistureContent"))),
     wetSolidDensity(readScalar(particleProperties_.lookup("wetSolidDensity"))),
     drySolidDensity(readScalar(particleProperties_.lookup("drySolidDensity"))),
     charDensity(readScalar(particleProperties_.lookup("charDensity"))),
@@ -246,7 +257,59 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
+    ),
+    size
+    (
+        IOobject
+        (
+            this->name() + "_size",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimensionSet(0, 1, 0, 0, 0, 0 ,0) , 0.0)
     ),    
+    massLossRate
+    (
+        IOobject
+        (
+            this->name() + "_massLossRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ), 
+    gasFuelReleaseRate
+    (
+        IOobject
+        (
+            this->name() + "_gasFuelReleaseRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ),
+    CO2ReleaseRate
+    (
+        IOobject
+        (
+            this->name() + "_CO2ReleaseRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ),                    
     surfaceTemp
     (
         IOobject
@@ -260,32 +323,32 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 1, 0, 0 ,0) , 0.0)
     ), 
-    surfaceEmissivity
+    surfaceHeatFluxConv
     (
         IOobject
         (
-            this->name() + "_surfaceEmissivity",
+            this->name() + "_surfaceHeatFluxConv",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea , 0.0)
     ),
-    convHeatTransCeoff
+    surfaceHeatFluxRad
     (
         IOobject
         (
-            this->name() + "_convHeatTransCeoff",
+            this->name() + "_surfaceHeatFluxRad",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimArea/dimTemperature , 0.0)
-    ),              
+        dimensionedScalar("zero", dimEnergy/dimTime/dimArea , 0.0)
+    ),                  
     surfaceO2MassFrac
     (
         IOobject
@@ -378,7 +441,12 @@ Foam::biomassCloud::biomassCloud
     superParticle.R4 = &R4;
 
     Info << "   setting particle geometry " << endl;
-    superParticle.setGeometry(shapeName, 1.0, length, width);
+    superParticle.setGeometry(
+                                shapeName, 
+                                readScalar(setParticlesDict.lookup("initSize")), 
+                                length, 
+                                width
+                            );
 
     Info << "   setting particle solution control " << endl;
     superParticle.setSolutionControl(
@@ -394,6 +462,17 @@ Foam::biomassCloud::biomassCloud
                                     O2URF,
                                     pressureURF
                                 );
+
+    Info << "   setting particle information at time Zero  " << endl;
+    superParticle.initialize(
+                                readScalar(setParticlesDict.lookup("initTemp")),
+                                readScalar(setParticlesDict.lookup("initWetSolid")),
+                                readScalar(setParticlesDict.lookup("initDrySolid")),
+                                readScalar(setParticlesDict.lookup("initChar")),
+                                readScalar(setParticlesDict.lookup("initAsh")),
+                                readScalar(setParticlesDict.lookup("initYO2")),
+                                readScalar(setParticlesDict.lookup("initGaugeP"))
+                            );
 
     // Set storage for mass source fields and initialise to zero
     forAll(rhoYTrans_, i)
@@ -435,8 +514,8 @@ void Foam::biomassCloud::evolve()
     interpolationCellPoint<scalar> YO2Interp(YO2_);
     interpolationCellPoint<scalar> GInterp(G_);     
     interpolationCellPoint<vector> UInterp(U_);
-    interpolationCellPoint<scalar> TInterp(T_);
-    interpolationCellPoint<scalar> pInterp(p_);
+    interpolationCellPoint<scalar> TInterp(thermo_.thermo().T());
+    interpolationCellPoint<scalar> pInterp(thermo_.thermo().p());
 
     biomassParticle::trackingData
         td(*this, rhoInterp, YO2Interp, GInterp, UInterp, TInterp, pInterp, g_.value());

@@ -47,6 +47,7 @@ Foam::biomassParticle::biomassParticle
     particle(mesh, is, readFields),
 
     particleState_(0),
+    particledt_(0.0),
     particleSize_(0.0),
     particleVelo_(Zero),    
 
@@ -57,6 +58,9 @@ Foam::biomassParticle::biomassParticle
     drySolidVolFraction_(0.0),
     charVolFraction_(0.0),
     ashVolFraction_(0.0),
+    integralWetSolidMass_(0.0),
+    integralDrySolidMass_(0.0),
+    integralCharMass_(0.0),
 
     particleMass_(0.0),
     particleVol_(0.0), 
@@ -73,6 +77,10 @@ Foam::biomassParticle::biomassParticle
     DynamicList<scalar> x_ds;
     DynamicList<scalar> x_c;
     DynamicList<scalar> x_a;
+    DynamicList<scalar> m_ws;
+    DynamicList<scalar> m_ds;
+    DynamicList<scalar> m_c;
+
 
     if (readFields)
     {
@@ -80,6 +88,7 @@ Foam::biomassParticle::biomassParticle
        if (is.format() == IOstream::ASCII)
         {
             particleState_ = readLabel(is);
+            particledt_ = readScalar(is);
             particleSize_ = readScalar(is);
             is >> particleVelo_;
 
@@ -90,6 +99,9 @@ Foam::biomassParticle::biomassParticle
 			is >> x_ds;
             is >> x_c;
             is >> x_a;
+            is >> m_ws;
+            is >> m_ds;
+            is >> m_c;
 
         }
         else
@@ -103,7 +115,9 @@ Foam::biomassParticle::biomassParticle
             is >> x_ds;
             is >> x_c;
             is >> x_a;
-
+            is >> m_ws;
+            is >> m_ds;
+            is >> m_c;
         }
 
         particleTemp_.transfer(T);
@@ -113,7 +127,9 @@ Foam::biomassParticle::biomassParticle
         drySolidVolFraction_.transfer(x_ds);
         charVolFraction_.transfer(x_c);
         ashVolFraction_.transfer(x_a);
-
+        integralWetSolidMass_.transfer(m_ws);
+        integralDrySolidMass_.transfer(m_ds);
+        integralCharMass_.transfer(m_c);
     }
 
     // Check state of Istream
@@ -136,6 +152,11 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     );
     c.checkFieldIOobject(c, particleState);
 
+    IOField<scalar> particledt
+        (
+            c.fieldIOobject("particledt", IOobject::MUST_READ)
+        );
+    c.checkFieldIOobject(c, particledt);
 
     IOField<scalar> particleSize
     	(
@@ -199,23 +220,45 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     );
     c.checkFieldIOobject(c, ashVolFraction);    
 
+    IOField<scalarField> integralWetSolidMass
+    (
+        c.fieldIOobject("integralWetSolidMass", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, integralWetSolidMass);   
+
+    IOField<scalarField> integralDrySolidMass
+    (
+        c.fieldIOobject("integralDrySolidMass", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, integralDrySolidMass);  
+
+    IOField<scalarField> integralCharMass
+    (
+        c.fieldIOobject("integralCharMass", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, integralCharMass);  
+
 
     label i = 0;
     forAllIter(Cloud<biomassParticle>, c, iter)
     {
         biomassParticle& bp = iter();
 
-        bp.particleState_    = particleState[i];
-        bp.particleSize_     = particleSize[i];
-        bp.particleVelo_     = particleVelo[i];
+        bp.particleState_           = particleState[i];
+        bp.particledt_              = particledt[i];
+        bp.particleSize_            = particleSize[i];
+        bp.particleVelo_            = particleVelo[i];
 
-        bp.particleTemp_             = particleTemp[i];
-        bp.particlePressure_         = particlePressure[i];
-        bp.particleO2MassFraction_   = particleO2MassFraction[i];
-        bp.wetSolidVolFraction_      = wetSolidVolFraction[i];
-        bp.drySolidVolFraction_      = drySolidVolFraction[i];
-        bp.charVolFraction_          = charVolFraction[i];
-        bp.ashVolFraction_           = ashVolFraction[i];
+        bp.particleTemp_            = particleTemp[i];
+        bp.particlePressure_        = particlePressure[i];
+        bp.particleO2MassFraction_  = particleO2MassFraction[i];
+        bp.wetSolidVolFraction_     = wetSolidVolFraction[i];
+        bp.drySolidVolFraction_     = drySolidVolFraction[i];
+        bp.charVolFraction_         = charVolFraction[i];
+        bp.ashVolFraction_          = ashVolFraction[i];
+        bp.integralWetSolidMass_    = integralWetSolidMass[i];
+        bp.integralDrySolidMass_    = integralDrySolidMass[i];
+        bp.integralCharMass_        = integralCharMass[i];
 
         i++;
     }
@@ -229,6 +272,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     label np = c.size();
 
     IOField<label> particleState(c.fieldIOobject("particleState", IOobject::NO_READ), np);    
+    IOField<scalar> particledt(c.fieldIOobject("particledt", IOobject::NO_READ), np);
     IOField<scalar> particleSize(c.fieldIOobject("particleSize", IOobject::NO_READ), np);
     IOField<vector> particleVelo(c.fieldIOobject("particleVelo", IOobject::NO_READ), np);
     
@@ -239,6 +283,9 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalarField> drySolidVolFraction(c.fieldIOobject("drySolidVolFraction", IOobject::NO_READ), np);
     IOField<scalarField> charVolFraction(c.fieldIOobject("charVolFraction", IOobject::NO_READ), np);
     IOField<scalarField> ashVolFraction(c.fieldIOobject("ashVolFraction", IOobject::NO_READ), np);
+    IOField<scalarField> integralWetSolidMass(c.fieldIOobject("integralWetSolidMass", IOobject::NO_READ), np);
+    IOField<scalarField> integralDrySolidMass(c.fieldIOobject("integralDrySolidMass", IOobject::NO_READ), np);
+    IOField<scalarField> integralCharMass(c.fieldIOobject("integralCharMass", IOobject::NO_READ), np);
 
     IOField<scalar> particleMass(c.fieldIOobject("particleMass", IOobject::NO_READ), np);
     IOField<scalar> particleVol(c.fieldIOobject("particleVol", IOobject::NO_READ), np);
@@ -252,9 +299,10 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     {
         const biomassParticle& bp = iter();
 
-        particleState[i] = bp.particleState_;
-        particleSize[i]  = bp.particleSize_;
-        particleVelo[i]  = bp.particleVelo_;
+        particleState[i]          = bp.particleState_;
+        particledt[i]             = bp.particledt_;
+        particleSize[i]           = bp.particleSize_;
+        particleVelo[i]           = bp.particleVelo_;
 
         particleTemp[i]           = bp.particleTemp_;
         particlePressure[i]       = bp.particlePressure_;
@@ -263,6 +311,9 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
         drySolidVolFraction[i]    = bp.drySolidVolFraction_;
         charVolFraction[i]        = bp.charVolFraction_;
         ashVolFraction[i]         = bp.ashVolFraction_;
+        integralWetSolidMass[i]   = bp.integralWetSolidMass_;
+        integralDrySolidMass[i]   = bp.integralDrySolidMass_;
+        integralCharMass[i]       = bp.integralCharMass_;
 
         particleMass[i]      = bp.particleMass_;
         particleVol[i]       = bp.particleVol_;
@@ -275,6 +326,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     }
 
     particleState.write();
+    particledt.write();
     particleSize.write();
     particleVelo.write();
     
@@ -285,6 +337,9 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     drySolidVolFraction.write();
     charVolFraction.write();
     ashVolFraction.write();
+    integralWetSolidMass.write();
+    integralDrySolidMass.write();
+    integralCharMass.write();
 
     particleMass.write();
     particleVol.write();
@@ -303,6 +358,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
     {
         os  << static_cast<const particle&>(bp)
             << token::SPACE << bp.particleState_
+            << token::SPACE << bp.particledt_
             << token::SPACE << bp.particleSize_
             << token::SPACE << bp.particleVelo_
             << token::SPACE << bp.particleTemp_
@@ -311,7 +367,10 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
             << token::SPACE << bp.wetSolidVolFraction_
             << token::SPACE << bp.drySolidVolFraction_
             << token::SPACE << bp.charVolFraction_
-            << token::SPACE << bp.ashVolFraction_;
+            << token::SPACE << bp.ashVolFraction_
+            << token::SPACE << bp.integralWetSolidMass_
+            << token::SPACE << bp.integralDrySolidMass_
+            << token::SPACE << bp.integralCharMass_;
     }
     else
     {
@@ -328,6 +387,9 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
         os  << bp.drySolidVolFraction_;
         os  << bp.charVolFraction_;
         os  << bp.ashVolFraction_;
+        os  << bp.integralWetSolidMass_;
+        os  << bp.integralDrySolidMass_;
+        os  << bp.integralCharMass_;
     }
 
     // Check state of Ostream

@@ -79,6 +79,9 @@ public:
     solidReaction* R3;    //oxidative pyrolysis
     solidReaction* R4;    //char oxidation
 
+    // Integration step size [s]
+    double localTimeStepSize;           
+
     // Model output quantities (for public access)
     double particleSize;                // Half thickness or radius of the particle [m]
     double particleVol;                 // Volume of the particle [m3]
@@ -103,6 +106,8 @@ public:
     double coreTemp;                    // Temperature of the core [K]
     double surfaceO2MassFrac;           // Mass fraction of O2 at the surface [-]
     double surfaceHeatFlux;             // Net surface heat flux [W/m2]
+    double surfaceHeatFluxConv;         // Convective surface heat flux [W/m2]
+    double surfaceHeatFluxRad;          // Radiative surface heat flux [W/m2]
     double surfaceMassFlux;             // Net surface mass flux [kg/s/m2]
     double h_conv;                      // Convective heat transfer coefficient of the particle [W/m2/K]
     double h_mass;                      // Convective mass transfer coefficient [kg/m2/s]
@@ -121,7 +126,15 @@ public:
     void setGeometry(std::string geometry_, double radius_, double length, double width);
 
     //function initializing particle
-    virtual void initialize() = 0;
+    virtual void initialize(
+                            double Temp_0,
+                            double wetSolidVolFraction_0,
+                            double drySolidVolFraction_0,
+                            double charVolFraction_0,
+                            double ashVolFraction_0,
+                            double particleO2MassFraction_0,
+                            double particlePressure_0
+                            ) = 0;
 
     //step forward one (global) time step given local gas temperature, velocity, radiant flux and oxygen fraction
     virtual void stepForward(
@@ -148,8 +161,6 @@ public:
 
 
 protected:
-
-    double localTimeStepSize;           //Integration step size [s]
 
     static constexpr double sigma = 5.67e-8;     //Stefan-Boltzmann constant [W/m2/K4]
     static constexpr double R = 8.3144598;       //Gas constant [J/mol/K]
