@@ -292,6 +292,9 @@ private:
         void updateExposedSurface(const double externalTemperature, const double externalVelocity,
                                   const double externalO2MassFrac, const double externalIrradiation);
 
+        // Blowing effect at the exposed surface
+        void correctForBlowing();
+
         // Update particle state and check burnout
         Particle::eState checkState();
 

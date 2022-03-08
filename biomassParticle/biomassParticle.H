@@ -125,6 +125,15 @@ class biomassParticle
             // Surface temperature [K]
             scalar surfaceTemp_;
 
+            // Convective heat flux [W/m2]
+            scalar convFlux_;
+
+            // Radiative heat flux [W/m2]
+            scalar radFlux_;
+
+            // Convective heat flux [kg/m2]
+            scalar massFlux_;
+
             // Surface O2 mass fraction -
             scalar surfaceO2MassFrac_;
 
@@ -132,7 +141,19 @@ class biomassParticle
             scalar hConv_;
 
             // Particle drag coeff [-]
-            scalar CD_;        
+            scalar CD_;
+
+            // drying reaction rate [kg/s]
+            scalar dryingRate_;        
+
+            // pyrolysis reaction rate [kg/s]
+            scalar pyrolysisRate_;  
+
+            // oxidative pyrolysis reaction rate [kg/s]
+            scalar oxidPyrolysisRate_;  
+
+            // char oxidation reaction rate [kg/s]
+            scalar charOxidRate_;  
 
             // Auxilary vectors for data transfer
             std::vector<double> particleTemp_std; 

@@ -55,7 +55,8 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
 {
     if(reactionName == "drying")  
     {
-        A = 4.29e+3;
+        // Source: Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
+        A = 4.29e+3; 
         Ea = 43.8e+3;
         n = 0.99;
         nO2 = 0.0;
@@ -66,9 +67,11 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
     }
     else if(reactionName == "thermal pyrolysis") 
     {
-        A = 3.29e+9;
-        Ea = 135e+3;
-        n = 4.78;
+        // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
+        // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
+        A = std::pow(10.0, 6.34);
+        Ea = 105e+3;
+        n = 0.87;
         nO2 = 0.0;
         deltaH = -533e+3;
         productYield = productYield_;
@@ -77,10 +80,12 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
     }
     else if(reactionName == "oxidative pyrolysis")
     {
-        A = 6.00e+9;
-        Ea = 124.2e+3;
-        n = 4.99;
-        nO2 = 1.16;
+        // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
+        // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
+        A = std::pow(10.0, 8.72);
+        Ea = 127e+3;
+        n = 0.63;
+        nO2 = 0.72;
         deltaH = +994e+3;
         productYield = productYield_;
         O2Yield = 0.1 * (1.0 - productYield_);
@@ -88,10 +93,12 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
     }
     else if (reactionName == "char oxidation")
     {
-        A = 9.79e+13;
-        Ea = 192.4e+3;
-        n = 1.86;
-        nO2 = 1.04;
+        // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
+        // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
+        A = std::pow(10.0, 6.55);
+        Ea = 124e+3;
+        n = 0.56;
+        nO2 = 0.68;
         deltaH = +37700e+3;
         productYield = productYield_;
         O2Yield = 2.0 * (1.0 - productYield_);

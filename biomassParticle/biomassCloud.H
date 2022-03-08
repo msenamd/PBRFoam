@@ -210,16 +210,20 @@ public:
 
 
            // Diagnostic Fields  
-            volScalarField packingRatio;        // Packing Ratio [-]
-            volScalarField size;                // Particle size [m]
-            volScalarField massLossRate;        // Total mass loss rate [kg/s]
-            volScalarField gasFuelReleaseRate;  // Fuel mass production rate [kg/s]
-            volScalarField CO2ReleaseRate;      // CO2 mass production rate [kg/s]
-            volScalarField surfaceTemp;         // Surface temperature [K]   
-            volScalarField surfaceHeatFluxConv; // Net surface convective heat flux [W/m2]   
-            volScalarField surfaceHeatFluxRad;  // Net surface radiative heat flux [W/m2]   
-            volScalarField surfaceO2MassFrac;   // Surface O2 mass fraction [-]
-            volVectorField momentum;            // Momentum [kg m/s]          
+            volScalarField packingRatio;            // Packing Ratio [-]
+            volScalarField surfToVolRatio;          // Particle surface area to volume ratio [1/m]            
+            volScalarField size;                    // Particle size [m]
+            volScalarField massLossRate;            // Total mass loss rate [kg/s]
+            volScalarField gasFuelReleaseRate;      // Fuel mass production rate [kg/s]
+            volScalarField dryingRate;              // Mass reaction rate in [kg/s]
+            volScalarField pyrolysisRate;           // Mass reaction rate in [kg/s]
+            volScalarField oxidPyrolysisRate;       // Mass reaction rate in [kg/s]
+            volScalarField charOxidRate;            // Mass reaction rate in [kg/s]
+            volScalarField surfaceTemp;             // Surface temperature [K]   
+            volScalarField surfaceHeatFluxConv;     // Net surface convective heat flux [W/m2]   
+            volScalarField surfaceHeatFluxRad;      // Net surface radiative heat flux [W/m2]   
+            volScalarField surfaceO2MassFrac;       // Surface O2 mass fraction [-]
+            volVectorField momentum;                // Momentum [kg m/s]          
 
     // Constructors
 

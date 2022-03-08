@@ -280,8 +280,15 @@ void Foam::biomassParticle::updateParticle
     particleMass_      = p1D.particleMass;
     particleVol_       = p1D.particleVol;
     surfaceTemp_       = p1D.surfaceTemp;
+    convFlux_          = p1D.surfaceHeatFluxConv;
+    radFlux_           = p1D.surfaceHeatFluxRad; 
+    massFlux_          = p1D.surfaceMassFlux;   
     surfaceO2MassFrac_ = p1D.surfaceO2MassFrac;
     hConv_             = p1D.h_conv;
+    dryingRate_        = p1D.globalR1reactionRate;
+    pyrolysisRate_     = p1D.globalR2reactionRate;
+    oxidPyrolysisRate_ = p1D.globalR3reactionRate;
+    charOxidRate_      = p1D.globalR4reactionRate;
 
     // update particle velocity
     if(td.cloud().dragModel == "constant")
@@ -344,6 +351,9 @@ void Foam::biomassParticle::updateParticle
     //  Additional diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    // Particle surface to volume ratio (1/m)
+    td.cloud().surfToVolRatio[celli] = p1D.particleSurfToVolRatio;
+
     // Particle size (m)
     td.cloud().size[celli] = particleSize_;
 
@@ -351,11 +361,16 @@ void Foam::biomassParticle::updateParticle
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
     // Mass rates (kg/s)
-    td.cloud().massLossRate[celli]       = p1D.globalMassLossRate;
-    td.cloud().gasFuelReleaseRate[celli] = p1D.globalGasFuelReleaseRate;
-    td.cloud().CO2ReleaseRate[celli]     = p1D.globalCO2ReleaseRate;
+    td.cloud().massLossRate[celli]       = td.cloud().nParticles * p1D.globalMassLossRate;
+    td.cloud().gasFuelReleaseRate[celli] = td.cloud().nParticles * p1D.globalGasFuelReleaseRate;
 
-    // Surface heat fluxes (W/m2)
+    // Reaction rates (kg/s)
+    td.cloud().dryingRate[celli]        = td.cloud().nParticles * p1D.globalR1reactionRate;
+    td.cloud().pyrolysisRate[celli]     = td.cloud().nParticles * p1D.globalR2reactionRate;
+    td.cloud().oxidPyrolysisRate[celli] = td.cloud().nParticles * p1D.globalR3reactionRate;
+    td.cloud().charOxidRate[celli]      = td.cloud().nParticles * p1D.globalR4reactionRate;
+
+    // Surface heat fluxes per unit area of single particle (W/m2)
     td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv;
     td.cloud().surfaceHeatFluxRad[celli]  = p1D.surfaceHeatFluxRad;
 

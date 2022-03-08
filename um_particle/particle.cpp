@@ -41,7 +41,13 @@ Particle::Particle()
     globalGasFuelReleaseRate = 0.0;
     globalMoistureReleaseRate = 0.0;
     globalCO2ReleaseRate = 0.0;
+
     globalHeatReleaseRate = 0.0;
+
+    globalR1reactionRate = 0.0;
+    globalR2reactionRate = 0.0;
+    globalR3reactionRate = 0.0;
+    globalR4reactionRate = 0.0;
 
     surfaceTemp = 0.0;    
     coreTemp = 0.0;
@@ -113,7 +119,13 @@ Particle::Particle(const Particle& rhs)
     globalGasFuelReleaseRate = rhs.globalGasFuelReleaseRate;
     globalMoistureReleaseRate = rhs.globalMoistureReleaseRate;
     globalCO2ReleaseRate = rhs.globalCO2ReleaseRate;
+
     globalHeatReleaseRate = rhs.globalHeatReleaseRate;
+
+    globalR1reactionRate = rhs.globalR1reactionRate;
+    globalR2reactionRate = rhs.globalR2reactionRate;
+    globalR3reactionRate = rhs.globalR3reactionRate;
+    globalR4reactionRate = rhs.globalR4reactionRate;
 
     surfaceTemp = rhs.surfaceTemp;
     coreTemp = rhs.coreTemp;
@@ -201,7 +213,13 @@ Particle& Particle::operator=(const Particle& rhs)
         globalGasFuelReleaseRate = rhs.globalGasFuelReleaseRate;
         globalMoistureReleaseRate = rhs.globalMoistureReleaseRate;
         globalCO2ReleaseRate = rhs.globalCO2ReleaseRate;
+
         globalHeatReleaseRate = rhs.globalHeatReleaseRate;
+
+        globalR1reactionRate = rhs.globalR1reactionRate;
+        globalR2reactionRate = rhs.globalR2reactionRate;
+        globalR3reactionRate = rhs.globalR3reactionRate;
+        globalR4reactionRate = rhs.globalR4reactionRate;
 
         surfaceTemp = rhs.surfaceTemp;
         coreTemp = rhs.coreTemp;
@@ -245,7 +263,7 @@ double Particle::getChemicalTimescale(double Temp_){
 
     dt = 0.1*min({ tau_R1_min, tau_R2_min, tau_R3_min, tau_R4_min });
 
-    return dt;
+    return max(dt, 1e-6); //Safety: avoid extremely small time-steps
 }
 
 /**
@@ -268,7 +286,7 @@ double Particle::getDiffusionTimescale(double cellSize_, double Temp_) {
 
     dt = 0.5 * pow(cellSize_, 2.0) / maxDiffusivity;
 
-    return dt;
+    return max(dt, 1e-6); //Safety: avoid extremely small time-steps
 }
 
 /**

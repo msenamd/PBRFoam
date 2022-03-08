@@ -262,18 +262,32 @@ volScalarField dQrad
     dimensionedScalar("dQrad", dimEnergy/dimTime/dimVolume, 0.0)
 );
 
-volScalarField dQradAbsorption
+volScalarField dQradAbs
 (
      IOobject
      (
-      "dQradabs",
+      "dQradAbs",
       runTime.timeName(),
       mesh,
       IOobject::NO_READ,
       IOobject::AUTO_WRITE
      ),
      mesh,
-     dimensionedScalar("dQradabs", dimEnergy/dimTime/dimVolume,0.0)
+     dimensionedScalar("dQradAbs", dimEnergy/dimTime/dimVolume,0.0)
+ );
+
+volScalarField dQradEm
+(
+     IOobject
+     (
+      "dQradEm",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("dQradEm", dimEnergy/dimTime/dimVolume,0.0)
  );
 
 volScalarField G_projected

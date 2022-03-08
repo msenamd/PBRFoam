@@ -78,8 +78,12 @@ tmp<fv::convectionScheme<scalar>> mvConvection
     radField = rad;
 
     const volScalarField::Internal radRu = radiation->Ru();
-    volScalarField::Internal& radFieldRu = dQradAbsorption.ref();
+    volScalarField::Internal& radFieldRu = dQradAbs.ref();
     radFieldRu = radRu;
+
+    const volScalarField::Internal radRp = radiation->Rp().ref()*T4;
+    volScalarField::Internal& radFieldRp = dQradEm.ref();
+    radFieldRp = radRp;
 
     if (mesh.foundObject<volScalarField>("G"))
     {

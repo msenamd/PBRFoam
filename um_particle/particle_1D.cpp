@@ -28,9 +28,9 @@ particle_1D::particle_1D() : Particle()
     solidSpeciesThreshold = 0.01;
     O2Threshold = 0.01;
     pressureThreshold = 0.1;
-    temperatureURF = 0.1;
+    temperatureURF = 0.01;
     solidSpeciesURF = 0.0;
-    O2URF = 0.1;
+    O2URF = 0.01;
     pressureURF = 0.0;
 
     TempDifference_iter = 0.0;     
@@ -363,7 +363,8 @@ void particle_1D::preStepForward(
     surfaceTemp = Temp.back();
     coreTemp = Temp.front();
 
-    cellSize.assign(numCells, particleSize_/numCells);
+    shape->currentSize = particleSize_;
+    cellSize.assign(numCells, shape->currentSize /numCells);
     setMesh(numCells, cellSize);
 }
 
@@ -386,11 +387,10 @@ void particle_1D::initialize(
 
     // Set particle size
     initParticleSize = shape->currentSize;
-    particleSize = initParticleSize;
     shape->air = air;
 
     //set spatial resolution ~ 100-micron or at least 5 cells
-    numCells = round(particleSize / defaultMeshResolution);
+    numCells = round(initParticleSize / defaultMeshResolution);
     numCells = max(5, numCells);
     Temp.assign(numCells, Temp_0);
     wetSolidVolFraction.assign(numCells, wetSolidVolFraction_0);
@@ -404,7 +404,7 @@ void particle_1D::initialize(
     coreTemp = Temp.front();
 
     // Set the mesh
-    cellSize.assign(numCells, particleSize/numCells);
+    cellSize.assign(numCells, initParticleSize /numCells);
     setMesh(numCells, cellSize);
 
     // Estimate the local time-step size based on the characteristic timescales
@@ -590,10 +590,6 @@ void particle_1D::stepForward(
     globalCO2Released = 0.0;
     globalHeatReleased = 0.0;
 
-    // Calculate the heat transfer and the drag coefficients based on external flow state
-    h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, Temp.back(), externalVelocity, xFacePositive.back());
-    dragCoeff = shape->get_dragCoefficient(externalTemperature, externalVelocity, xFacePositive.back());
-
     // Local time loop
     while ((localTimeStepIndex < finalTimeStepIndex) && (state != burned))
     {
@@ -622,6 +618,10 @@ void particle_1D::stepForward(
         // Calculate the surface areas of cell boundary faces at old time-step
         calcCellFaceArea();
 
+        // Calculate the heat transfer coefficient based on external flow state
+        h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, Temp.back(), externalVelocity, shape->currentSize);
+        correctForBlowing();
+
         // Initial guess for the iterative loop
         Temp_newIter = Temp_old;
         wetSolidVolFraction_newIter = wetSolidVolFraction_old;
@@ -632,6 +632,15 @@ void particle_1D::stepForward(
         particlePressure_newIter = particlePressure_old;
         surfaceTemp_newIter = surfaceTemp_old;
 
+        Temp_oldIter = Temp_old;
+        wetSolidVolFraction_oldIter = wetSolidVolFraction_old;
+        drySolidVolFraction_oldIter = drySolidVolFraction_old;
+        charVolFraction_oldIter = charVolFraction_old;
+        ashVolFraction_oldIter = ashVolFraction_old;
+        particleO2MassFraction_oldIter = particleO2MassFraction_old;
+        particlePressure_oldIter = particlePressure_old;
+        surfaceTemp_oldIter = surfaceTemp_old;
+
         // Begin the iterative loop
         iter = 0;
         iterMaxError = 1.0;
@@ -640,14 +649,17 @@ void particle_1D::stepForward(
             iter++;
 
             // Save solution at previous iteration
-            Temp_oldIter = Temp_newIter;
-            wetSolidVolFraction_oldIter = wetSolidVolFraction_newIter;
-            drySolidVolFraction_oldIter = drySolidVolFraction_newIter;
-            charVolFraction_oldIter = charVolFraction_newIter;
-            ashVolFraction_oldIter = ashVolFraction_newIter;
-            particleO2MassFraction_oldIter = particleO2MassFraction_newIter;
-            particlePressure_oldIter = particlePressure_newIter;
-            surfaceTemp_oldIter = surfaceTemp_newIter;
+            for (int i = 0; i < numCells_old; i++)
+            { 
+                Temp_oldIter[i] = 0.5*Temp_newIter[i] + 0.5*Temp_oldIter[i] ;
+                wetSolidVolFraction_oldIter[i] = 0.5*wetSolidVolFraction_newIter[i] + 0.5*wetSolidVolFraction_oldIter[i];
+                drySolidVolFraction_oldIter[i] = 0.5*drySolidVolFraction_newIter[i] + 0.5*drySolidVolFraction_oldIter[i];
+                charVolFraction_oldIter[i] = 0.5*charVolFraction_newIter[i] + 0.5*charVolFraction_oldIter[i];
+                ashVolFraction_oldIter[i] = 0.5*ashVolFraction_newIter[i] + 0.5*ashVolFraction_oldIter[i];
+                particleO2MassFraction_oldIter[i] = 0.5*particleO2MassFraction_newIter[i] + 0.5*particleO2MassFraction_oldIter[i];
+                particlePressure_oldIter[i] = 0.5*particlePressure_newIter[i] + 0.5*particlePressure_oldIter[i];
+                surfaceTemp_oldIter = 0.5*surfaceTemp_newIter + 0.5*surfaceTemp_oldIter;
+            }
 
             // Calculate reaction rates from information at old iteration
             calcReaction_oldIter();
@@ -713,6 +725,21 @@ void particle_1D::stepForward(
         {
             cout << "**** Error. Iterative loop did not converge after " << iter << " iterations" << endl;
             cout << "**** Iterative loop maximum error = " << iterMaxError << endl;
+            cout.precision(12);
+            cout << "--local time (s) = " << localTime << endl;
+            cout << "   --local time step size (s) = " << localTimeStepSize << endl;
+            cout << "   --local time-step index= " << localTimeStepIndex << endl;
+            cout << "   --iterative loop #iterations = " << iter << endl;
+            cout << "   --iterative loop maximum error = " << iterMaxError << endl;
+            cout << "   --temperature error = " << TempError << endl;
+            cout << "   --wetSolid error = " << wetSolidError << endl;
+            cout << "   --drySolid error = " << drySolidError << endl;
+            cout << "   --char error = " << charError << endl;
+            cout << "   --ash error = " << ashError << endl;
+            cout << "   --O2 error = " << O2Error << endl;
+            cout << "   --pressure error = " << pressureError << endl;
+            cout << "   --max temperature = " << *std::max_element(Temp.begin(), Temp.end()) << endl;
+            cout << "   --max pressure = " << *std::max_element(particlePressure.begin(), particlePressure.end()) << endl;
             throw exception();
         }
 
@@ -782,6 +809,7 @@ void particle_1D::calcReactionThermo()
     for (int i = 0; i < numCells_old; i++)
     {
         //calculate reaction rates
+        Temp_old[i] = min(2500.0, Temp_old[i]); //safety
         particleO2MassFraction_old[i] = max(0.0, particleO2MassFraction_old[i]); //safety
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_old[i]) * wetSolidVolFraction_old[i] * cellVolume_old[i], R1->get_n())
@@ -796,13 +824,13 @@ void particle_1D::calcReactionThermo()
 
         R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_old[i]) * drySolidVolFraction_old[i] * cellVolume_old[i], R3->get_n())
                             * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
-                            * (pow(1.0 + particleO2MassFraction_old[i], R3->get_nO2()) - 1.0)
+                            * pow(particleO2MassFraction_old[i] / 0.226 , R3->get_nO2())
                             * R3->get_A()
                             * exp(-R3->get_Ta() / Temp_old[i]);
 
         R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_old[i]) * charVolFraction_old[i] * cellVolume_old[i], R4->get_n())
                             * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
-                            * (pow(1.0 + particleO2MassFraction_old[i], R4->get_nO2()) - 1.0)
+                            * pow(particleO2MassFraction_old[i] / 0.226 , R4->get_nO2())
                             * R4->get_A()
                             * exp(-R4->get_Ta() / Temp_old[i]);
 
@@ -885,6 +913,7 @@ void particle_1D::calcReaction_oldIter()
 {
     for (int i = 0; i < numCells; i++)
     {
+        Temp_oldIter[i] = min(2500.0, Temp_oldIter[i]); //safety
         particleO2MassFraction_oldIter[i] = max(0.0, particleO2MassFraction_oldIter[i]); //safety
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_oldIter[i]) * wetSolidVolFraction_oldIter[i]
@@ -902,14 +931,14 @@ void particle_1D::calcReaction_oldIter()
         R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_oldIter[i]) * drySolidVolFraction_oldIter[i]
                             * cellVolume_old[i], R3->get_n())
                             * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
-                            * (pow(1.0 + particleO2MassFraction_oldIter[i], R3->get_nO2()) - 1.0)
+                            * pow(particleO2MassFraction_oldIter[i] / 0.226 , R3->get_nO2())
                             * R3->get_A()
                             * exp(-R3->get_Ta() / Temp_oldIter[i]);
 
         R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_oldIter[i]) * charVolFraction_oldIter[i]
                             * cellVolume_old[i], R4->get_n())
                             * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
-                            * (pow(1.0 + particleO2MassFraction_oldIter[i], R4->get_nO2()) - 1.0)
+                            * pow(particleO2MassFraction_oldIter[i] / 0.226, R4->get_nO2())
                             * R4->get_A()
                             * exp(-R4->get_Ta() / Temp_old[i]);
     }
@@ -1228,7 +1257,7 @@ void particle_1D::pressure_equation(const double externalPressure)
     i = 0;
 
     vectA[i] = 0;
-    vectC[i] = -0.5 * (permeability[i+1] / air->get_v(Temp_oldIter[i+1]) + permeability[i] / air->get_v(Temp_oldIter[i]))
+    vectC[i] = -0.5 * (permeability[i+1] / diffusivity[i+1] + permeability[i] / diffusivity[i])
                 * areaFacePositive[i] / (xCellCenter[i+1] - xCellCenter[i]);
     vectB[i] = -vectC[i];
     vectD[i] = dRRpressure[i];
@@ -1239,11 +1268,11 @@ void particle_1D::pressure_equation(const double externalPressure)
     // ---- Exposed surface boundary cell
     i = numCells_old - 1;
 
-    vectA[i] = -0.5 * (permeability[i] / air->get_v(Temp_oldIter[i]) + permeability[i-1] / air->get_v(Temp_oldIter[i-1]))
+    vectA[i] = -0.5 * (permeability[i] / diffusivity[i] + permeability[i-1] / diffusivity[i-1])
                 * areaFaceNegative[i] / (xCellCenter[i] - xCellCenter[i-1]);
-    vectB[i] = -vectA[i] + permeability[i] / air->get_v(Temp_oldIter[i]) * areaFacePositive[i] / surfaceGridSpacing;
+    vectB[i] = -vectA[i] + permeability[i] / diffusivity[i] * areaFacePositive[i] / surfaceGridSpacing;
     vectC[i] = 0.0;
-    vectD[i] = permeability[i] / air->get_v(Temp_oldIter[i]) * areaFacePositive[i] / surfaceGridSpacing * externalPressure 
+    vectD[i] = permeability[i] / diffusivity[i] * areaFacePositive[i] / surfaceGridSpacing * externalPressure
                 + dRRpressure[i];
 
     vectB[i] += pressureURF; //apply under-relaxation
@@ -1252,9 +1281,9 @@ void particle_1D::pressure_equation(const double externalPressure)
     // ---- Interior cells
     for (i = 1; i < (numCells_old - 1); i++)
     {
-        vectA[i] = -0.5 * (permeability[i] / air->get_v(Temp_oldIter[i]) + permeability[i-1] / air->get_v(Temp_oldIter[i-1]))
+        vectA[i] = -0.5 * (permeability[i] / diffusivity[i] + permeability[i-1] / diffusivity[i-1])
                     * areaFaceNegative[i] / (xCellCenter[i] - xCellCenter[i-1]);        
-        vectC[i] = -0.5 * (permeability[i+1] / air->get_v(Temp_oldIter[i+1]) + permeability[i] / air->get_v(Temp_oldIter[i]))
+        vectC[i] = -0.5 * (permeability[i+1] / diffusivity[i+1] + permeability[i] / diffusivity[i])
                     * areaFacePositive[i] / (xCellCenter[i+1] - xCellCenter[i]);  
 
         vectB[i] = -vectA[i] - vectC[i];
@@ -1328,7 +1357,7 @@ void particle_1D::set_heatCFL_L(const int& i, const double& dt_)
           && (particlePressure_old[i] > particlePressure_old[i+1])) 
         )
     {
-        CFL_L = dt_ * permeability[i] / air->get_v(Temp_old[i])
+        CFL_L = dt_ * permeability[i] / diffusivity[i]
                 * air->get_cSubP(Temp_old[i]) / effectiveVolHeatCapacity[i]
                 * (particlePressure_old[i-1] - particlePressure_old[i])
                 / pow(xCellCenter[i] - xCellCenter[i-1], 2.0);
@@ -1355,7 +1384,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
             && (particlePressure_old[i] > particlePressure_old[i+1]))
         )
     {
-        CFL_L = dt_ * permeability[i] / air->get_v(Temp_old[i])
+        CFL_L = dt_ * permeability[i] / diffusivity[i]
                 * 1.0 / (air->get_rho(Temp_old[i]) * porosity[i])
                 * (particlePressure_old[i-1] - particlePressure_old[i])
                 / pow(xCellCenter[i] - xCellCenter[i-1], 2.0);
@@ -1382,7 +1411,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
             && (particlePressure_old[i] < particlePressure_old[i+1]))
         )
     {
-        CFL_R = dt_ * permeability[i] / air->get_v(Temp_old[i])
+        CFL_R = dt_ * permeability[i] / diffusivity[i]
                 * air->get_cSubP(Temp_old[i]) / effectiveVolHeatCapacity[i]
                 * (particlePressure_old[i] - particlePressure_old[i+1])
                 / pow(xCellCenter[i+1] - xCellCenter[i], 2.0);
@@ -1409,7 +1438,7 @@ void particle_1D::set_massCFL_R(const int& i, const double& dt_)
             && (particlePressure_old[i] < particlePressure_old[i+1]))
         )
     {
-        CFL_R = dt_ * permeability[i] / air->get_v(Temp_old[i])
+        CFL_R = dt_ * permeability[i] / diffusivity[i]
                 * 1.0 / (air->get_rho(Temp_old[i]) * porosity[i])
                 * (particlePressure_old[i] - particlePressure_old[i+1])
                 / pow(xCellCenter[i+1] - xCellCenter[i], 2.0);
@@ -1625,9 +1654,8 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
 
     // Calculate the heat flux and the temperature at the exposed surface
 
-    h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_old, externalVelocity, xFacePositive.back());
-    dragCoeff = shape->get_dragCoefficient(externalTemperature, externalVelocity, xFacePositive.back());
-
+    h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_old, externalVelocity, shape->currentSize);
+    correctForBlowing();
 
     h_rad = surfaceEmissivity * sigma * pow(surfaceTemp_newIter, 3.0);
     Bi = (h_conv + h_rad) * surfaceGridSpacing / surfaceConductivity;
@@ -1643,6 +1671,7 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
 
     surfaceHeatFlux = surfaceHeatFluxConv + surfaceHeatFluxRad;
 
+
     // Calculate the oxygen mass flux at the exposed surface
 
     h_mass = h_conv / air->get_cSubP(Temp.back());
@@ -1653,6 +1682,32 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
                         / (1 + Bi);
 
     surfaceMassFlux = h_mass * (externalO2MassFrac - surfaceO2MassFrac);
+
+    // Drag coefficient 
+    dragCoeff = shape->get_dragCoefficient(externalTemperature, externalVelocity, xFacePositive.back());
+
+}
+
+/**
+* Correction of heat transfer coeff. due to blowing 
+* using a Couette approximation
+* @param
+* @return
+*/
+void particle_1D::correctForBlowing()
+{
+
+    double outletMassFlux = 0.0;
+
+    if (particlePressure[numCells-2] > particlePressure[numCells-1])
+    {
+        outletMassFlux = permeability.back() / diffusivity.back()
+                          * (particlePressure[numCells-2]  - particlePressure[numCells-1]) 
+                          / (xCellCenter[numCells-1] - xCellCenter[numCells-2]);
+
+        h_conv = outletMassFlux * air->get_cSubP(surfaceTemp) 
+                / (exp(outletMassFlux * air->get_cSubP(surfaceTemp) / h_conv) - 1.0 );
+    }
 }
 
 /**
@@ -1666,12 +1721,18 @@ Particle::eState particle_1D::checkState()
     {
         if ( (R2->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
         {
+            #if defined _DEBUG
             cout << "particle is completely consumed to zero size" << endl;
+            #endif
+
             return burned;
         }
         else if ((R2->get_productYield() != 0) && (charVolFraction.front() > 0.999))
         {
+            #if defined _DEBUG
             cout << "particle is completely transformed into char" << endl;
+            #endif
+
             return burned;
         }
         else
@@ -1683,12 +1744,18 @@ Particle::eState particle_1D::checkState()
     {
         if ( (R4->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
         {
+            #if defined _DEBUG
             cout << "particle is completely consumed to zero size" << endl;
+            #endif
+
             return burned;
         }
         else if ((R4->get_productYield() != 0) && (ashVolFraction.front() > 0.999))
         {
+            #if defined _DEBUG
             cout << "particle is completely transformed into ash" << endl;
+            #endif
+
             return burned;
         }
         else
@@ -1740,7 +1807,7 @@ void particle_1D::updateOutputs()
                                   + (1.0 - R4->get_productYield()) * R4reactionRate[j];
 
         localGasFuelReleaseRate_cell[j] = (1.0 - R2->get_productYield()) * R2reactionRate[j]
-                                     + (1.0 - R3->get_productYield()) * R3reactionRate[j];
+                                        + (1.0 - R3->get_productYield()) * R3reactionRate[j];
 
         localMoistureReleaseRate_cell[j] = (1.0 - R1->get_productYield()) * R1reactionRate[j];
 
@@ -1760,7 +1827,7 @@ void particle_1D::updateOutputs()
                         * shape->correctForShape();
 
     localGasFuelReleaseRate = accumulate(localGasFuelReleaseRate_cell.begin(), localGasFuelReleaseRate_cell.end(), 0.0f)
-                            * shape->correctForShape();
+                                * shape->correctForShape();
 
     localMoistureReleaseRate = accumulate(localMoistureReleaseRate_cell.begin(), localMoistureReleaseRate_cell.end(), 0.0f)
                                 * shape->correctForShape();
@@ -1771,19 +1838,27 @@ void particle_1D::updateOutputs()
     localHeatReleaseRate = accumulate(localHeatReleaseRate_cell.begin(), localHeatReleaseRate_cell.end(), 0.0f)
                              * shape->correctForShape();
 
-    //accumulate global mass produced/consumed in local time [kg]
-    globalMassReleased += localMassLossRate * localTimeStepSize;
-    globalGasFuelReleased += localGasFuelReleaseRate * localTimeStepSize;
+    //accumulate global mass (or heat) produced/consumed in local time [kg or J]
+    globalMassReleased     += localMassLossRate * localTimeStepSize;
+    globalGasFuelReleased  += localGasFuelReleaseRate * localTimeStepSize;
     globalMoistureReleased += localMoistureReleaseRate * localTimeStepSize;
-    globalCO2Released += localCO2ReleaseRate * localTimeStepSize;
-    globalHeatReleased += localHeatReleaseRate * localTimeStepSize;
+    globalCO2Released      += localCO2ReleaseRate * localTimeStepSize;
+    globalHeatReleased     += localHeatReleaseRate * localTimeStepSize;
 
     //calculate global mass production/consumption rates in [kg/s]
-    globalMassLossRate = globalMassReleased / localTime;
-    globalGasFuelReleaseRate = globalGasFuelReleased / localTime;
+    globalMassLossRate        = globalMassReleased / localTime;
+    globalGasFuelReleaseRate  = globalGasFuelReleased / localTime;
     globalMoistureReleaseRate = globalMoistureReleased / localTime;
-    globalCO2ReleaseRate = globalCO2Released / localTime;
+    globalCO2ReleaseRate      = globalCO2Released / localTime;
+
+    //calculate global heat release rate in [J/s]
     globalHeatReleaseRate = globalHeatReleased / localTime;
+
+    //calculate global reaction rates in [kg/s] (at the last local time for diagnostic objectives)
+    globalR1reactionRate = accumulate(R1reactionRate.begin(), R1reactionRate.end(), 0.0f);
+    globalR2reactionRate = accumulate(R2reactionRate.begin(), R2reactionRate.end(), 0.0f);
+    globalR3reactionRate = accumulate(R3reactionRate.begin(), R3reactionRate.end(), 0.0f);
+    globalR4reactionRate = accumulate(R4reactionRate.begin(), R4reactionRate.end(), 0.0f);
 
     //TODO: update firelab outputs
     outTime = localTime;
@@ -1937,11 +2012,25 @@ void particle_1D::interpolateOnNewMesh()
             initCharMass[i] = initCharMass_old[ii]
                 + (initCharMass_old[ii + 1] - initCharMass_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
                 / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
+
+
+            // Safety: enforce 0 <= VolFraction <= 1
+            wetSolidVolFraction[i] = max(0.0, min(1.0, wetSolidVolFraction[i]));
+            drySolidVolFraction[i] = max(0.0, min(1.0, drySolidVolFraction[i]));
+            charVolFraction[i] = max(0.0, min(1.0, charVolFraction[i]));
+            ashVolFraction[i] = max(0.0, min(1.0, ashVolFraction[i]));  
+
+            // Safety: disallow negative mass
+            integralWetSolidMass[i] = max(1e-14, integralWetSolidMass[i]);
+            integralDrySolidMass[i] = max(1e-14, integralDrySolidMass[i]);
+            integralCharMass[i] = max(1e-14, integralCharMass[i]);
+
         }
         if (ii == -1)
         {
             cout << "*** Error in linear interpolation routine ***" << endl;
             break;
+            throw exception();
         }
     }
 

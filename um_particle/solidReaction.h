@@ -8,7 +8,7 @@ using namespace std;
 #include <vector>
 #include <tuple>
 #include <algorithm>
-
+#include <cmath>
 
 class solidReaction{
 

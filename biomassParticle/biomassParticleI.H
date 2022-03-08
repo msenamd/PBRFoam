@@ -95,9 +95,16 @@ inline Foam::biomassParticle::biomassParticle
     particleMass_(0.0),
     particleVol_(0.0), 
     surfaceTemp_(0.0),
+    convFlux_(0.0),
+    radFlux_(0.0),
+    massFlux_(0.0),
     surfaceO2MassFrac_(0.0),
     hConv_(0.0),
-    CD_(0.0)
+    CD_(0.0),
+    dryingRate_(0.0),
+    pyrolysisRate_(0.0),
+    oxidPyrolysisRate_(0.0),
+    charOxidRate_(0.0)
 {
 
 }

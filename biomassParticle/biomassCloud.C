@@ -258,6 +258,19 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
     ),
+    surfToVolRatio
+    (
+        IOobject
+        (
+            this->name() + "_surfToVolRatio",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimensionSet(0, -1, 0, 0, 0, 0 ,0) , 0.0)
+    ),    
     size
     (
         IOobject
@@ -297,11 +310,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ),
-    CO2ReleaseRate
+    dryingRate
     (
         IOobject
         (
-            this->name() + "_CO2ReleaseRate",
+            this->name() + "_dryingRate",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -309,7 +322,46 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
-    ),                    
+    ),
+    pyrolysisRate
+    (
+        IOobject
+        (
+            this->name() + "_pyrolysisRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ),
+    oxidPyrolysisRate
+    (
+        IOobject
+        (
+            this->name() + "_oxidPyrolysisRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ), 
+    charOxidRate
+    (
+        IOobject
+        (
+            this->name() + "_charOxidRate",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ),                                     
     surfaceTemp
     (
         IOobject
@@ -526,8 +578,12 @@ void Foam::biomassCloud::evolve()
     // evolve the cloud
     Cloud<biomassParticle>::move(td, mesh_.time().deltaTValue());
 
-	Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
+	Info << "particle size: " << "min = " << min(size()).value() 
+    << " , " << "max = " << max(size()).value() << endl;
+
+    Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
     << " , " << "max = " << max(packingRatio()).value() << endl;
+
 	Info << "surface temperature: " << "min = " << min(surfaceTemp()).value()
 	<< " , " << "max = " << max(surfaceTemp()).value() << endl;
 }

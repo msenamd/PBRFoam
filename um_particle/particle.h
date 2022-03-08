@@ -100,7 +100,13 @@ public:
     double globalGasFuelReleaseRate;    // Gaseous fuel release rate for global time-step [kg/s]
     double globalMoistureReleaseRate;   // Moisture release rate for global time-step [kg/s]
     double globalCO2ReleaseRate;        // CO2 release rate for global time-step [kg/s]
+    
     double globalHeatReleaseRate;       // Heat consumption/production due to the heterogeneous reactions for global time-step [J/s]
+
+    double globalR1reactionRate;        // Reactoin rate of drying for global time-step [kg/s]
+    double globalR2reactionRate;        // Reactoin rate of thermal pyrolysis for global time-step [kg/s]
+    double globalR3reactionRate;        // Reactoin rate of oxidative pyrolysis time-step [kg/s]
+    double globalR4reactionRate;        // Reactoin rate of char oxidation time-step [kg/s]
 
     double surfaceTemp;                 // Temperature of the surface [K]
     double coreTemp;                    // Temperature of the core [K]
