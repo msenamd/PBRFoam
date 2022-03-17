@@ -56,8 +56,10 @@ scalar maxSmolderingFront = max(SmolderingFront).value();
 outFireFront << runTime.value() << " " << maxFlameHeight << " " << maxFlameFront 
 << " " << maxPyrolysisFront << " " << maxSmolderingFront << endl;
 
-
 // Other diagnostics
+
+label nCells = 0;
+
 forAll (mesh.C(),cellI)
 {
 	// heat flux ahead of the flame
@@ -66,6 +68,7 @@ forAll (mesh.C(),cellI)
 
 	if (mesh.C()[cellI].x() > maxPyrolysisFront) 
 	{ 
+			nCells = nCells + 1;
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];
 	    	QradPUVbed[cellI]  = particles.surfaceHeatFluxRad[cellI] / mesh.V()[cellI];				
 	}
@@ -80,3 +83,7 @@ forAll (mesh.C(),cellI)
 	//fluid momentum
 	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];
 }
+
+QconvPUVbed = QconvPUVbed/nCells;
+QradPUVbed = QradPUVbed/nCells;
+
