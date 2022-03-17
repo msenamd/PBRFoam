@@ -84,6 +84,6 @@ forAll (mesh.C(),cellI)
 	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];
 }
 
-QconvPUVbed = QconvPUVbed/nCells;
-QradPUVbed = QradPUVbed/nCells;
+QconvPUVbed = QconvPUVbed/max(nCells,1);
+QradPUVbed = QradPUVbed/max(nCells,1);
 
