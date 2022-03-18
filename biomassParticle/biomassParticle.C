@@ -85,10 +85,10 @@ bool Foam::biomassParticle::move
         }
 
         // Remove particle if status is burned
-        /*if(particleState_ == 2)
+        if(particleState_ == 3)
         {
             td.keepParticle = false;
-        }*/
+        }
     }
     
     return td.keepParticle;
