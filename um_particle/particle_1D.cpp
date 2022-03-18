@@ -580,7 +580,6 @@ void particle_1D::stepForward(
     // Set time
     localTime = 0.0;
     localTimeStepIndex = 0;
-    adjustTimeStep(globalTimeStepSize);
     getNumLocalTimeSteps(globalTimeStepSize);
 
     // Reset the time accumulated output quantities
@@ -651,7 +650,12 @@ void particle_1D::stepForward(
             // Save solution at previous iteration
             for (int i = 0; i < numCells_old; i++)
             { 
-                Temp_oldIter[i] = 0.5*Temp_newIter[i] + 0.5*Temp_oldIter[i] ;
+                //Safety: limit temperature and O2 mass fraction
+                particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
+                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
+
+                //Use the average of old and new iterations
+                Temp_oldIter[i] = 0.5*Temp_newIter[i] + 0.5*Temp_oldIter[i];
                 wetSolidVolFraction_oldIter[i] = 0.5*wetSolidVolFraction_newIter[i] + 0.5*wetSolidVolFraction_oldIter[i];
                 drySolidVolFraction_oldIter[i] = 0.5*drySolidVolFraction_newIter[i] + 0.5*drySolidVolFraction_oldIter[i];
                 charVolFraction_oldIter[i] = 0.5*charVolFraction_newIter[i] + 0.5*charVolFraction_oldIter[i];
@@ -785,6 +789,9 @@ void particle_1D::stepForward(
         cout << "   --pressure error = " << pressureError << endl;
         #endif      
     } //end time loop
+
+    // Time-step restriction
+    adjustTimeStep(globalTimeStepSize);
 }
 
 /**
@@ -809,8 +816,6 @@ void particle_1D::calcReactionThermo()
     for (int i = 0; i < numCells_old; i++)
     {
         //calculate reaction rates
-        Temp_old[i] = min(2500.0, Temp_old[i]); //safety
-        particleO2MassFraction_old[i] = max(0.0, particleO2MassFraction_old[i]); //safety
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_old[i]) * wetSolidVolFraction_old[i] * cellVolume_old[i], R1->get_n())
                             * pow(integralWetSolidMass[i] + initWetSolidMass[i] , 1.0 - R1->get_n())
@@ -913,8 +918,6 @@ void particle_1D::calcReaction_oldIter()
 {
     for (int i = 0; i < numCells; i++)
     {
-        Temp_oldIter[i] = min(2500.0, Temp_oldIter[i]); //safety
-        particleO2MassFraction_oldIter[i] = max(0.0, particleO2MassFraction_oldIter[i]); //safety
 
         R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_oldIter[i]) * wetSolidVolFraction_oldIter[i]
                             * cellVolume_old[i], R1->get_n())
@@ -1664,6 +1667,8 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
                     (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation)
                     * surfaceGridSpacing / surfaceConductivity) / (1.0 + Bi);
 
+    surfaceTemp = max(273.0, min(surfaceTemp, 3000.0));
+
     surfaceHeatFluxConv = h_conv * (externalTemperature - surfaceTemp);
 
     surfaceHeatFluxRad = surfaceEmissivity * externalIrradiation
@@ -1680,6 +1685,8 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
 
     surfaceO2MassFrac = (Bi * externalO2MassFrac + particleO2MassFraction.back())
                         / (1 + Bi);
+
+    surfaceO2MassFrac = max(0.0, min(surfaceO2MassFrac, 1.0));
 
     surfaceMassFlux = h_mass * (externalO2MassFrac - surfaceO2MassFrac);
 
@@ -2014,11 +2021,12 @@ void particle_1D::interpolateOnNewMesh()
                 / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
 
 
-            // Safety: enforce 0 <= VolFraction <= 1
+            // Safety: enforce 0 <= VolFraction (massFration) <= 1
             wetSolidVolFraction[i] = max(0.0, min(1.0, wetSolidVolFraction[i]));
             drySolidVolFraction[i] = max(0.0, min(1.0, drySolidVolFraction[i]));
             charVolFraction[i] = max(0.0, min(1.0, charVolFraction[i]));
             ashVolFraction[i] = max(0.0, min(1.0, ashVolFraction[i]));  
+            particleO2MassFraction[i] = max(0.0, min(1.0, particleO2MassFraction[i])); 
 
             // Safety: disallow negative mass
             integralWetSolidMass[i] = max(1e-14, integralWetSolidMass[i]);
