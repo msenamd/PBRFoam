@@ -643,7 +643,7 @@ void particle_1D::stepForward(
         // Begin the iterative loop
         iter = 0;
         iterMaxError = 1.0;
-        while ((iter < maxIter) && (iterMaxError > 0.001))
+        while ((iter < maxIter) && (iterMaxError > 0.01))
         {
             iter++;
 
