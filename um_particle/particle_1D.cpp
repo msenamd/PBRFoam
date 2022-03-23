@@ -599,6 +599,7 @@ void particle_1D::stepForward(
         numCells_old = numCells;
         cellVolume_old = cellVolume;
         cellSize_old = cellSize;
+        localTimeStepSize_old = localTimeStepSize;
         Temp_old = Temp;
         wetSolidVolFraction_old = wetSolidVolFraction;
         drySolidVolFraction_old = drySolidVolFraction;
@@ -618,7 +619,7 @@ void particle_1D::stepForward(
         calcCellFaceArea();
 
         // Calculate the heat transfer coefficient based on external flow state
-        h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, Temp.back(), externalVelocity, shape->currentSize);
+        h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_old, externalVelocity, shape->currentSize);
         correctForBlowing();
 
         // Initial guess for the iterative loop
@@ -650,11 +651,6 @@ void particle_1D::stepForward(
             // Save solution at previous iteration
             for (int i = 0; i < numCells_old; i++)
             { 
-                //Safety: limit temperature and O2 mass fraction
-                particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
-                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
-
-                //Use the average of old and new iterations
                 Temp_oldIter[i] = 0.5*Temp_newIter[i] + 0.5*Temp_oldIter[i];
                 wetSolidVolFraction_oldIter[i] = 0.5*wetSolidVolFraction_newIter[i] + 0.5*wetSolidVolFraction_oldIter[i];
                 drySolidVolFraction_oldIter[i] = 0.5*drySolidVolFraction_newIter[i] + 0.5*drySolidVolFraction_oldIter[i];
@@ -713,6 +709,13 @@ void particle_1D::stepForward(
             vectC.clear();
             vectD.clear();
 
+            //Safety: disallow negative oxygen mass fraction or extreme temperatures
+            for (int i = 0; i < numCells_old; i++)
+            {
+                particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
+                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
+            }
+
             // Calculate the numerical error of the iterative loop
             calcIterError();
 
@@ -756,9 +759,15 @@ void particle_1D::stepForward(
         particleO2MassFraction = particleO2MassFraction_newIter;
         particlePressure = particlePressure_newIter;
 
+        // Time-step restriction
+        adjustTimeStep(globalTimeStepSize - localTime);
+
         // Update computational grid (in case of volume change)
         moveMesh(xFacePositive, xCellCenter, cellSize, numCells_old, cellVolume);
 
+        // Re-mesh the particle due to size change
+        //remeshing();
+ 
         // Update the conditions at the exposed surface
         updateExposedSurface(externalTemperature, externalVelocity,
                              externalO2MassFrac, externalIrradiation);
@@ -768,9 +777,6 @@ void particle_1D::stepForward(
 
         // Update model outputs
         updateOutputs();
-
-        // Re-mesh the particle due to size change
-        remeshing();
 
         // check prints
         #if defined _DEBUG
@@ -789,9 +795,6 @@ void particle_1D::stepForward(
         cout << "   --pressure error = " << pressureError << endl;
         #endif      
     } //end time loop
-
-    // Time-step restriction
-    adjustTimeStep(globalTimeStepSize);
 }
 
 /**
@@ -904,7 +907,7 @@ void particle_1D::accumulateSolidMass()
         integralWetSolidMass[i] = integralWetSolidMass[i];
         integralDrySolidMass[i] = integralDrySolidMass[i] + localTimeStepSize * R1->get_productYield() * R1reactionRate[i];
         integralCharMass[i] = integralCharMass[i] + localTimeStepSize * (R2->get_productYield() * R2reactionRate[i]
-                                                                        + R3->get_productYield() * R3reactionRate[i]);
+                                                                       + R3->get_productYield() * R3reactionRate[i]);
     }
 }
 
@@ -943,7 +946,7 @@ void particle_1D::calcReaction_oldIter()
                             * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
                             * pow(particleO2MassFraction_oldIter[i] / 0.226, R4->get_nO2())
                             * R4->get_A()
-                            * exp(-R4->get_Ta() / Temp_old[i]);
+                            * exp(-R4->get_Ta() / Temp_oldIter[i]);
     }
 
 }
@@ -1106,7 +1109,7 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
     vectD[i] = (0.5 * FO_L + 0.5 * CFL_L) * Temp_old[i-1]
                 + (1 - 0.5 * FO_L - 0.5 * CFL_L) * Temp_old[i] + dRRTemp[i];
 
-    h_rad = surfaceEmissivity * sigma * pow(surfaceTemp_old, 3.0);
+    h_rad = surfaceEmissivity * sigma * pow(surfaceTemp_oldIter, 3.0);
 
 	Bi = (h_conv + h_rad) * surfaceGridSpacing / surfaceConductivity;
 
@@ -1306,7 +1309,7 @@ void particle_1D::pressure_equation(const double externalPressure)
 void particle_1D::set_heatFO_L(const int &i , const double &dt_)
 {
     FO_L = 0.5 * (effectiveConductivity[i] + effectiveConductivity[i-1]) / effectiveVolHeatCapacity[i] 
-         * areaFaceNegative[i] * dt_ / (cellVolume[i] * (xCellCenter[i] - xCellCenter[i-1]));
+         * areaFaceNegative[i] * dt_ / (cellVolume_old[i] * (xCellCenter[i] - xCellCenter[i-1]));
 }
 /**
 * Calculate mass transfer's Fourier number (FO), for left face
@@ -1316,9 +1319,9 @@ void particle_1D::set_heatFO_L(const int &i , const double &dt_)
 */
 void particle_1D::set_massFO_L(const int& i, const double& dt_)
 {
-    FO_L = 0.5 * (porosity[i] * diffusivity[i] * air->get_rho(Temp_oldIter[i]) + porosity[i-1] * diffusivity[i-1] * air->get_rho(Temp_oldIter[i-1])) 
-         / (porosity[i] * air->get_rho(Temp_oldIter[i])) 
-         * areaFaceNegative[i] * dt_ / (cellVolume[i] * (xCellCenter[i] - xCellCenter[i-1]));
+    FO_L = 0.5 * (porosity[i] * diffusivity[i] * air->get_rho(Temp_old[i]) + porosity[i-1] * diffusivity[i-1] * air->get_rho(Temp_old[i-1])) 
+         / (porosity[i] * air->get_rho(Temp_old[i])) 
+         * areaFaceNegative[i] * dt_ / (cellVolume_old[i] * (xCellCenter[i] - xCellCenter[i-1]));
 }
 
 /**
@@ -1329,7 +1332,7 @@ void particle_1D::set_massFO_L(const int& i, const double& dt_)
 */void particle_1D::set_heatFO_R(const int &i , const double &dt_)
 {
     FO_R = 0.5 * (effectiveConductivity[i] + effectiveConductivity[i+1]) / effectiveVolHeatCapacity[i] 
-         * areaFacePositive[i] * dt_ / (cellVolume[i] * (xCellCenter[i+1] - xCellCenter[i]));
+         * areaFacePositive[i] * dt_ / (cellVolume_old[i] * (xCellCenter[i+1] - xCellCenter[i]));
 }
 /**
 * Calculate mass transfer's Fourier number (FO), for right face
@@ -1339,9 +1342,9 @@ void particle_1D::set_massFO_L(const int& i, const double& dt_)
 */
 void particle_1D::set_massFO_R(const int& i, const double& dt_)
 {
-    FO_R = 0.5 * (porosity[i] * diffusivity[i] * air->get_rho(Temp_oldIter[i]) + porosity[i+1] * diffusivity[i+1] * air->get_rho(Temp_oldIter[i+1]))
-         / (porosity[i] * air->get_rho(Temp_oldIter[i])) 
-         * areaFacePositive[i] * dt_ / (cellVolume[i] * (xCellCenter[i+1] - xCellCenter[i]));
+    FO_R = 0.5 * (porosity[i] * diffusivity[i] * air->get_rho(Temp_old[i]) + porosity[i+1] * diffusivity[i+1] * air->get_rho(Temp_old[i+1]))
+         / (porosity[i] * air->get_rho(Temp_old[i])) 
+         * areaFacePositive[i] * dt_ / (cellVolume_old[i] * (xCellCenter[i+1] - xCellCenter[i]));
 }
 
 /**
@@ -1559,15 +1562,15 @@ void particle_1D::calcIterError()
 * @param globalTimeStepSize: the global time-step size
 * @return
 */
-void particle_1D::getNumLocalTimeSteps(const double remianingTime)
+void particle_1D::getNumLocalTimeSteps(const double remainingTime)
 {
-    localTimeStepSize = min(localTimeStepSize, remianingTime);
-    finalTimeStepIndex = round(remianingTime / localTimeStepSize);
+    localTimeStepSize = min(localTimeStepSize, remainingTime);
+    finalTimeStepIndex = floor(remainingTime / localTimeStepSize);
 
-    if ((finalTimeStepIndex * localTimeStepSize) != remianingTime)
+    if ((finalTimeStepIndex * localTimeStepSize) < remainingTime)
     {
         finalTimeStepIndex = finalTimeStepIndex + 1;
-        localTimeStepSize = remianingTime / finalTimeStepIndex;
+        localTimeStepSize = remainingTime / finalTimeStepIndex;
     }
 }
 
@@ -1579,8 +1582,6 @@ void particle_1D::getNumLocalTimeSteps(const double remianingTime)
 void particle_1D::adjustTimeStep(const double remainingTime)
 {
     double dt_Temp, dt_wetSolid, dt_drySolid, dt_char, dt_ash, dt_O2, dt_pressure;
-
-    localTimeStepSize_old = localTimeStepSize;
 
     // Limit the time step dt so that variations in Q are less than a user defined Threshold
     dt_Temp = localTimeStepSize_old * temperatureThreshold / max(TempDifference_time, 1e-14);
@@ -1607,6 +1608,15 @@ void particle_1D::adjustTimeStep(const double remainingTime)
                               dt_pressure
                             });
 
+    // Update the total number of time-steps according to the new dt
+    localTimeStepIndex = 0;
+    finalTimeStepIndex = floor(remainingTime / localTimeStepSize);
+
+    if ((finalTimeStepIndex * localTimeStepSize) < remainingTime)
+    {
+        finalTimeStepIndex = finalTimeStepIndex + 1;
+        localTimeStepSize = remainingTime / finalTimeStepIndex;
+    }
 }
 
 /**
@@ -1657,7 +1667,7 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
 
     // Calculate the heat flux and the temperature at the exposed surface
 
-    h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_old, externalVelocity, shape->currentSize);
+    h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_newIter, externalVelocity, shape->currentSize);
     correctForBlowing();
 
     h_rad = surfaceEmissivity * sigma * pow(surfaceTemp_newIter, 3.0);
@@ -1672,7 +1682,7 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
     surfaceHeatFluxConv = h_conv * (externalTemperature - surfaceTemp);
 
     surfaceHeatFluxRad = surfaceEmissivity * externalIrradiation
-                        - surfaceEmissivity * sigma * pow(surfaceTemp, 4.0);
+                       - surfaceEmissivity * sigma * pow(surfaceTemp, 4.0);
 
     surfaceHeatFlux = surfaceHeatFluxConv + surfaceHeatFluxRad;
 
@@ -2026,7 +2036,10 @@ void particle_1D::interpolateOnNewMesh()
             drySolidVolFraction[i] = max(0.0, min(1.0, drySolidVolFraction[i]));
             charVolFraction[i] = max(0.0, min(1.0, charVolFraction[i]));
             ashVolFraction[i] = max(0.0, min(1.0, ashVolFraction[i]));  
-            particleO2MassFraction[i] = max(0.0, min(1.0, particleO2MassFraction[i])); 
+
+            //Safety: disallow negative oxygen mass fraction or extreme temperatures
+            particleO2MassFraction[i] = max(0.0, min(particleO2MassFraction[i], 1.0));
+            Temp[i] = max(273.0, min(Temp[i], 3000.0));
 
             // Safety: disallow negative mass
             integralWetSolidMass[i] = max(1e-14, integralWetSolidMass[i]);

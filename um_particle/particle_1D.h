@@ -283,7 +283,7 @@ private:
         double maxAbsDifference(std::vector<double> vectX, std::vector<double> vectY);
 
         // Check the summation of local time-steps is equal to the global time step size
-        void getNumLocalTimeSteps(const double remianingTime);
+        void getNumLocalTimeSteps(const double remainingTime);
 
         // Adjust the local time-step of particle integration
 		void adjustTimeStep(const double remianingTime);
