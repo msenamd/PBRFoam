@@ -42,7 +42,9 @@ public:
         ambient,
         preheat,
         burning,
-        burned,
+        gasified,
+        charred,
+        ashed,
         empty
     };
     eState state;

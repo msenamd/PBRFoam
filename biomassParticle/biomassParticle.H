@@ -84,7 +84,8 @@ class biomassParticle
 
         // Stored particle data
 
-            // Particle state (0:ambient, 1:preheat, 2:burning, 3:burned)
+            // Particle state 
+            //(0:ambient, 1:preheat, 2:burning, 3:gasified, 4: charred, 5: ashed, 6: empty)
             label particleState_;
 
             // Particle time step size

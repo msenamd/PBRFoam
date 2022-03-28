@@ -84,10 +84,16 @@ bool Foam::biomassParticle::move
             }
         }
 
-        // Remove particle if status is burned
-        if(particleState_ == 3)
+        // Remove or collapse the particle to ground
+        if(particleState_ == 3) 
         {
+            // remove if gassified
             td.keepParticle = false;
+        }
+        else if(particleState_ == 4 || particleState_ == 5)
+        {
+            // collapse to ground if charred or ashed
+            particleVelo_ = particleVelo_ + dt * td.g();
         }
     }
     

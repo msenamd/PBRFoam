@@ -590,7 +590,7 @@ void particle_1D::stepForward(
     globalHeatReleased = 0.0;
 
     // Local time loop
-    while ((localTimeStepIndex < finalTimeStepIndex) && (state != burned))
+    while ((localTimeStepIndex < finalTimeStepIndex) && (state == burning || state != gasified))
     {
         localTimeStepIndex++;
         localTime = localTime + localTimeStepSize;
@@ -1742,7 +1742,7 @@ Particle::eState particle_1D::checkState()
             cout << "particle is completely consumed to zero size" << endl;
             #endif
 
-            return burned;
+            return gasified;
         }
         else if ((R2->get_productYield() != 0) && (charVolFraction.front() > 0.999))
         {
@@ -1750,7 +1750,7 @@ Particle::eState particle_1D::checkState()
             cout << "particle is completely transformed into char" << endl;
             #endif
 
-            return burned;
+            return charred;
         }
         else
         {
@@ -1765,7 +1765,7 @@ Particle::eState particle_1D::checkState()
             cout << "particle is completely consumed to zero size" << endl;
             #endif
 
-            return burned;
+            return gasified;
         }
         else if ((R4->get_productYield() != 0) && (ashVolFraction.front() > 0.999))
         {
@@ -1773,15 +1773,13 @@ Particle::eState particle_1D::checkState()
             cout << "particle is completely transformed into ash" << endl;
             #endif
 
-            return burned;
+            return ashed;
         }
         else
         {
             return burning;
         }
     }
-
-    return burned;
 }
 
 /**
