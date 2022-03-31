@@ -54,7 +54,6 @@ int main(int argc, char *argv[])
     #include "createControl.H"
     #include "createFields.H"
     #include "createFieldRefs.H"
-    #include "diagnosticsFields.H"
     #include "createFvOptions.H"
     #include "initContinuityErrs.H"
     #include "createTimeControls.H"
@@ -62,6 +61,7 @@ int main(int argc, char *argv[])
     #include "setInitialDeltaT.H"
 
     #include "createClouds.H"
+    #include "createDiagnostics.H"
 
     turbulence->validate();
 

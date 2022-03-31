@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 
     OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
+    OFstream os_ID(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleID");
     OFstream os_state(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleState");
     OFstream os_dt(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particledt");
     OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
@@ -93,6 +94,7 @@ int main(int argc, char *argv[])
 
 
     writeHeader(os_pos, "Cloud<solidParticle>", "positions");
+    writeHeader(os_ID, "labelField", "particleID");
     writeHeader(os_state, "labelField", "particleState");
     writeHeader(os_dt, "scalarField", "particledt");
     writeHeader(os_size, "scalarField", "particleSize");
@@ -235,6 +237,11 @@ int main(int argc, char *argv[])
 
 
     Info << "Writing other particle data" << endl;
+
+    writeData( os_ID, mesh, 0, numSuperParticles, 
+                xMin, yMin, zMin,
+                xMax, yMax, zMax
+            );
 
     writeData( os_state, mesh, initState, numSuperParticles, 
                 xMin, yMin, zMin,

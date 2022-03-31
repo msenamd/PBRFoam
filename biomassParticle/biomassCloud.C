@@ -528,7 +528,7 @@ Foam::biomassCloud::biomassCloud
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
+                    IOobject::NO_WRITE
                 ),
                 this->mesh(),
                 dimensionedScalar("zero", dimMass/dimVol, 0.0)

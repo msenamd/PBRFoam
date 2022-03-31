@@ -286,6 +286,7 @@ void Foam::biomassParticle::updateParticle
     particleMass_      = p1D.particleMass;
     particleVol_       = p1D.particleVol;
     surfaceTemp_       = p1D.surfaceTemp;
+    coreTemp_          = p1D.coreTemp;
     convFlux_          = p1D.surfaceHeatFluxConv;
     radFlux_           = p1D.surfaceHeatFluxRad; 
     massFlux_          = p1D.surfaceMassFlux;   
@@ -295,6 +296,7 @@ void Foam::biomassParticle::updateParticle
     pyrolysisRate_     = p1D.globalR2reactionRate;
     oxidPyrolysisRate_ = p1D.globalR3reactionRate;
     charOxidRate_      = p1D.globalR4reactionRate;
+    massLossRate_      = p1D.globalMassLossRate;
 
     // update particle velocity
     if(td.cloud().dragModel == "constant")
@@ -318,7 +320,6 @@ void Foam::biomassParticle::updateParticle
     {
         particleVelo_ = Zero;
     }
-
 
     //  Accumulate carrier phase source terms for this dt
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

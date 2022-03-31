@@ -31,7 +31,7 @@ License
 const std::size_t Foam::biomassParticle::sizeofFields_
 (
     offsetof(biomassParticle, particleTemp_)
-    - offsetof(biomassParticle, particleState_)
+    - offsetof(biomassParticle, particleID_)
 );
 
 
@@ -46,6 +46,7 @@ Foam::biomassParticle::biomassParticle
 :
     particle(mesh, is, readFields),
 
+    particleID_(0),
     particleState_(0),
     particledt_(0.0),
     particleSize_(0.0),
@@ -65,6 +66,7 @@ Foam::biomassParticle::biomassParticle
     particleMass_(0.0),
     particleVol_(0.0), 
     surfaceTemp_(0.0),
+    coreTemp_(0.0),
     convFlux_(0.0),
     radFlux_(0.0),
     massFlux_(0.0),    
@@ -74,7 +76,8 @@ Foam::biomassParticle::biomassParticle
     dryingRate_(0.0),
     pyrolysisRate_(0.0),
     oxidPyrolysisRate_(0.0),
-    charOxidRate_(0.0)
+    charOxidRate_(0.0),
+    massLossRate_(0.0)
 {
 
     DynamicList<scalar> T;
@@ -94,7 +97,7 @@ Foam::biomassParticle::biomassParticle
 
        if (is.format() == IOstream::ASCII)
         {
-            particleState_ = readLabel(is);
+            particleID_ = readLabel(is);
             particledt_ = readScalar(is);
             particleSize_ = readScalar(is);
             is >> particleVelo_;
@@ -113,7 +116,7 @@ Foam::biomassParticle::biomassParticle
         }
         else
         {
-            is.read(reinterpret_cast<char*>(&particleState_), sizeofFields_);
+            is.read(reinterpret_cast<char*>(&particleID_), sizeofFields_);
             
             is >> T;
             is >> p;
@@ -151,6 +154,12 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     }
 
     particle::readFields(c);
+
+    IOField<label> particleID
+    (
+        c.fieldIOobject("particleID", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, particleID);
 
 
     IOField<label> particleState
@@ -251,6 +260,7 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     {
         biomassParticle& bp = iter();
 
+        bp.particleID_              = particleID[i];
         bp.particleState_           = particleState[i];
         bp.particledt_              = particledt[i];
         bp.particleSize_            = particleSize[i];
@@ -278,6 +288,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
 
     label np = c.size();
 
+    IOField<label> particleID(c.fieldIOobject("particleID", IOobject::NO_READ), np);    
     IOField<label> particleState(c.fieldIOobject("particleState", IOobject::NO_READ), np);    
     IOField<scalar> particledt(c.fieldIOobject("particledt", IOobject::NO_READ), np);
     IOField<scalar> particleSize(c.fieldIOobject("particleSize", IOobject::NO_READ), np);
@@ -297,6 +308,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalar> particleMass(c.fieldIOobject("particleMass", IOobject::NO_READ), np);
     IOField<scalar> particleVol(c.fieldIOobject("particleVol", IOobject::NO_READ), np);
     IOField<scalar> surfaceTemp(c.fieldIOobject("surfaceTemp", IOobject::NO_READ), np);
+    IOField<scalar> coreTemp(c.fieldIOobject("coreTemp", IOobject::NO_READ), np);    
     IOField<scalar> convFlux(c.fieldIOobject("convFlux", IOobject::NO_READ), np);
     IOField<scalar> radFlux(c.fieldIOobject("radFlux", IOobject::NO_READ), np);
     IOField<scalar> massFlux(c.fieldIOobject("massFlux", IOobject::NO_READ), np);
@@ -308,12 +320,14 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalar> pyrolysisRate(c.fieldIOobject("pyrolysisRate", IOobject::NO_READ), np);
     IOField<scalar> oxidPyrolysisRate(c.fieldIOobject("oxidPyrolysisRate", IOobject::NO_READ), np);
     IOField<scalar> charOxidRate(c.fieldIOobject("charOxidRate", IOobject::NO_READ), np);
+    IOField<scalar> massLossRate(c.fieldIOobject("massLossRate", IOobject::NO_READ), np);
 
     label i = 0;
     forAllConstIter(Cloud<biomassParticle>, c, iter)
     {
         const biomassParticle& bp = iter();
 
+        particleID[i]             = bp.particleID_;
         particleState[i]          = bp.particleState_;
         particledt[i]             = bp.particledt_;
         particleSize[i]           = bp.particleSize_;
@@ -330,24 +344,27 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
         integralDrySolidMass[i]   = bp.integralDrySolidMass_;
         integralCharMass[i]       = bp.integralCharMass_;
 
-        particleMass[i]      = bp.particleMass_;
-        particleVol[i]       = bp.particleVol_;
-        surfaceTemp[i]       = bp.surfaceTemp_;
-        convFlux[i]          = bp.convFlux_;
-        radFlux[i]           = bp.radFlux_;
-        massFlux[i]          = bp.massFlux_;
-        surfaceO2MassFrac[i] = bp.surfaceO2MassFrac_;
-        hConv[i]             = bp.hConv_;
-        CD[i]                = bp.CD_;
+        particleMass[i]           = bp.particleMass_;
+        particleVol[i]            = bp.particleVol_;
+        surfaceTemp[i]            = bp.surfaceTemp_;
+        coreTemp[i]               = bp.coreTemp_;
+        convFlux[i]               = bp.convFlux_;
+        radFlux[i]                = bp.radFlux_;
+        massFlux[i]               = bp.massFlux_;
+        surfaceO2MassFrac[i]      = bp.surfaceO2MassFrac_;
+        hConv[i]                  = bp.hConv_;
+        CD[i]                     = bp.CD_;
 
-        dryingRate[i]           = bp.dryingRate_;
-        pyrolysisRate[i]        = bp.pyrolysisRate_;
-        oxidPyrolysisRate[i]    = bp.oxidPyrolysisRate_;
-        charOxidRate[i]         = bp.charOxidRate_;
+        dryingRate[i]             = bp.dryingRate_;
+        pyrolysisRate[i]          = bp.pyrolysisRate_;
+        oxidPyrolysisRate[i]      = bp.oxidPyrolysisRate_;
+        charOxidRate[i]           = bp.charOxidRate_;
+        massLossRate[i]           = bp.massLossRate_;
 
         i++;
     }
 
+    particleID.write();
     particleState.write();
     particledt.write();
     particleSize.write();
@@ -367,6 +384,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     particleMass.write();
     particleVol.write();
     surfaceTemp.write();
+    coreTemp.write();
     convFlux.write();
     radFlux.write();
     massFlux.write();
@@ -378,6 +396,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     pyrolysisRate.write();
     oxidPyrolysisRate.write();
     charOxidRate.write();
+    massLossRate.write();
 }
 
 
@@ -388,6 +407,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
     if (os.format() == IOstream::ASCII)
     {
         os  << static_cast<const particle&>(bp)
+            << token::SPACE << bp.particleID_
             << token::SPACE << bp.particleState_
             << token::SPACE << bp.particledt_
             << token::SPACE << bp.particleSize_
@@ -408,7 +428,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
         os  << static_cast<const particle&>(bp);
         os.write
         (
-            reinterpret_cast<const char*>(&bp.particleState_),
+            reinterpret_cast<const char*>(&bp.particleID_),
             biomassParticle::sizeofFields_
         );
         os  << bp.particleTemp_;

@@ -57,6 +57,7 @@ inline Foam::biomassParticle::biomassParticle
     const label celli,
     const label tetFacei,
     const label tetPtI,
+    const label particleID,
     const label particleState,
     const scalar particledt,
     const scalar particleSize,
@@ -74,7 +75,8 @@ inline Foam::biomassParticle::biomassParticle
 )
 :
     particle(mesh, position, celli, tetFacei, tetPtI),
-    
+
+    particleID_(particleID),    
     particleState_(particleState),
     particledt_(particledt),
     particleSize_(particleSize),
@@ -95,6 +97,7 @@ inline Foam::biomassParticle::biomassParticle
     particleMass_(0.0),
     particleVol_(0.0), 
     surfaceTemp_(0.0),
+    coreTemp_(0.0),
     convFlux_(0.0),
     radFlux_(0.0),
     massFlux_(0.0),
@@ -104,7 +107,8 @@ inline Foam::biomassParticle::biomassParticle
     dryingRate_(0.0),
     pyrolysisRate_(0.0),
     oxidPyrolysisRate_(0.0),
-    charOxidRate_(0.0)
+    charOxidRate_(0.0),
+    massLossRate_(0.0)
 {
 
 }
@@ -151,5 +155,85 @@ inline const Foam::vector& Foam::biomassParticle::trackingData::g() const
 {
     return g_;
 }
+
+
+// Return constant access to private data
+inline Foam::label Foam::biomassParticle::particleID() const
+{
+    return particleID_;
+}
+inline Foam::label Foam::biomassParticle::particleState() const
+{
+    return particleState_;
+}
+inline Foam::scalar Foam::biomassParticle::particledt() const
+{
+    return particledt_;
+}
+inline Foam::scalar Foam::biomassParticle::particleSize() const
+{
+    return particleSize_;
+}
+inline Foam::vector Foam::biomassParticle::particleVelo() const
+{
+    return particleVelo_;
+}
+inline Foam::scalar Foam::biomassParticle::particleMass() const
+{
+    return particleMass_;
+}
+inline Foam::scalar Foam::biomassParticle::surfaceTemp() const
+{
+    return surfaceTemp_;
+}
+inline Foam::scalar Foam::biomassParticle::coreTemp() const
+{
+    return coreTemp_;
+}
+inline Foam::scalar Foam::biomassParticle::convFlux() const
+{
+    return convFlux_;
+}
+inline Foam::scalar Foam::biomassParticle::radFlux() const
+{
+    return radFlux_;
+}
+inline Foam::scalar Foam::biomassParticle::massFlux() const
+{
+    return massFlux_;
+}
+inline Foam::scalar Foam::biomassParticle::surfaceO2MassFrac() const
+{
+    return surfaceO2MassFrac_;
+}
+inline Foam::scalar Foam::biomassParticle::hConv() const
+{
+    return hConv_;
+}
+inline Foam::scalar Foam::biomassParticle::CD() const
+{
+    return CD_;
+}
+inline Foam::scalar Foam::biomassParticle::dryingRate() const
+{
+    return dryingRate_;
+}
+inline Foam::scalar Foam::biomassParticle::pyrolysisRate() const
+{
+    return pyrolysisRate_;
+}
+inline Foam::scalar Foam::biomassParticle::oxidPyrolysisRate() const
+{
+    return oxidPyrolysisRate_;
+}
+inline Foam::scalar Foam::biomassParticle::charOxidRate() const
+{
+    return charOxidRate_;
+}
+inline Foam::scalar Foam::biomassParticle::massLossRate() const
+{
+    return massLossRate_;
+}
+
 
 // ************************************************************************* //

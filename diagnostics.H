@@ -57,8 +57,8 @@ scalar maxDryingFront = max(dryingFront).value();
 scalar maxPyrolysisFront = max(pyrolysisFront).value();
 scalar maxSmolderingFront = max(smolderingFront).value();
 
-outFireFront << runTime.value() << " " << maxFlameHeight << " " << maxFlameFront
-<< " " << maxDryingFront << " " << maxPyrolysisFront << " " << maxSmolderingFront << endl;
+outFireFront << runTime.value() << "," << maxFlameHeight << "," << maxFlameFront
+<< "," << maxDryingFront << "," << maxPyrolysisFront << "," << maxSmolderingFront << endl;
 
 
 
@@ -86,3 +86,21 @@ forAll (mesh.C(),cellI)
 QconvPUVbed = QconvPUVbed/max(nCells,1);
 QradPUVbed = QradPUVbed/max(nCells,1);
 
+
+// Write particle properties if their IDs are > 0
+forAllConstIter(biomassCloud, particles, iter)
+{
+    if(iter().particleID() > 0)
+    {
+    	std::ofstream outParticle("particle" + name(iter().particleID()) + ".csv", ios::app);
+
+        outParticle << runTime.timeName() << "," << iter().position()[0] << "," << iter().position()[1] << "," << iter().position()[2] << "," 
+                    << iter().particleState() << "," << iter().particledt() << "," << iter().particleSize() << ","  
+                    << iter().particleVelo()[0] << "," << iter().particleVelo()[1] << "," << iter().particleVelo()[2] << ","
+                    << iter().particleMass() << "," << iter().surfaceTemp()  << "," << iter().coreTemp()  << ","
+                    << iter().convFlux() << "," << iter().radFlux() << "," << iter().massFlux() << ","
+                    << iter().surfaceO2MassFrac() << "," << iter().hConv() << "," << iter().CD() << ","
+                    << iter().dryingRate() << "," << iter().pyrolysisRate() << "," << iter().oxidPyrolysisRate() << ","
+                    << iter().charOxidRate() << "," << iter().massLossRate() << endl;
+    }
+}
