@@ -39,12 +39,14 @@ public:
  
     // State of the particle
     enum eState{
-        ambient,
         preheat,
-        burning,
-        gasified,
-        charred,
+        drying,
+        pyrolysing,
+        flaming,
+        charring,
+        glowing,
         ashed,
+        consumed,
         empty
     };
     eState state;

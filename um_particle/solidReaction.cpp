@@ -104,7 +104,7 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         O2Yield = 2.0 * (1.0 - productYield_);
         return true;
     }
-    else if (reactionName == "passive solidReaction")
+    else if (reactionName == "passive")
     {
         A = 0.0;
         Ea = 0.0;

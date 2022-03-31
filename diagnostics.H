@@ -18,43 +18,49 @@ ft.min(1.0);
 convectiveHeatFlux = 
          - fvc::interpolate(turbulence->alphaEff())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
 
+
 // Fire front diagnostics
 forAll (mesh.C(),cellI)
 {
 	flameHeight[cellI] = 0.0;
 	flameFront[cellI] = 0.0;
-	PyrolysisFront[cellI] = 0.0;
-	SmolderingFront[cellI] = 0.0;
+	dryingFront[cellI] = 0.0;
+	pyrolysisFront[cellI] = 0.0;
+	smolderingFront[cellI] = 0.0;
 
-	// Flame front
-	if (ft[cellI] >= ftSt)
+	// flame front
+	if (dQ[cellI] >= 1e-12)
 	{ 
 	    flameHeight[cellI] = mesh.C()[cellI].z();
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
-
-	// Pyrolysis front
-	if (particles.pyrolysisRate[cellI] > 1e-12) 
+	// drying front
+	if (particles.state[cellI] == 1) 
 	{ 
-	    PyrolysisFront[cellI] = mesh.C()[cellI].x();
+	    dryingFront[cellI] = mesh.C()[cellI].x();
 	}
-
-	// Smoldering front
-	if (particles.charOxidRate[cellI] > 1e-12) 
+	// pyrolysis front
+	if (particles.state[cellI] == 2 || particles.state[cellI] == 3) 
 	{ 
-	    SmolderingFront[cellI] = mesh.C()[cellI].x();
+	    pyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
-
-
+	// smoldering front
+	if (particles.state[cellI] == 5) 
+	{ 
+	    smolderingFront[cellI] = mesh.C()[cellI].x();
+	}
 }
 
 scalar maxFlameHeight = max(flameHeight).value();
 scalar maxFlameFront = max(flameFront).value();
-scalar maxPyrolysisFront = max(PyrolysisFront).value();
-scalar maxSmolderingFront = max(SmolderingFront).value();
+scalar maxDryingFront = max(dryingFront).value();
+scalar maxPyrolysisFront = max(pyrolysisFront).value();
+scalar maxSmolderingFront = max(smolderingFront).value();
 
-outFireFront << runTime.value() << " " << maxFlameHeight << " " << maxFlameFront 
-<< " " << maxPyrolysisFront << " " << maxSmolderingFront << endl;
+outFireFront << runTime.value() << " " << maxFlameHeight << " " << maxFlameFront
+<< " " << maxDryingFront << " " << maxPyrolysisFront << " " << maxSmolderingFront << endl;
+
+
 
 // Other diagnostics
 
@@ -72,13 +78,6 @@ forAll (mesh.C(),cellI)
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];
 	    	QradPUVbed[cellI]  = particles.surfaceHeatFluxRad[cellI] / mesh.V()[cellI];				
 	}
-
-	//mass rates
-	mFuelPUVbed[cellI] = particles.gasFuelReleaseRate[cellI] / mesh.V()[cellI];
-	RR1PUVbed[cellI] = particles.dryingRate[cellI] / mesh.V()[cellI];
-	RR2PUVbed[cellI] = particles.pyrolysisRate[cellI] / mesh.V()[cellI];
-	RR3PUVbed[cellI] = particles.oxidPyrolysisRate[cellI] / mesh.V()[cellI];
-	RR4PUVbed[cellI] = particles.charOxidRate[cellI] / mesh.V()[cellI];
 
 	//fluid momentum
 	fluidMomentum[cellI] = rho[cellI]/(1.0 - particles.packingRatio[cellI]) * U[cellI] * mesh.V()[cellI];

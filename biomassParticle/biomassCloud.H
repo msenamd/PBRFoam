@@ -209,21 +209,25 @@ public:
             scalar Kperm_a;     // Permeability of the particle when pure ash [m2]
 
 
-           // Diagnostic Fields  
-            volScalarField packingRatio;            // Packing Ratio [-]
-            volScalarField surfToVolRatio;          // Particle surface area to volume ratio [1/m]            
-            volScalarField size;                    // Particle size [m]
-            volScalarField massLossRate;            // Total mass loss rate [kg/s]
-            volScalarField gasFuelReleaseRate;      // Fuel mass production rate [kg/s]
-            volScalarField dryingRate;              // Mass reaction rate in [kg/s]
-            volScalarField pyrolysisRate;           // Mass reaction rate in [kg/s]
-            volScalarField oxidPyrolysisRate;       // Mass reaction rate in [kg/s]
-            volScalarField charOxidRate;            // Mass reaction rate in [kg/s]
-            volScalarField surfaceTemp;             // Surface temperature [K]   
-            volScalarField surfaceHeatFluxConv;     // Net surface convective heat flux [W/m2]   
-            volScalarField surfaceHeatFluxRad;      // Net surface radiative heat flux [W/m2]   
-            volScalarField surfaceO2MassFrac;       // Surface O2 mass fraction [-]
-            volVectorField momentum;                // Momentum [kg m/s]          
+           // Eulerian Diagnostic Fields
+
+            volScalarField packingRatio;                    // Packing Ratio [-]
+
+            volScalarField state;                           // state [-]
+
+            volScalarField massLossRatePUVbed;              // Total mass loss rate [kg/s/m3]
+            volScalarField gasFuelReleaseRatePUVbed;        // Fuel mass prod. rate [kg/s/m3]
+            volScalarField dryingRatePUVbed;                // Mass reaction rate in [kg/s/m3]
+            volScalarField pyrolysisRatePUVbed;             // Mass reaction rate in [kg/s/m3]
+            volScalarField oxidPyrolysisRatePUVbed;         // Mass reaction rate in [kg/s/m3]
+            volScalarField charOxidRatePUVbed;              // Mass reaction rate in [kg/s/m3]
+
+            volScalarField surfaceTemp;                     // Surface temperature [K]   
+            volScalarField surfaceHeatFluxConv;             // Surface convective heat flux [W/m2]   
+            volScalarField surfaceHeatFluxRad;              // Surface radiative heat flux [W/m2]   
+            volScalarField surfaceO2MassFrac;               // Surface O2 mass fraction [-]
+
+            volVectorField momentum;                        // Momentum [kg m/s]          
 
     // Constructors
 

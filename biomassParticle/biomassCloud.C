@@ -88,7 +88,7 @@ Foam::biomassCloud::biomassCloud
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE
             ),
             mesh_,
             dimensionedScalar("zero", dimMass/dimVol, 0.0)
@@ -108,7 +108,7 @@ Foam::biomassCloud::biomassCloud
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE
             ),
             mesh_,
             dimensionedVector("zero", dimForce/dimVol*dimTime, Zero)
@@ -124,7 +124,7 @@ Foam::biomassCloud::biomassCloud
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE
             ),
             this->mesh(),
             dimensionedScalar("zero", dimEnergy/dimVol, 0.0)
@@ -140,7 +140,7 @@ Foam::biomassCloud::biomassCloud
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE
             ),
             mesh_,
             dimensionedScalar("zero", dimless/dimLength , 0.0)
@@ -156,7 +156,7 @@ Foam::biomassCloud::biomassCloud
                 this->db().time().timeName(),
                 this->db(),
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::NO_WRITE
             ),
             mesh_,
             dimensionedScalar("zero", dimEnergy/dimVol , 0.0)
@@ -257,38 +257,25 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
-    ),
-    surfToVolRatio
+    ),  
+    state
     (
         IOobject
         (
-            this->name() + "_surfToVolRatio",
+            this->name() + "_state",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
         mesh_,
-        dimensionedScalar("zero", dimensionSet(0, -1, 0, 0, 0, 0 ,0) , 0.0)
+        dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
     ),    
-    size
+    massLossRatePUVbed
     (
         IOobject
         (
-            this->name() + "_size",
-            this->db().time().timeName(),
-            this->db(),
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("zero", dimensionSet(0, 1, 0, 0, 0, 0 ,0) , 0.0)
-    ),    
-    massLossRate
-    (
-        IOobject
-        (
-            this->name() + "_massLossRate",
+            this->name() + "_massLossRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -297,11 +284,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ), 
-    gasFuelReleaseRate
+    gasFuelReleaseRatePUVbed
     (
         IOobject
         (
-            this->name() + "_gasFuelReleaseRate",
+            this->name() + "_gasFuelReleaseRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -310,11 +297,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ),
-    dryingRate
+    dryingRatePUVbed
     (
         IOobject
         (
-            this->name() + "_dryingRate",
+            this->name() + "_dryingRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -323,11 +310,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ),
-    pyrolysisRate
+    pyrolysisRatePUVbed
     (
         IOobject
         (
-            this->name() + "_pyrolysisRate",
+            this->name() + "_pyrolysisRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -336,11 +323,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ),
-    oxidPyrolysisRate
+    oxidPyrolysisRatePUVbed
     (
         IOobject
         (
-            this->name() + "_oxidPyrolysisRate",
+            this->name() + "_oxidPyrolysisRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -349,11 +336,11 @@ Foam::biomassCloud::biomassCloud
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
     ), 
-    charOxidRate
+    charOxidRatePUVbed
     (
         IOobject
         (
-            this->name() + "_charOxidRate",
+            this->name() + "_charOxidRatePUVbed",
             this->db().time().timeName(),
             this->db(),
             IOobject::NO_READ,
@@ -577,9 +564,6 @@ void Foam::biomassCloud::evolve()
 
     // evolve the cloud
     Cloud<biomassParticle>::move(td, mesh_.time().deltaTValue());
-
-	Info << "particle size: " << "min = " << min(size()).value() 
-    << " , " << "max = " << max(size()).value() << endl;
 
     Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
     << " , " << "max = " << max(packingRatio()).value() << endl;

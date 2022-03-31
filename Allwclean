@@ -5,6 +5,6 @@ wclean libso um_particle
 wclean libso biomassParticle
 wclean libso radiation
 wclean
-wclean PBM_fireFoam
+wclean PBMFoam
 
 #------------------------------------------------------------------------------

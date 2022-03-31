@@ -383,7 +383,7 @@ void particle_1D::initialize(
 )
 {
 
-    state = burning;
+    state = preheat;
 
     // Set particle size
     initParticleSize = shape->currentSize;
@@ -590,7 +590,7 @@ void particle_1D::stepForward(
     globalHeatReleased = 0.0;
 
     // Local time loop
-    while ((localTimeStepIndex < finalTimeStepIndex) && (state == burning || state != gasified))
+    while ((localTimeStepIndex < finalTimeStepIndex) && (state != consumed))
     {
         localTimeStepIndex++;
         localTime = localTime + localTimeStepSize;
@@ -766,17 +766,17 @@ void particle_1D::stepForward(
         moveMesh(xFacePositive, xCellCenter, cellSize, numCells_old, cellVolume);
 
         // Re-mesh the particle due to size change
-        //remeshing();
+        remeshing();
  
         // Update the conditions at the exposed surface
         updateExposedSurface(externalTemperature, externalVelocity,
                              externalO2MassFrac, externalIrradiation);
 
-        // Update particle state and check burnout
-        state = checkState();
-
         // Update model outputs
         updateOutputs();
+
+        // Update particle state and check burnout
+        state = checkState();
 
         // check prints
         #if defined _DEBUG
@@ -1734,52 +1734,49 @@ void particle_1D::correctForBlowing()
 */
 Particle::eState particle_1D::checkState()
 {
-    if ((R3->get_A() == 0) && (R4->get_A() == 0)) //no oxidation
+    // particle is losing moisture, some pyrolysis gas may be emitting but it is below the set threshold for flaming ignition
+    if ( (wetSolidVolFraction.front() > 0.001) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3) )
     {
-        if ( (R2->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
-        {
-            #if defined _DEBUG
-            cout << "particle is completely consumed to zero size" << endl;
-            #endif
-
-            return gasified;
-        }
-        else if ((R2->get_productYield() != 0) && (charVolFraction.front() > 0.999))
-        {
-            #if defined _DEBUG
-            cout << "particle is completely transformed into char" << endl;
-            #endif
-
-            return charred;
-        }
-        else
-        {
-            return burning;
-        }
+        return drying;
     }
+    // particle is dry, some pyrolysis gas may be emitting but it is below the set threshold for flaming ignition
+    if ((drySolidVolFraction.front() > 0.999) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3))
+    {
+        return pyrolysing;
+    }
+    // particle is releasing pyrolysis gas at a rate higher than the ignition threshold, charring could also be occuring
+    else if (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) >= 1.0e-3)
+    {
+        return flaming;
+    }
+    // particle is charring, insignificant amounts of pyrolysis gas is being released, insignificant oxidation is occuring
+    else if ( (charVolFraction.front() > 0.001) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3) 
+            && (localHeatReleaseRate < 1e-9) )
+    {
+        return charring;
+    }
+    // particle is charring, insignificant amounts of pyrolysis gas is being released, significant oxidation is occuring
+    else if ((charVolFraction.front() > 0.001) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3)
+            && (localHeatReleaseRate >= 1e-9))
+    {
+        return glowing;
+    }
+    // charring and pyrolysis rates are insignificant, mostly composed of ash
+    else if (ashVolFraction.front() > 0.999)
+    {
+        return ashed;
+    }
+    // particle is completely consumed to insignificant size
+    else if (particleSize / initParticleSize < 0.01)
+    {
+        return consumed;
+    }
+    // otherwise, the particle is heating up
     else
     {
-        if ( (R4->get_productYield() == 0) && (shape->currentSize / initParticleSize < 0.01) )
-        {
-            #if defined _DEBUG
-            cout << "particle is completely consumed to zero size" << endl;
-            #endif
-
-            return gasified;
-        }
-        else if ((R4->get_productYield() != 0) && (ashVolFraction.front() > 0.999))
-        {
-            #if defined _DEBUG
-            cout << "particle is completely transformed into ash" << endl;
-            #endif
-
-            return ashed;
-        }
-        else
-        {
-            return burning;
-        }
+        return preheat;
     }
+
 }
 
 /**

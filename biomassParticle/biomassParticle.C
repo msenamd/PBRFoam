@@ -85,15 +85,15 @@ bool Foam::biomassParticle::move
         }
 
         // Remove or collapse the particle to ground
-        if(particleState_ == 3) 
+        if(particleState_ == 6)
+        {
+            // collapse to ground if ashed
+            particleVelo_ = particleVelo_ + dt * td.g();
+        }
+        else if(particleState_ == 7)
         {
             // remove if gassified
             td.keepParticle = false;
-        }
-        else if(particleState_ == 4 || particleState_ == 5)
-        {
-            // collapse to ground if charred or ashed
-            particleVelo_ = particleVelo_ + dt * td.g();
         }
     }
     
@@ -357,24 +357,19 @@ void Foam::biomassParticle::updateParticle
     //  Additional diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    // Particle surface to volume ratio (1/m)
-    td.cloud().surfToVolRatio[celli] = p1D.particleSurfToVolRatio;
+    // vegetaion bed stat (-)
+    td.cloud().state[celli] = particleState_;
 
-    // Particle size (m)
-    td.cloud().size[celli] = particleSize_;
+    // Mass rates (kg/s/m3)
+    td.cloud().massLossRatePUVbed[celli]        = td.cloud().nParticles * p1D.globalMassLossRate / mesh_.cellVolumes()[celli];
+    td.cloud().gasFuelReleaseRatePUVbed[celli]  = td.cloud().nParticles * p1D.globalGasFuelReleaseRate / mesh_.cellVolumes()[celli];
+    td.cloud().dryingRatePUVbed[celli]          = td.cloud().nParticles * p1D.globalR1reactionRate / mesh_.cellVolumes()[celli];
+    td.cloud().pyrolysisRatePUVbed[celli]       = td.cloud().nParticles * p1D.globalR2reactionRate / mesh_.cellVolumes()[celli];
+    td.cloud().oxidPyrolysisRatePUVbed[celli]   = td.cloud().nParticles * p1D.globalR3reactionRate / mesh_.cellVolumes()[celli];
+    td.cloud().charOxidRatePUVbed[celli]        = td.cloud().nParticles * p1D.globalR4reactionRate / mesh_.cellVolumes()[celli];
 
     // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
-
-    // Mass rates (kg/s)
-    td.cloud().massLossRate[celli]       = td.cloud().nParticles * p1D.globalMassLossRate;
-    td.cloud().gasFuelReleaseRate[celli] = td.cloud().nParticles * p1D.globalGasFuelReleaseRate;
-
-    // Reaction rates (kg/s)
-    td.cloud().dryingRate[celli]        = td.cloud().nParticles * p1D.globalR1reactionRate;
-    td.cloud().pyrolysisRate[celli]     = td.cloud().nParticles * p1D.globalR2reactionRate;
-    td.cloud().oxidPyrolysisRate[celli] = td.cloud().nParticles * p1D.globalR3reactionRate;
-    td.cloud().charOxidRate[celli]      = td.cloud().nParticles * p1D.globalR4reactionRate;
 
     // Surface heat fluxes per unit area of single particle (W/m2)
     td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv;

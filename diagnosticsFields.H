@@ -2,8 +2,8 @@
 // for outputing fire front
     OFstream outFireFront("outFireFront_"+runTime.timeName());
 
-    outFireFront << "Time(s)" << " " << "FlameHeight(m)" << " " << "FlameFront(m)" 
-    << " " << "PyrolysisFront(m)" << " " << "SmolderingFront(m)" << endl;
+    outFireFront << "time(s)" << " " << "flameHeight(m)" << " " << "flameFront(m)" 
+    << " " << "dryingFront(m)" << " " << "pyrolysisFront(m)" << " " << "smolderingFront(m)" << endl;
 
     volScalarField flameHeight
     (
@@ -33,11 +33,11 @@
         dimensionedScalar("zero",dimLength,0.0)
     );
 
-    volScalarField PyrolysisFront
+    volScalarField dryingFront
     (
         IOobject
         (
-            "PyrolysisFront",
+            "dryingFront",
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
@@ -47,11 +47,25 @@
         dimensionedScalar("zero",dimLength,0.0)
     );
 
-    volScalarField SmolderingFront
+    volScalarField pyrolysisFront
     (
         IOobject
         (
-            "SmolderingFront",
+            "pyrolysisFront",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("zero",dimLength,0.0)
+    );
+
+    volScalarField smolderingFront
+    (
+        IOobject
+        (
+            "smolderingFront",
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
@@ -121,73 +135,4 @@
         ),
         mesh,
         dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
-    );
-
-// Vegetation bed mass rates per unit bed volume [W/m2/m3]
-    volScalarField mFuelPUVbed
-    (
-        IOobject
-        (
-            "mFuelPUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
-    );
-
-    volScalarField RR1PUVbed
-    (
-        IOobject
-        (
-            "RR1PUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
-    );
-
-    volScalarField RR2PUVbed
-    (
-        IOobject
-        (
-            "RR2PUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
-    );
-    volScalarField RR3PUVbed
-    (
-        IOobject
-        (
-            "RR3PUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
-    );
-    volScalarField RR4PUVbed
-    (
-        IOobject
-        (
-            "RR4PUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", dimMass/dimTime/dimVolume, 0.0)
     );
