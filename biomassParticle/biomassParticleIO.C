@@ -77,7 +77,8 @@ Foam::biomassParticle::biomassParticle
     pyrolysisRate_(0.0),
     oxidPyrolysisRate_(0.0),
     charOxidRate_(0.0),
-    massLossRate_(0.0)
+    massLossRate_(0.0),
+    outputPath("")
 {
 
     DynamicList<scalar> T;
@@ -144,6 +145,17 @@ Foam::biomassParticle::biomassParticle
 
     // Check state of Istream
     is.check("biomassParticle::biomassParticle(Istream&)");
+
+    // Setting the output path and writing headers
+    if (Pstream::parRun())
+    {
+        outputPath = mesh.time().path()/".."/"particlePostProcessing";
+    }
+    else
+    {
+        outputPath = mesh.time().path()/"particlePostProcessing";
+    } 
+    mkDir(outputPath);
 }
 
 void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
@@ -277,8 +289,23 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
         bp.integralDrySolidMass_    = integralDrySolidMass[i];
         bp.integralCharMass_        = integralCharMass[i];
 
+        if(bp.particleID_ > 0)
+        {
+            std::ofstream outParticle(bp.outputPath/ "particle" + name(bp.particleID_) + ".csv", ios::app);
+
+            outParticle << "time(s)" << "," << "x(m)" << "," << "y(m)" << "," << "z(m)" << "," 
+                        << "state" << "," << "dt(s)" << "," << "size(m)" << ","  
+                        << "Ux(m/s)" << "," << "Uy(m/s)" << "," << "Uz(m/s)" << ","
+                        << "mass(kg)" << "," << "surfaceTemp(K)"  << "," << "coreTemp(K)"  << ","
+                        << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","
+                        << "surfaceO2MassFrac(-)" << "," << "hConv(W/m2/K)" << "," << "CD(-)" << ","
+                        << "dryingRate(kg/s)" << "," << "pyrolysisRate(kg/s)" << "," << "oxidPyrolysisRate(kg/s)" << ","
+                        << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "\n";        
+        }
         i++;
     }
+
+
 }
 
 

@@ -66,41 +66,109 @@ solidMaterial& solidMaterial::operator=(const solidMaterial& rhs)
     return *this;
 }
 
-// Set material properties from external input qnatities
+// Set material properties from known type
 
-void solidMaterial::set_bulkDensity(double bulkDensity_)
+void solidMaterial::set_knownType(const std::string& materialName)
+{
+    if(materialName == "white_pine")
+    {
+        bulkDensity = 361.0;
+        conductivity = 0.176;
+        conductivityExponent = 0.594;
+        radConductivity = 0.0;
+        specificHeat = 1664.0;
+        specificHeatExponent = 0.660;
+        emissivity = 0.759;
+        porosity = 0.0744;
+        permeability = 1e-10;
+
+    }else if(materialName == "cardboard")
+    {
+        bulkDensity = 525.9;
+        conductivity = 0.22;
+        conductivityExponent = 0.0;
+        radConductivity = 0.0;
+        specificHeat = 2805.0;
+        specificHeatExponent = 0.0;
+        emissivity = 0.9;
+        porosity = 0.0744;
+        permeability = 1e-10;
+
+    }else if(materialName == "Char")
+    {
+        bulkDensity = 73.0;
+        conductivity = 0.065;
+        conductivityExponent = 0.435;
+        radConductivity = 3.3e-3;
+        specificHeat = 1219.0;
+        specificHeatExponent = 0.283;
+        emissivity = 0.957;
+        porosity = 0.8128;
+        permeability = 1e-10;
+
+    }else if(materialName == "ash")
+    {
+        bulkDensity = 5.7;
+        conductivity = 0.058;
+        conductivityExponent = 0.353;
+        radConductivity = 6.4e-3;
+        specificHeat = 1244.0;
+        specificHeatExponent = 0.315;
+        emissivity = 0.955;
+        porosity = 0.9854;
+        permeability = 1e-10;
+
+    }else
+    {
+        throw exception();
+    }
+}
+
+void solidMaterial::set_wetSolid(const double& moistureFraction, const solidMaterial& drySolid)
+{
+    this->operator =(drySolid);
+
+    bulkDensity = drySolid.get_bulkDensity(300.0) * (1.0 + moistureFraction);
+    conductivity = drySolid.get_conductivity(300.0) * (1.0 + 2.1*moistureFraction);
+    specificHeat = drySolid.get_specificHeat(300.0) * (1.0 + 5.0*moistureFraction);
+    porosity = 1.0 - bulkDensity / (drySolid.get_bulkDensity(300.0) / (1 - drySolid.get_porosity(300.0)));
+}
+
+// Set material properties from external input quantities
+
+void solidMaterial::set_bulkDensity(const double& bulkDensity_)
 {
     bulkDensity = bulkDensity_;
 }
 
-void solidMaterial::set_conductivity(double conductivity_, double conductivityExponent_)
+void solidMaterial::set_conductivity(const double& conductivity_, const double& conductivityExponent_)
 {
     conductivity = conductivity_;
     conductivityExponent = conductivityExponent_;
 }
 
-void solidMaterial::set_radConductivity(double radConductivity_)
+void solidMaterial::set_radConductivity(const double& radConductivity_)
 {
     radConductivity = radConductivity_;
 }
 
-void solidMaterial::set_specificHeat(double specificHeat_, double specificHeatExponent_)
+void solidMaterial::set_specificHeat(const double& specificHeat_, const double& specificHeatExponent_)
 {
     specificHeat = specificHeat_;
     specificHeatExponent = specificHeatExponent_;
 }
 
-void solidMaterial::set_emissivity(double emissivity_)
+void solidMaterial::set_emissivity(const double& emissivity_)
 {
     emissivity = emissivity_;
 }
 
-void solidMaterial::set_porosity(double porosity_)
+void solidMaterial::set_porosity(const double& porosity_)
 {
     porosity = porosity_;
 }
 
-void solidMaterial::set_permeability(double permeability_)
+void solidMaterial::set_permeability(const double& permeability_)
 {
     permeability = permeability_;
 }
@@ -108,37 +176,37 @@ void solidMaterial::set_permeability(double permeability_)
 
 // Return material properties
 
-double solidMaterial::get_bulkDensity(double temperature)
+double solidMaterial::get_bulkDensity(const double& temperature) const
 {
     return bulkDensity;
 }
 
-double solidMaterial::get_conductivity(double temperature)
+double solidMaterial::get_conductivity(const double& temperature) const
 {
     return conductivity*pow(temperature/300.0, conductivityExponent);
 }
 
-double solidMaterial::get_radConductivity(double temperature)
+double solidMaterial::get_radConductivity(const double& temperature) const
 {
     return radConductivity;
 }
 
-double solidMaterial::get_specificHeat(double temperature)
+double solidMaterial::get_specificHeat(const double& temperature) const
 {
     return specificHeat * pow(temperature/300.0, specificHeatExponent);
 }
 
-double solidMaterial::get_emissivity(double temperature)
+double solidMaterial::get_emissivity(const double& temperature) const
 {
     return emissivity;
 }
 
-double solidMaterial::get_porosity(double temperature)
+double solidMaterial::get_porosity(const double& temperature) const
 {
     return porosity;
 }
 
-double solidMaterial::get_permeability(double temperature)
+double solidMaterial::get_permeability(const double& temperature) const
 {
     return permeability;
 }

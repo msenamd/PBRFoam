@@ -73,14 +73,14 @@ public:
         );
 
         //write data at global time
-        void writeCoordLine(FILE* outfile);
-        void writeTempLine(FILE* outfile);
-        void writeWetSolidLine(FILE* outfile);
-        void writeDrySolidLine(FILE* outfile);
-	    void writeCharLine(FILE* outfile);
-        void writeAshLine(FILE* outfile);
-        void writeO2Line(FILE* outfile);
-        void writePressureLine(FILE* outfile);
+        void writeCoordLine(ofstream& outfile);
+        void writeTempLine(ofstream& outfile);
+        void writeWetSolidLine(ofstream& outfile);
+        void writeDrySolidLine(ofstream& outfile);
+	    void writeCharLine(ofstream& outfile);
+        void writeAshLine(ofstream& outfile);
+        void writeO2Line(ofstream& outfile);
+        void writePressureLine(ofstream& outfile);
 
 // Public data
         int numCells;                                // number of cells [-]
@@ -110,8 +110,8 @@ private:
 		double localTime;               // for local time loop of the particle (always starts from 0) [s]
         double FO_L;                    // Fourier number (FO), for left face [-]
         double FO_R;                    // Fourier number (FO), for right face [-]
-        double CFL_L;                   // Courant–Friedrichs–Lewy number (CFL), for left face [-]
-        double CFL_R;                   // Courant–Friedrichs–Lewy number (CFL), for right face [-]
+        double CFL_L;                   // CourantM-^VFriedrichsM-^VLewy number (CFL), for left face [-]
+        double CFL_R;                   // CourantM-^VFriedrichsM-^VLewy number (CFL), for right face [-]
         double h_rad;                   // radiative heat transfer coefficient [W/m2/K]
         double Bi;                      // Biot number [-]
 
@@ -265,11 +265,11 @@ private:
         void set_heatFO_R(const int &i , const double &dt_);
         void set_massFO_R(const int& i, const double& dt_);
 
-        // Calculate Courant–Friedrichs–Lewy number (CFL), for left face
+        // Calculate CourantM-^VFriedrichsM-^VLewy number (CFL), for left face
         void set_heatCFL_L(const int& i, const double& dt_);
         void set_massCFL_L(const int& i, const double& dt_);
 
-        // Calculate Courant–Friedrichs–Lewy number (CFL), for right face
+        // Calculate CourantM-^VFriedrichsM-^VLewy number (CFL), for right face
         void set_heatCFL_R(const int& i, const double& dt_);
         void set_massCFL_R(const int& i, const double& dt_);
 

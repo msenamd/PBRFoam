@@ -176,6 +176,8 @@ class biomassParticle
             std::vector<double> integralDrySolidMass_std;
             std::vector<double> integralCharMass_std;
 
+            // Output path
+            word outputPath;
 public:
 
     friend class Cloud<biomassParticle>;
@@ -347,29 +349,6 @@ public:
             //- The nearest distance to a wall that
             //  the particle can be in the n direction
             virtual scalar wallImpactDistance(const vector& n) const;
-
-
-    // Access
-
-        inline label particleID() const;
-        inline label particleState() const;
-        inline scalar particledt() const;
-        inline scalar particleSize() const;
-        inline vector particleVelo() const;
-        inline scalar particleMass() const;
-        inline scalar surfaceTemp() const;
-        inline scalar coreTemp() const;
-        inline scalar convFlux() const;
-        inline scalar radFlux() const;
-        inline scalar massFlux() const;
-        inline scalar surfaceO2MassFrac() const;
-        inline scalar hConv() const;
-        inline scalar CD() const;
-        inline scalar dryingRate() const;
-        inline scalar pyrolysisRate() const;
-        inline scalar oxidPyrolysisRate() const;
-        inline scalar charOxidRate() const;
-        inline scalar massLossRate() const;
 
     // I-O
 

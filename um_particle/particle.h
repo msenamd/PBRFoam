@@ -160,14 +160,14 @@ public:
     virtual void destroy() = 0;
 
     //write data at global time
-    virtual void writeCoordLine(FILE* outfile) = 0;     //write one line of coordinate output to outfile ()
-    virtual void writeTempLine(FILE* outfile) = 0;      //write one line of temperature output to outfile (temperature of each cell)
-    virtual void writeWetSolidLine(FILE* outfile) = 0;  //write one line of wet solid output to outfile (wet solid vol. frac. of each cell)
-    virtual void writeDrySolidLine(FILE* outfile) = 0;  //write one line of dry solid vol. fraction output to outfile (dry solid vol. frac. of each cell)
-    virtual void writeCharLine(FILE* outfile) = 0;      //write one line of char vol. fraction output to outfile (char vol. frac. of each cell)
-    virtual void writeAshLine(FILE* outfile) = 0;      //write one line of ash vol. fraction output to outfile (char vol. frac. of each cell)
-    virtual void writeO2Line(FILE* outfile) = 0;        //write one line of O2 mass fraction output to outfile (O2 mass frac. of each cell)
-    virtual void writePressureLine(FILE* outfile) = 0;  //write one line of pressure output to outfile (gauge pressure of each cell)
+    virtual void writeCoordLine(ofstream& outfile) = 0;     //write one line of coordinate output to outfile ()
+    virtual void writeTempLine(ofstream& outfile) = 0;      //write one line of temperature output to outfile (temperature of each cell)
+    virtual void writeWetSolidLine(ofstream& outfile) = 0;  //write one line of wet solid output to outfile (wet solid vol. frac. of each cell)
+    virtual void writeDrySolidLine(ofstream& outfile) = 0;  //write one line of dry solid vol. fraction output to outfile (dry solid vol. frac. of each cell)
+    virtual void writeCharLine(ofstream& outfile) = 0;      //write one line of char vol. fraction output to outfile (char vol. frac. of each cell)
+    virtual void writeAshLine(ofstream& outfile) = 0;       //write one line of ash vol. fraction output to outfile (char vol. frac. of each cell)
+    virtual void writeO2Line(ofstream& outfile) = 0;        //write one line of O2 mass fraction output to outfile (O2 mass frac. of each cell)
+    virtual void writePressureLine(ofstream& outfile) = 0;  //write one line of pressure output to outfile (gauge pressure of each cell)
 
 
 protected:

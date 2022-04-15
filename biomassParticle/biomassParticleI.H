@@ -108,8 +108,34 @@ inline Foam::biomassParticle::biomassParticle
     pyrolysisRate_(0.0),
     oxidPyrolysisRate_(0.0),
     charOxidRate_(0.0),
-    massLossRate_(0.0)
+    massLossRate_(0.0),
+    outputPath("")
 {
+
+    // Setting the output path and writing headers
+    if (Pstream::parRun())
+    {
+        outputPath = mesh.time().path()/".."/"particlePostProcessing";
+    }
+    else
+    {
+        outputPath = mesh.time().path()/"particlePostProcessing";
+    } 
+    mkDir(outputPath);
+
+    if(particleID_ > 0)
+    {
+        std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
+
+        outParticle << "time(s)" << "," << "x(m)" << "," << "y(m)" << "," << "z(m)" << "," 
+                    << "state" << "," << "dt(s)" << "," << "size(m)" << ","  
+                    << "Ux(m/s)" << "," << "Uy(m/s)" << "," << "Uz(m/s)" << ","
+                    << "mass(kg)" << "," << "surfaceTemp(K)"  << "," << "coreTemp(K)"  << ","
+                    << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","
+                    << "surfaceO2MassFrac(-)" << "," << "hConv(W/m2/K)" << "," << "CD(-)" << ","
+                    << "dryingRate(kg/s)" << "," << "pyrolysisRate(kg/s)" << "," << "oxidPyrolysisRate(kg/s)" << ","
+                    << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "\n";        
+    }
 
 }
 
@@ -155,85 +181,5 @@ inline const Foam::vector& Foam::biomassParticle::trackingData::g() const
 {
     return g_;
 }
-
-
-// Return constant access to private data
-inline Foam::label Foam::biomassParticle::particleID() const
-{
-    return particleID_;
-}
-inline Foam::label Foam::biomassParticle::particleState() const
-{
-    return particleState_;
-}
-inline Foam::scalar Foam::biomassParticle::particledt() const
-{
-    return particledt_;
-}
-inline Foam::scalar Foam::biomassParticle::particleSize() const
-{
-    return particleSize_;
-}
-inline Foam::vector Foam::biomassParticle::particleVelo() const
-{
-    return particleVelo_;
-}
-inline Foam::scalar Foam::biomassParticle::particleMass() const
-{
-    return particleMass_;
-}
-inline Foam::scalar Foam::biomassParticle::surfaceTemp() const
-{
-    return surfaceTemp_;
-}
-inline Foam::scalar Foam::biomassParticle::coreTemp() const
-{
-    return coreTemp_;
-}
-inline Foam::scalar Foam::biomassParticle::convFlux() const
-{
-    return convFlux_;
-}
-inline Foam::scalar Foam::biomassParticle::radFlux() const
-{
-    return radFlux_;
-}
-inline Foam::scalar Foam::biomassParticle::massFlux() const
-{
-    return massFlux_;
-}
-inline Foam::scalar Foam::biomassParticle::surfaceO2MassFrac() const
-{
-    return surfaceO2MassFrac_;
-}
-inline Foam::scalar Foam::biomassParticle::hConv() const
-{
-    return hConv_;
-}
-inline Foam::scalar Foam::biomassParticle::CD() const
-{
-    return CD_;
-}
-inline Foam::scalar Foam::biomassParticle::dryingRate() const
-{
-    return dryingRate_;
-}
-inline Foam::scalar Foam::biomassParticle::pyrolysisRate() const
-{
-    return pyrolysisRate_;
-}
-inline Foam::scalar Foam::biomassParticle::oxidPyrolysisRate() const
-{
-    return oxidPyrolysisRate_;
-}
-inline Foam::scalar Foam::biomassParticle::charOxidRate() const
-{
-    return charOxidRate_;
-}
-inline Foam::scalar Foam::biomassParticle::massLossRate() const
-{
-    return massLossRate_;
-}
-
 
 // ************************************************************************* //

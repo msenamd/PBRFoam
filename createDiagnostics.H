@@ -136,22 +136,3 @@
         mesh,
         dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
     );
-
-
-// Write particle properties if their IDs are > 0
-forAllConstIter(biomassCloud, particles, iter)
-{
-    if(iter().particleID() > 0)
-    {
-        std::ofstream outParticle("particle" + name(iter().particleID()) + ".csv", ios::app);
-
-        outParticle << "time(s)" << "," << "x(m)" << "," << "y(m)" << "," << "z(m)" << "," 
-                    << "state" << "," << "dt(s)" << "," << "size(m)" << ","  
-                    << "Ux(m/s)" << "," << "Uy(m/s)" << "," << "Uz(m/s)" << ","
-                    << "mass(kg)" << "," << "surfaceTemp(K)"  << "," << "coreTemp(K)"  << ","
-                    << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","
-                    << "surfaceO2MassFrac(-)" << "," << "hConv(W/m2/K)" << "," << "CD(-)" << ","
-                    << "dryingRate(kg/s)" << "," << "pyrolysisRate(kg/s)" << "," << "oxidPyrolysisRate(kg/s)" << ","
-                    << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << endl;
-    }
-}

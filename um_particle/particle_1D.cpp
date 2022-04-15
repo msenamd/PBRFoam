@@ -443,14 +443,14 @@ void particle_1D::destroy()
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeCoordLine(FILE* outfile)
+void particle_1D::writeCoordLine(ofstream& outfile)
 {
-    fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", xCellCenter[i]);
+        outfile << "," << xCellCenter[i];
     }
-    fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -458,14 +458,14 @@ void particle_1D::writeCoordLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeTempLine(FILE* outfile)
+void particle_1D::writeTempLine(ofstream& outfile)
 {
-	fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", Temp[i]);
+        outfile << "," << Temp[i] ;
     }
-	fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -473,14 +473,14 @@ void particle_1D::writeTempLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeWetSolidLine(FILE* outfile)
+void particle_1D::writeWetSolidLine(ofstream& outfile)
 {
-	fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", wetSolidVolFraction[i]);
+        outfile << "," << wetSolidVolFraction[i];
     }
-	fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -488,14 +488,14 @@ void particle_1D::writeWetSolidLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeDrySolidLine(FILE* outfile)
+void particle_1D::writeDrySolidLine(ofstream& outfile)
 {
-	fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", drySolidVolFraction[i]);
+        outfile << "," << drySolidVolFraction[i];
     }
-	fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -503,14 +503,14 @@ void particle_1D::writeDrySolidLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeCharLine(FILE* outfile)
+void particle_1D::writeCharLine(ofstream& outfile)
 {
-	fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", charVolFraction[i]);
+        outfile << "," << charVolFraction[i];
     }
-	fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -518,14 +518,14 @@ void particle_1D::writeCharLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeAshLine(FILE* outfile)
+void particle_1D::writeAshLine(ofstream& outfile)
 {
-    fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", ashVolFraction[i]);
+        outfile << "," << ashVolFraction[i];
     }
-    fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -533,14 +533,14 @@ void particle_1D::writeAshLine(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writeO2Line(FILE* outfile)
+void particle_1D::writeO2Line(ofstream& outfile)
 {
-    fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", particleO2MassFraction[i]);
+        outfile << "," << particleO2MassFraction[i];
     }
-    fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -548,14 +548,14 @@ void particle_1D::writeO2Line(FILE* outfile)
 * @param outfile: output file
 * @return
 */
-void particle_1D::writePressureLine(FILE* outfile)
+void particle_1D::writePressureLine(ofstream& outfile)
 {
-    fprintf(outfile, "%.6f", *pCurrentTime);
+    outfile << *pCurrentTime;
     for (int i = 0; i < numCells; i++)
     {
-        fprintf(outfile, "\t%.6f", particlePressure[i]);
+        outfile << "," << particlePressure[i];
     }
-    fprintf(outfile, "\n");
+    outfile << endl;
 }
 
 /**
@@ -1348,7 +1348,7 @@ void particle_1D::set_massFO_R(const int& i, const double& dt_)
 }
 
 /**
-* Calculate heat transfer's Courant–Friedrichs–Lewy (CFL) number, for left face
+* Calculate heat transfer's CourantM-^VFriedrichsM-^VLewy (CFL) number, for left face
 * @param i: cell index [-]
 * @param dt_: time-step size [s]
 * @return
@@ -1375,7 +1375,7 @@ void particle_1D::set_heatCFL_L(const int& i, const double& dt_)
     }
 }
 /**
-* Calculate mass transfer's Courant–Friedrichs–Lewy (CFL) number, for left face
+* Calculate mass transfer's CourantM-^VFriedrichsM-^VLewy (CFL) number, for left face
 * @param i: cell index [-]
 * @param dt_: time-step size [s]
 * @return
@@ -1403,7 +1403,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
 }
 
 /**
-* Calculate heat transfer's Courant–Friedrichs–Lewy (CFL) number, for right face
+* Calculate heat transfer's CourantM-^VFriedrichsM-^VLewy (CFL) number, for right face
 * @param i: cell index [-]
 * @param dt_: time-step size [s]
 * @return
@@ -1429,7 +1429,7 @@ void particle_1D::set_massCFL_L(const int& i, const double& dt_)
     }
 }
 /**
-* Calculate mass transfer's Courant–Friedrichs–Lewy (CFL) number, for right face
+* Calculate mass transfer's CourantM-^VFriedrichsM-^VLewy (CFL) number, for right face
 * @param i: cell index [-]
 * @param dt_: time-step size [s]
 * @return
@@ -1740,7 +1740,7 @@ Particle::eState particle_1D::checkState()
         return drying;
     }
     // particle is dry, some pyrolysis gas may be emitting but it is below the set threshold for flaming ignition
-    if ((drySolidVolFraction.front() > 0.999) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3))
+    else if ((drySolidVolFraction.front() > 0.999) && (localGasFuelReleaseRate / shape->get_surfaceArea(particleSize) < 1.0e-3))
     {
         return pyrolysing;
     }
