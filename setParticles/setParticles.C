@@ -29,6 +29,7 @@ Description
 #include "fvCFD.H"
 #include "IOstreams.H"
 #include "fvMesh.H"
+#include "pointField.H"
 
 void writeHeader(OFstream& os, word className, word objectName)
 {
@@ -161,6 +162,8 @@ int main(int argc, char *argv[])
     const scalarField initAsh(numCells, readScalar(setParticlesDict.lookup("initAsh")));
     const scalarField Zero(numCells, 0.0);   
 
+    const pointField probeLocations = setParticlesDict.lookup("probeLocations");
+
 
     Info << "box minimum  [m]          = " << boxMin << nl
          << "box miaximum [m]          = " << boxMax << nl
@@ -211,6 +214,42 @@ int main(int argc, char *argv[])
     os_pos  << ')' << nl;
 
 
+
+    Info << "Writing particles IDs" << endl;
+    os_ID  << numSuperParticles << nl;
+    os_ID  << '(' << nl;
+
+    label particleID = 0;
+    label diagCellID = 0;
+    forAll(mesh.C(), celli)
+    {
+        if( mesh.C()[celli][0] >= xMin && mesh.C()[celli][1] >= yMin && mesh.C()[celli][2] >= zMin
+            && mesh.C()[celli][0] <= xMax && mesh.C()[celli][1] <= yMax && mesh.C()[celli][2] <= zMax
+            )
+        {
+            forAll(probeLocations, probeID)
+            {
+                const vector& location = probeLocations[probeID];
+                diagCellID = mesh.findCell(location);
+                if(celli == diagCellID)
+                {
+                    break;
+                }
+            }
+            if(celli == diagCellID)
+            {
+                particleID ++;
+                os_ID  << particleID << nl;
+            }
+            else
+            {
+                os_ID  << 0 << nl;
+            }
+        }
+    }
+    os_ID  << ')' << nl;
+
+
     Info << "Setting ignition temperature" << endl;
     os_T  << numSuperParticles << nl;
     os_T  << '(' << nl;
@@ -237,11 +276,6 @@ int main(int argc, char *argv[])
 
 
     Info << "Writing other particle data" << endl;
-
-    writeData( os_ID, mesh, 0, numSuperParticles, 
-                xMin, yMin, zMin,
-                xMax, yMax, zMax
-            );
 
     writeData( os_state, mesh, initState, numSuperParticles, 
                 xMin, yMin, zMin,
