@@ -52,6 +52,11 @@ double slab::get_volume()
     return 2.0 * currentSize * length * width;
 }
 
+double slab::get_initialVolume()
+{
+    return 2.0 * initialHalfThickness * length * width;
+}
+
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
 * @return Single-sided surface area of particle (m^2).

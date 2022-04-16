@@ -19,7 +19,9 @@ public:
     solidReaction(const solidReaction& rhs);
     solidReaction& operator=(const solidReaction& rhs);
 
-    bool set_reaction(std::string reactionName, double productYield_);
+    void set_reaction(const double& A_, const double& Ea_, const double& n_, const double& nO2_,
+                      const double& deltaH_, const double& productYield_, const double& O2Yield_);
+    void set_knownReaction(std::string reactionName, const double& productYield_);
 
     double get_A();
     double get_Ta();

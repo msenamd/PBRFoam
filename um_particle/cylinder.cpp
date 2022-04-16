@@ -48,6 +48,11 @@ double cylinder::get_volume()
     return pi * pow(currentSize, 2.0) * length;
 }
 
+double cylinder::get_initialVolume()
+{
+    return pi * pow(initialRadius, 2.0) * length;
+}
+
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
 * @return Single-sided surface area of particle (m^2).

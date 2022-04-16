@@ -51,7 +51,19 @@ solidReaction& solidReaction::operator=(const solidReaction& rhs)
     return *this;
 }
 
-bool solidReaction::set_reaction(std::string reactionName, double productYield_)
+void solidReaction::set_reaction(const double& A_, const double& Ea_, const double& n_, const double& nO2_,
+                                 const double& deltaH_, const double& productYield_, const double& O2Yield_)
+{
+    A = A_;
+    Ea = Ea_;
+    n = n_;
+    nO2 = nO2_;
+    deltaH = deltaH_;
+    productYield = productYield_;
+    O2Yield = O2Yield_;
+}
+
+void solidReaction::set_knownReaction(std::string reactionName, const double& productYield_)
 {
     if(reactionName == "drying")  
     {
@@ -63,9 +75,8 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         deltaH = -2410e+3;
         productYield = productYield_;
         O2Yield = 0.0;
-        return true;
     }
-    else if(reactionName == "thermal pyrolysis") 
+    else if(reactionName == "pinewood_thermalPyrolysis") 
     {
         // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
         // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
@@ -76,9 +87,8 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         deltaH = -533e+3;
         productYield = productYield_;
         O2Yield = 0.0;
-        return true;
     }
-    else if(reactionName == "oxidative pyrolysis")
+    else if(reactionName == "pinewood_oxidativePyrolysis")
     {
         // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
         // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
@@ -89,9 +99,8 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         deltaH = +994e+3;
         productYield = productYield_;
         O2Yield = 0.1 * (1.0 - productYield_);
-        return true;
     }
-    else if (reactionName == "char oxidation")
+    else if (reactionName == "pinewood_charOxidation")
     {
         // Source: Anca-Couce et al. (2012) Combust. Flame 159 : 1708 - 1719
         // Source(DeltaH) : Lautenberger & Fernandez-Pello(2009) Combust. Flame 156 : 1503 - 1513
@@ -102,7 +111,6 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         deltaH = +37700e+3;
         productYield = productYield_;
         O2Yield = 2.0 * (1.0 - productYield_);
-        return true;
     }
     else if (reactionName == "passive")
     {
@@ -113,12 +121,11 @@ bool solidReaction::set_reaction(std::string reactionName, double productYield_)
         deltaH = 0.0;
         productYield = 0.0;
         O2Yield = 0.0;
-        return true;
     }
     else
     {
-        cout << "Error: Invalid reaction" << endl;
-        return false;   //unknown name
+        cout << "Error: Invalid reaction: " << reactionName << endl;
+        throw exception();
     }
 }
 

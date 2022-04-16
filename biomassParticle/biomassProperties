@@ -33,9 +33,9 @@ temperatureThreshold  0.1;          // Max. value of temperature variation durin
 solidSpeciesThreshold  0.01;        // Max.value of solid species vol. fraction variation during dt [-]
 O2Threshold  0.01;                  // Max.value of gaseous variation during dt[-]
 pressureThreshold  0.1;             // Max.value of pres variation during dt[Pa]
-temperatureURF  0.1;                // Under relaxation factor for temperature [-]
+temperatureURF  0.1;         	    // Under relaxation factor for temperature [-]
 solidSpeciesURF  0.0;               // Under relaxation factor for solid species [-]
-O2URF  0.1;                         // Under relaxation factor for O2 [-]
+O2URF  0.1;      	            // Under relaxation factor for O2 [-]
 pressureURF  0.0;                   // Under relaxation factor for pressure [-]                
 
 
@@ -58,6 +58,28 @@ thermalCharYield 	0.2022;
 oxidativeCharYield 	0.2022;
 ashYield 		0.07808;
 
+// Reaction kinetics
+A_R1		4.29e3;             // Pre-exponential factor [1/s]
+Ea_R1		43.8e3;             // Activation energy [J/mol]
+n_R1		0.99;               // Solid-phase reactant exponent [-]
+DeltaH_R1	-2410e3;            // Heat of evaporation [J/kg] (< 0, endothermic) 
+
+A_R2		2.1878e6;           // Pre-exponential factor [1/s]
+Ea_R2		105e3;              // Activation energy [J/mol]
+n_R2		0.87;               // Solid-phase reactant exponent [-]
+DeltaH_R2	-533e3;             // Heat of pyrolysis [J/kg] (< 0, endothermic) 
+
+A_R3		524.8075e6;         // Pre-exponential factor [1/s]
+Ea_R3		127e3;              // Activation energy [J/mol]
+n_R3		0.63;               // Solid-phase reactant exponent [-]
+nO2_R3		0.72;               // Gas-phase oxygen exponent [-]
+DeltaH_R3	994e3;              // Heat of oxidative pyrolysis [J/kg] (> 0, exothermic)
+
+A_R4		3.5481e6;           // Pre-exponential factor [1/s]
+Ea_R4		124e3;              // Activation energy [J/mol]
+n_R4		0.56;               // Solid-phase reactant exponent [-]
+nO2_R4		0.68;               // Gas-phase oxygen exponent [-]
+DeltaH_R4	37700e3;            // Heat of char oxidation [J/kg] (> 0, exothermic)
 
 // User-defined conductivity, heat capacity, emissivity, porosity & permeabiltiy  
 k0_ws  0.186;  // Conductivity of wet solid(at 300 K) [W/m/K]

@@ -3,7 +3,7 @@
 Particle::Particle()
 {
     state = empty;
-    burningRateModel = uniform;
+    burningRateModel = pyrolysisCharring;
 
     name = "";    
     shapeName = "";
@@ -18,6 +18,7 @@ Particle::Particle()
     drySolid = NULL;
     Char = NULL;
     ash = NULL;
+    mineralContent = 0.0;
 
     R1 = NULL;
     R2 = NULL;
@@ -63,7 +64,8 @@ Particle::Particle()
     ignitionTime = 0.0;                
     outTime = 0.0;                     
     ignitionTemp = 0.0;                
-    flamingFraction = 0.0;             
+    flamingFraction = 0.0;
+    flamingFractionNoMinerals = 0.80;
     residenceTime = 0.0;
 
     localTimeStepSize = 0.0;
@@ -96,6 +98,7 @@ Particle::Particle(const Particle& rhs)
     drySolid = new solidMaterial(*rhs.drySolid);
     Char = new solidMaterial(*rhs.Char);
     ash = new solidMaterial(*rhs.ash);
+    mineralContent = rhs.mineralContent;
 
     R1 = new solidReaction(*rhs.R1);
     R2 = new solidReaction(*rhs.R2);
@@ -142,6 +145,7 @@ Particle::Particle(const Particle& rhs)
     outTime = rhs.outTime;
     ignitionTemp = rhs.ignitionTemp;
     flamingFraction = rhs.flamingFraction;
+    flamingFractionNoMinerals = rhs.flamingFractionNoMinerals;
     residenceTime = rhs.residenceTime;
 
     localTimeStepSize = rhs.localTimeStepSize;
@@ -179,6 +183,8 @@ Particle& Particle::operator=(const Particle& rhs)
         if (ash)
             delete ash;
         ash = new solidMaterial(*rhs.ash);
+
+        mineralContent = rhs.mineralContent;
 
         if (R1)
             delete R1;
@@ -236,6 +242,7 @@ Particle& Particle::operator=(const Particle& rhs)
         outTime = rhs.outTime;
         ignitionTemp = rhs.ignitionTemp;
         flamingFraction = rhs.flamingFraction;
+        flamingFractionNoMinerals = rhs.flamingFractionNoMinerals;
         residenceTime = rhs.residenceTime;
 
         localTimeStepSize = rhs.localTimeStepSize;
@@ -290,7 +297,7 @@ double Particle::getDiffusionTimescale(double cellSize_, double Temp_) {
 }
 
 /**
-* Sets particle to be a specific geomerty.
+* Sets particle to be a specific geometry.
 * @param geometry_ geometric shape.
 * @param radius_ Radius or half thickness (m).
 * @param length_ Length of cylinder or slab (m).
@@ -318,4 +325,49 @@ void Particle::setGeometry(std::string shapeName_, double radius_, double length
     }
 
     shapeName = shapeName_;
+}
+
+/**
+* Sets burning rate model. If solidReaction argument is not applicable, pass NULL.
+* @param burningRateModel_ Enum indicating type of reaction models.
+* @param drying_ Drying solidReaction.
+* @param thermalPyrolysis_ Thermal pyrolysis solidReaction.
+* @param oxydativePyrolysis Oxydative pyrolysis solidReaction.
+* @param charring Charring solidReaction.
+* @return
+*/
+void Particle::setBurningRateModel(eBurningRateModel burningRateModel_, solidReaction& drying_, solidReaction& thermalPyrolysis_, solidReaction& oxydativePyrolysis_, solidReaction& charring_)
+{
+    burningRateModel = burningRateModel_;
+    R1 = &drying_;
+    R2 = &thermalPyrolysis_;
+    R3 = &oxydativePyrolysis_;
+    R4 = &charring_;
+}
+
+/**
+* Set references to material properties. If argument is not applicable, pass NULL.
+* @param air_ Reference to air properties object.
+* @param wetSolid_ Reference to wet solid properties object.
+* @param drySolid_  Reference to dry solid properties object.
+* @param Char_ Reference to char solid properties object.
+* @param ash_ Reference to ash properties object.
+* @return
+*/
+void Particle::setMaterials(Air& air_, solidMaterial& wetSolid_, solidMaterial& drySolid_, solidMaterial& Char_, solidMaterial& ash_)
+{
+    air = &air_;
+    wetSolid = &wetSolid_;
+    drySolid = &drySolid_;
+    Char = &Char_;
+    ash = &ash_;
+}
+
+/**
+* Get fraction of minerals.  Computed from R2 and R4 reaction information.
+* @return Mass fraction of minerals based on initial dry virgin material.
+*/
+double Particle::getMineralFraction()
+{
+    return R4->get_productYield() * R2->get_productYield();
 }

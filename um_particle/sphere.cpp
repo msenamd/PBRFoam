@@ -45,6 +45,11 @@ double sphere::get_volume()
     return 4.0 / 3.0 * pi * pow(currentSize, 3.0);
 }
 
+double sphere::get_initialVolume()
+{
+    return 4.0 / 3.0 * pi * pow(initialRadius, 3.0);
+}
+
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
 * @return Single-sided surface area of particle (m^2).

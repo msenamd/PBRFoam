@@ -202,11 +202,6 @@ Foam::biomassCloud::biomassCloud
     charDensity(readScalar(particleProperties_.lookup("charDensity"))),
     ashDensity(readScalar(particleProperties_.lookup("ashDensity"))),
    
-    drySolidYield(readScalar(particleProperties_.lookup("drySolidYield"))),
-    thermalCharYield(readScalar(particleProperties_.lookup("thermalCharYield"))),
-    oxidativeCharYield(readScalar(particleProperties_.lookup("oxidativeCharYield"))),
-    ashYield(readScalar(particleProperties_.lookup("ashYield"))),
-   
     k0_ws(readScalar(particleProperties_.lookup("k0_ws"))),
     k0_ds(readScalar(particleProperties_.lookup("k0_ds"))),
     k0_c(readScalar(particleProperties_.lookup("k0_c"))),
@@ -244,6 +239,32 @@ Foam::biomassCloud::biomassCloud
     Kperm_ds(readScalar(particleProperties_.lookup("Kperm_ds"))),
     Kperm_c(readScalar(particleProperties_.lookup("Kperm_c"))),
     Kperm_a(readScalar(particleProperties_.lookup("Kperm_a"))),
+
+    A_R1(readScalar(particleProperties_.lookup("A_R1"))),
+    Ea_R1(readScalar(particleProperties_.lookup("Ea_R1"))),
+    n_R1(readScalar(particleProperties_.lookup("n_R1"))),
+    DeltaH_R1(readScalar(particleProperties_.lookup("DeltaH_R1"))),
+    drySolidYield(readScalar(particleProperties_.lookup("drySolidYield"))),
+
+    A_R2(readScalar(particleProperties_.lookup("A_R2"))),
+    Ea_R2(readScalar(particleProperties_.lookup("Ea_R2"))),
+    n_R2(readScalar(particleProperties_.lookup("n_R2"))),
+    DeltaH_R2(readScalar(particleProperties_.lookup("DeltaH_R2"))),
+    thermalCharYield(readScalar(particleProperties_.lookup("thermalCharYield"))),
+    
+    A_R3(readScalar(particleProperties_.lookup("A_R3"))),
+    Ea_R3(readScalar(particleProperties_.lookup("Ea_R3"))),
+    n_R3(readScalar(particleProperties_.lookup("n_R3"))),
+    nO2_R3(readScalar(particleProperties_.lookup("nO2_R3"))),
+    DeltaH_R3(readScalar(particleProperties_.lookup("DeltaH_R3"))),
+    oxidativeCharYield(readScalar(particleProperties_.lookup("oxidativeCharYield"))),
+    
+    A_R4(readScalar(particleProperties_.lookup("A_R4"))),
+    Ea_R4(readScalar(particleProperties_.lookup("Ea_R4"))),
+    n_R4(readScalar(particleProperties_.lookup("n_R4"))),
+    nO2_R4(readScalar(particleProperties_.lookup("nO2_R4"))),
+    DeltaH_R4(readScalar(particleProperties_.lookup("DeltaH_R4"))),
+    ashYield(readScalar(particleProperties_.lookup("ashYield"))),
 
     packingRatio
     (
@@ -463,10 +484,10 @@ Foam::biomassCloud::biomassCloud
     Char.set_permeability(Kperm_c);
     ash.set_permeability(Kperm_a);
 
-    R1.set_reaction("drying", drySolidYield);
-    R2.set_reaction("thermal pyrolysis", thermalCharYield);
-    R3.set_reaction("oxidative pyrolysis", oxidativeCharYield);
-    R4.set_reaction("char oxidation", ashYield);
+    R1.set_reaction(A_R1, Ea_R1, n_R1, 0.0, DeltaH_R1, drySolidYield, 0.0);
+    R2.set_reaction(A_R2, Ea_R2, n_R2, 0.0, DeltaH_R2, thermalCharYield, 0.0);
+    R3.set_reaction(A_R3, Ea_R3, n_R3, nO2_R3, DeltaH_R3, oxidativeCharYield, 0.1*(1.0-oxidativeCharYield));
+    R4.set_reaction(A_R4, Ea_R4, n_R4, nO2_R4, DeltaH_R4, ashYield, 2.0*(1.0-ashYield));
 
     superParticle.air = &air;
     superParticle.wetSolid = &wetSolid;

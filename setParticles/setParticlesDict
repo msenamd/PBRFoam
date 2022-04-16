@@ -25,7 +25,7 @@ ignMax 		(0 0 0);		// maximum coordinates for ignition zone
 initTemp 	300;
 ignTemp 	300;
 
-initTimeStep	1e-2;
+initTimeStep	1e-3;
 
 initSize 	3.8e-2;
 
@@ -40,6 +40,12 @@ initDrySolid	0.0;
 initChar	0.0;
 initAsh		0.0;
 
-initState	1;
+initState	0;
+
+probeLocations
+(
+	(0.0 0.0 0.0)
+);
+
 
 // ************************************************************************* //

@@ -174,16 +174,28 @@ void solidMaterial::set_permeability(const double& permeability_)
 }
 
 
-// Return material properties
+// Return material properties//////////////////////////////////////
 
 double solidMaterial::get_bulkDensity(const double& temperature) const
 {
     return bulkDensity;
 }
 
+// Get bulk density of material by adding effects of the input moisture content (should only be used on materials initialized as dry solids)
+double solidMaterial::get_bulkDensity(const double& temperature, const double& moistureFraction) const
+{
+    return bulkDensity * (1.0 + moistureFraction);
+}
+
 double solidMaterial::get_conductivity(const double& temperature) const
 {
     return conductivity*pow(temperature/300.0, conductivityExponent);
+}
+
+// Get conductivity of material by adding effects of the input moisture content (should only be used on materials initialized as dry solids)
+double solidMaterial::get_conductivity(const double& temperature, const double& moistureFraction) const
+{
+    return conductivity*pow(temperature/300.0, conductivityExponent) * (1.0 + 2.1*moistureFraction);
 }
 
 double solidMaterial::get_radConductivity(const double& temperature) const
@@ -194,6 +206,12 @@ double solidMaterial::get_radConductivity(const double& temperature) const
 double solidMaterial::get_specificHeat(const double& temperature) const
 {
     return specificHeat * pow(temperature/300.0, specificHeatExponent);
+}
+
+// Get specific heat of material by adding effects of the input moisture content (should only be used on materials initialized as dry solids)
+double solidMaterial::get_specificHeat(const double& temperature, const double& moistureFraction) const
+{
+    return specificHeat * pow(temperature/300.0, specificHeatExponent) * (1.0 + 5.0*moistureFraction);
 }
 
 double solidMaterial::get_emissivity(const double& temperature) const

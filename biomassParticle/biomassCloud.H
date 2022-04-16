@@ -156,17 +156,11 @@ public:
             scalar length;                      // Length of the particle [m]
             scalar width;                       // Width of the particle [m]
 
-        // Particle components density and yield
-
+        // Particle components density
             scalar wetSolidDensity;             // Measured density of the wet solid [kg/m3]
             scalar drySolidDensity;             // Density of the dry solid [kg/m3]
             scalar charDensity;                 // Mass density of char [kg/m3]
             scalar ashDensity;                  // Mass density of ash [kg/m3]   
-
-            scalar drySolidYield;               // Mass yield of dry solid in drying reaction [-]
-            scalar thermalCharYield;            // Mass yield of char in thermal pyolysis [-]
-            scalar oxidativeCharYield;          // Mass yield of char in oxidative pyolysis [-]
-            scalar ashYield;                    // Mass yield of ash in char oxidation [-]
 
         // User-defined conductivity, heat capacity, emissivity, porosity & permeabiltiy  
 
@@ -208,8 +202,34 @@ public:
             scalar Kperm_c;     // Permeability of the particle when pure char [m2]
             scalar Kperm_a;     // Permeability of the particle when pure ash [m2]
 
+        // User-defined reaction kinetics
+            scalar A_R1;                 // Pre-exponential factor [1/s]
+            scalar Ea_R1;                // Activation energy [J/mol]
+            scalar n_R1;                 // Solid-phase reactant exponent [-]
+            scalar DeltaH_R1;            // Heat of evaporation [J/kg] (< 0, endothermic) 
+            scalar drySolidYield;        // Mass yield of dry solid in drying reaction [-]
 
-           // Eulerian Diagnostic Fields
+            scalar A_R2;                 // Pre-exponential factor [1/s]
+            scalar Ea_R2;                // Activation energy [J/mol]
+            scalar n_R2;                 // Solid-phase reactant exponent [-]
+            scalar DeltaH_R2;            // Heat of pyrolysis [J/kg] (< 0, endothermic) 
+            scalar thermalCharYield;     // Mass yield of char in thermal pyolysis [-]
+
+            scalar A_R3;                 // Pre-exponential factor [1/s]
+            scalar Ea_R3;                // Activation energy [J/mol]
+            scalar n_R3;                 // Solid-phase reactant exponent [-]
+            scalar nO2_R3;               // Gas-phase oxygen exponent [-]
+            scalar DeltaH_R3;            // HHeat of oxidative pyrolysis [J/kg] (> 0, exothermic) 
+            scalar oxidativeCharYield;   // Mass yield of char in oxidative pyolysis [-]
+
+            scalar A_R4;                 // Pre-exponential factor [1/s]
+            scalar Ea_R4;                // Activation energy [J/mol]
+            scalar n_R4;                 // Solid-phase reactant exponent [-]
+            scalar nO2_R4;               // Gas-phase oxygen exponent [-]
+            scalar DeltaH_R4;            // Heat of pchar oxidation [J/kg] (> 0, exothermic) 
+            scalar ashYield;             // Mass yield of ash in char oxidation [-]
+
+        // Eulerian Diagnostic Fields
 
             volScalarField packingRatio;                    // Packing Ratio [-]
 

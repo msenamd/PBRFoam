@@ -401,10 +401,8 @@ void Foam::biomassParticle::updateParticle
                     << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
                     << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
                     << charOxidRate_ << "," << massLossRate_ << "\n";
-    }
 
-    if(particleID_> 0 && mesh_.time().writeTime())
-    {
+
         std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);
         p1D.writeTempLine(TempFile);
 

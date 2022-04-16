@@ -33,9 +33,12 @@ public:
 
 
     double get_bulkDensity(const double& temperature) const;
+    double get_bulkDensity(const double& temperature, const double& moistureFraction) const;
     double get_conductivity(const double& temperature) const;
+    double get_conductivity(const double& temperature, const double& moistureFraction) const;
     double get_radConductivity(const double& temperature) const;
     double get_specificHeat(const double& temperature) const;
+    double get_specificHeat(const double& temperature, const double& moistureFraction) const;
     double get_emissivity(const double& temperature) const;
     double get_porosity(const double& temperature) const;
     double get_permeability(const double& temperature) const;

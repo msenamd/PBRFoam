@@ -1564,7 +1564,7 @@ void particle_1D::calcIterError()
 */
 void particle_1D::getNumLocalTimeSteps(const double remainingTime)
 {
-    localTimeStepSize = min(localTimeStepSize, remainingTime);
+    localTimeStepSize = max(1e-9, min(localTimeStepSize, remainingTime));
     finalTimeStepIndex = floor(remainingTime / localTimeStepSize);
 
     if ((finalTimeStepIndex * localTimeStepSize) < remainingTime)

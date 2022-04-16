@@ -51,10 +51,12 @@ public:
     };
     eState state;
 
-    // Burning rate model (TODO fireLab)
+    // Burning rate model
     enum eBurningRateModel{
-        uniform,                            //This model assumes energy is uniformly released over the residence time
-        firstOrderArrheniusOneBreakPoint    //This is the model from Tinney 1965
+        uniformRateResidenceTime,           // Assumes energy is uniformly released over the residence time
+        firstOrderArrheniusOneBreakPoint,   // The model from Tinney 1965
+        thermalPyrolysisOnly,               // Arhennius reaction for thermal pyrolysis
+        pyrolysisCharring                   // Arhenius reactions for thermal and oxydative pyrolysis, and charring
     };
     eBurningRateModel burningRateModel; //model used to compute the energy release rate of the particle as it burns
 
@@ -126,14 +128,25 @@ public:
     double ignitionTime;                // Fuel particle ignition time [s] (TODO)
     double outTime;                     // Fuel particle burned out time [s] (TODO)
     double ignitionTemp;                // Ignition temperature used in some combustion methods [K] (TODO)
-    double flamingFraction;             // Fraction of dry mass (minus mineralContent) that participates in flaming combustion (TODO)
+    double flamingFraction;             // Fraction of total initial dry mass (including mineralContent) that participates in flaming combustion (TODO)
+    double flamingFractionNoMinerals;   // Fraction of dry mass that participates in combustion (if no minerals were present)
     double residenceTime;               // Fuel particle residence time (=duration of the particle burning simulation) [s] (TODO)
+    double mineralContent;              // Mass fraction of minerals.
 
 
 // Public member Functions:
 
     //set geometry and dimensions
     void setGeometry(std::string geometry_, double radius_, double length, double width);
+
+    //set burning rate model
+    void setBurningRateModel(eBurningRateModel burningRateModel_, solidReaction& drying_, solidReaction& thermalPyrolysis_, solidReaction& oxydativePyrolysis_, solidReaction& charring_);
+
+    //set material properties
+    void setMaterials(Air& air_, solidMaterial& wetSolid_, solidMaterial& drySolid_, solidMaterial& Char_, solidMaterial& ash_);
+
+    //computes mineral fraction from reaction parameters
+    double getMineralFraction();
 
     //function initializing particle
     virtual void initialize(
