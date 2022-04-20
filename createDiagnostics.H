@@ -3,7 +3,7 @@
     OFstream outFireFront("outFireFront_"+runTime.timeName());
 
     outFireFront << "time(s)" << "," << "flameHeight(m)" << "," << "flameFront(m)" 
-    << "," << "dryingFront(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingFront(m)" << endl;
+    << "," << "pyrolysisBack(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingFront(m)" << endl;
 
     volScalarField flameHeight
     (
@@ -33,11 +33,11 @@
         dimensionedScalar("zero",dimLength,0.0)
     );
 
-    volScalarField dryingFront
+    volScalarField pyrolysisBack
     (
         IOobject
         (
-            "dryingFront",
+            "pyrolysisBack",
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,

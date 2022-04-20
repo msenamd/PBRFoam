@@ -24,20 +24,20 @@ forAll (mesh.C(),cellI)
 {
 	flameHeight[cellI] = 0.0;
 	flameFront[cellI] = 0.0;
-	dryingFront[cellI] = 0.0;
+	pyrolysisBack[cellI] = 0.0;
 	pyrolysisFront[cellI] = 0.0;
 	smolderingFront[cellI] = 0.0;
 
 	// flame front
-	if (dQ[cellI] >= 1e-12)
+	if (dQ[cellI] >= 1000)
 	{ 
 	    flameHeight[cellI] = mesh.C()[cellI].z();
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
-	// drying front
-	if (particles.state[cellI] == 1) 
+	// pyrolysis back
+	if (particles.state[cellI] == 4) 
 	{ 
-	    dryingFront[cellI] = mesh.C()[cellI].x();
+	    pyrolysisBack[cellI] = mesh.C()[cellI].x();
 	}
 	// pyrolysis front
 	if (particles.state[cellI] == 2 || particles.state[cellI] == 3) 
@@ -53,12 +53,12 @@ forAll (mesh.C(),cellI)
 
 scalar maxFlameHeight = max(flameHeight).value();
 scalar maxFlameFront = max(flameFront).value();
-scalar maxDryingFront = max(dryingFront).value();
+scalar maxpyrolysisBack = max(pyrolysisBack).value();
 scalar maxPyrolysisFront = max(pyrolysisFront).value();
 scalar maxSmolderingFront = max(smolderingFront).value();
 
 outFireFront << runTime.value() << "," << maxFlameHeight << "," << maxFlameFront
-<< "," << maxDryingFront << "," << maxPyrolysisFront << "," << maxSmolderingFront << endl;
+<< "," << maxpyrolysisBack << "," << maxPyrolysisFront << "," << maxSmolderingFront << endl;
 
 
 
