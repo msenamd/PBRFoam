@@ -86,10 +86,21 @@ template<class ThermoType>
 void Foam::radiation::sootYield<ThermoType>::correct()
 {
 
-    forAll(fv_, cellI)
-	{
-       	fv_[cellI] = 0.0;
-  	}
+    //access species mass fractions
+    const PtrList<volScalarField>& Y = thermo.composition().Y();
+
+    // get index of fuel in mixture
+    label fuelIndex = dynamic_cast<const reactingMixture<gasHThermoPhysics>&> (thermo).species()[thermo.lookup("fuel")];
+
+    const volScalarField& YFuel = Y[fuelIndex];
+
+
+    dimensionedScalar rhoSoot("rhoSoot", dimMass/dimVol, scalar(1800.0));
+
+    fv_ = sootYield_ * thermo_.rho() * YFuel / rhoSoot;
+
+        Info << "soot volume fraction min/max = " << min(fv_).value() 
+             << " , " << max(fv_).value() << endl;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
