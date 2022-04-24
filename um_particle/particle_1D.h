@@ -236,14 +236,19 @@ private:
         void moveMesh(std::vector<double>& xR, std::vector<double>& xC, std::vector<double>& deltaX,
                       const int& numCells, std::vector<double>& vol);
 
-        // Explicit calculation of reaction ratesand thermophysical properties of the porous medium
-        void calcReactionThermo();
+        // Calculation of thermophysical properties of the porous medium
+        void calcThermo();
 
         // Accumulation of solid species masses (used by the reaction rate equation)
         void accumulateSolidMass();
 
-        // Calculation of reaction rates from informations at the old iteration
-        void calcReaction_oldIter();
+        // Calculation of reaction rates from given temperature and composition ant certain time (or iter)
+        void calcReaction(const std::vector<double>& Temp_ ,
+                          const std::vector<double>& wetSolidVolFraction_,
+                          const std::vector<double>& drySolidVolFraction_,
+                          const std::vector<double>& charVolFraction_,
+                          const std::vector<double>& ashVolFraction_,
+                          const std::vector<double>& particleO2MassFraction_);
 
 		// Solid Species mass conservation
 		void mass_conservation();

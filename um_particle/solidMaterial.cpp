@@ -70,8 +70,9 @@ solidMaterial& solidMaterial::operator=(const solidMaterial& rhs)
 
 void solidMaterial::set_knownType(const std::string& materialName)
 {
-    if(materialName == "white_pine")
+    if(materialName == "pinewood") 
     {
+        //Source: Lautenberger & Fernandez - Pello(2009) Combust.Flame 156 : 1503 - 1513
         bulkDensity = 361.0;
         conductivity = 0.176;
         conductivityExponent = 0.594;
@@ -81,21 +82,10 @@ void solidMaterial::set_knownType(const std::string& materialName)
         emissivity = 0.759;
         porosity = 0.0744;
         permeability = 1e-10;
-
-    }else if(materialName == "cardboard")
+    }
+    else if (materialName == "pinewood_char")
     {
-        bulkDensity = 525.9;
-        conductivity = 0.22;
-        conductivityExponent = 0.0;
-        radConductivity = 0.0;
-        specificHeat = 2805.0;
-        specificHeatExponent = 0.0;
-        emissivity = 0.9;
-        porosity = 0.0744;
-        permeability = 1e-10;
-
-    }else if(materialName == "Char")
-    {
+        //Source: Lautenberger & Fernandez - Pello(2009) Combust.Flame 156 : 1503 - 1513
         bulkDensity = 73.0;
         conductivity = 0.065;
         conductivityExponent = 0.435;
@@ -105,9 +95,10 @@ void solidMaterial::set_knownType(const std::string& materialName)
         emissivity = 0.957;
         porosity = 0.8128;
         permeability = 1e-10;
-
-    }else if(materialName == "ash")
+    }
+    else if (materialName == "pinewood_ash")
     {
+        //Source: Lautenberger & Fernandez - Pello(2009) Combust.Flame 156 : 1503 - 1513
         bulkDensity = 5.7;
         conductivity = 0.058;
         conductivityExponent = 0.353;
@@ -117,9 +108,46 @@ void solidMaterial::set_knownType(const std::string& materialName)
         emissivity = 0.955;
         porosity = 0.9854;
         permeability = 1e-10;
-
-    }else
+    }
+    else if(materialName == "cardboard")
     {
+        bulkDensity = 520.0;            // Semmes et al. (2014) Proc. IAFSS : 111-123
+        conductivity = 0.1;             // Semmes et al. (2014) Proc. IAFSS : 111-123
+        conductivityExponent = 0.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
+        radConductivity = 0.0;          // Assume equal to pinewood
+        specificHeat = 1800.0;          // Semmes et al. (2014) Proc. IAFSS : 111-123
+        specificHeatExponent = 0.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123    
+        emissivity = 0.7;               // Semmes et al. (2014) Proc. IAFSS : 111-123
+        porosity = 0.0744;              // Assume equal to pinewood
+        permeability = 1e-10;           // Assume equal to pinewood
+    }
+    else if (materialName == "cardboard_char")
+    {
+        bulkDensity = 104.0;            // Estimated from char yield
+        conductivity = 0.00405;         // Semmes et al. (2014) Proc. IAFSS : 111-123
+        conductivityExponent = 3.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
+        radConductivity = 3.3e-3;       // Assume equal to pinewood     
+        specificHeat = 1300.0;          // Semmes et al. (2014) Proc. IAFSS : 111-123
+        specificHeatExponent = 0.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
+        emissivity = 0.85;              // Semmes et al. (2014) Proc. IAFSS : 111-123
+        porosity = 0.8149;              // Estimated from density
+        permeability = 1e-10;           // Assume equal to pinewood char
+    }
+    else if (materialName == "cardboard_ash")
+    {
+        bulkDensity = 21.6944;          // Estimated from ash yield
+        conductivity = 0.058;           // Assume equal to pinewood ash
+        conductivityExponent = 0.353;   // Assume equal to pinewood ash
+        radConductivity = 6.4e-3;       // Assume equal to pinewood ash
+        specificHeat = 1244.0;          // Assume equal to pinewood ash
+        specificHeatExponent = 0.315;   // Assume equal to pinewood ash
+        emissivity = 0.955;             // Assume equal to pinewood ash
+        porosity = 0.9854;              // Estimated from density
+        permeability = 1e-10;           // Assume equal to pinewood ash
+    }
+    else
+    {
+        cout << "Error: Invalid material: " << materialName << endl;
         throw exception();
     }
 }
@@ -131,7 +159,7 @@ void solidMaterial::set_wetSolid(const double& moistureFraction, const solidMate
     bulkDensity = drySolid.get_bulkDensity(300.0) * (1.0 + moistureFraction);
     conductivity = drySolid.get_conductivity(300.0) * (1.0 + 2.1*moistureFraction);
     specificHeat = drySolid.get_specificHeat(300.0) * (1.0 + 5.0*moistureFraction);
-    porosity = 1.0 - bulkDensity / (drySolid.get_bulkDensity(300.0) / (1 - drySolid.get_porosity(300.0)));
+    porosity = 1.0 - bulkDensity / (drySolid.get_bulkDensity(300.0) / (1.0 - drySolid.get_porosity(300.0)));
 }
 
 // Set material properties from external input quantities
@@ -174,7 +202,7 @@ void solidMaterial::set_permeability(const double& permeability_)
 }
 
 
-// Return material properties//////////////////////////////////////
+// Return material properties
 
 double solidMaterial::get_bulkDensity(const double& temperature) const
 {

@@ -608,9 +608,13 @@ void particle_1D::stepForward(
         particleO2MassFraction_old = particleO2MassFraction;
         particlePressure_old = particlePressure;
         surfaceTemp_old = surfaceTemp;
+ 
+        // Calculate thermophyscial properties at old time-step
+        calcThermo();
 
-        // Calculate the reaction & thermophyscial properties at old time-step
-        calcReactionThermo();
+        // Calculate the reaction rate at old time-step
+        calcReaction(Temp_old, wetSolidVolFraction_old, drySolidVolFraction_old, 
+            charVolFraction_old, ashVolFraction_old, particleO2MassFraction_old);
 
         // Accumulate time integration of solid species masses (used by the reaction rates)
         accumulateSolidMass();
@@ -662,7 +666,8 @@ void particle_1D::stepForward(
             }
 
             // Calculate reaction rates from information at old iteration
-            calcReaction_oldIter();
+            calcReaction(Temp_oldIter, wetSolidVolFraction_oldIter, drySolidVolFraction_oldIter,
+                charVolFraction_oldIter, ashVolFraction_oldIter, particleO2MassFraction_oldIter);
 
             // Calculate temperature at new time step, at new iteration
             vectA.assign(numCells_old, 0.0);
@@ -802,14 +807,9 @@ void particle_1D::stepForward(
 * @param
 * @return
 */
-void particle_1D::calcReactionThermo()
+void particle_1D::calcThermo()
 {
     // All variables must be resized due to mesh changes
-    R1reactionRate.assign(numCells_old, 0.0);
-    R2reactionRate.assign(numCells_old, 0.0);
-    R3reactionRate.assign(numCells_old, 0.0);
-    R4reactionRate.assign(numCells_old, 0.0);
-
     porosity.assign(numCells_old, 0.0);
     effectiveConductivity.assign(numCells_old, 0.0);
     effectiveVolHeatCapacity.assign(numCells_old, 0.0);
@@ -818,30 +818,6 @@ void particle_1D::calcReactionThermo()
 
     for (int i = 0; i < numCells_old; i++)
     {
-        //calculate reaction rates
-
-        R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_old[i]) * wetSolidVolFraction_old[i] * cellVolume_old[i], R1->get_n())
-                            * pow(integralWetSolidMass[i] + initWetSolidMass[i] , 1.0 - R1->get_n())
-                            * R1->get_A()
-                            * exp(-R1->get_Ta() / Temp_old[i]);
-
-        R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_old[i]) * drySolidVolFraction_old[i] * cellVolume_old[i], R2->get_n())
-                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R2->get_n())
-                            * R2->get_A()
-                            * exp(-R2->get_Ta() / Temp_old[i]);
-
-        R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_old[i]) * drySolidVolFraction_old[i] * cellVolume_old[i], R3->get_n())
-                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
-                            * pow(particleO2MassFraction_old[i] / 0.226 , R3->get_nO2())
-                            * R3->get_A()
-                            * exp(-R3->get_Ta() / Temp_old[i]);
-
-        R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_old[i]) * charVolFraction_old[i] * cellVolume_old[i], R4->get_n())
-                            * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
-                            * pow(particleO2MassFraction_old[i] / 0.226 , R4->get_nO2())
-                            * R4->get_A()
-                            * exp(-R4->get_Ta() / Temp_old[i]);
-
         //porosity
         porosity[i] = wetSolid->get_porosity(Temp_old[i]) * wetSolidVolFraction_old[i]
                     + drySolid->get_porosity(Temp_old[i]) * drySolidVolFraction_old[i]
@@ -913,42 +889,50 @@ void particle_1D::accumulateSolidMass()
 
 
 /**
-* Calculation of reaction rates from informations at the old iteration
+* Calculation of reaction rates from given temperature and composition ant certain time (or iter)
 * @param
 * @return
 */
-void particle_1D::calcReaction_oldIter()
+void particle_1D::calcReaction(const std::vector<double>& Temp_,
+                                const std::vector<double>& wetSolidVolFraction_,
+                                const std::vector<double>& drySolidVolFraction_,
+                                const std::vector<double>& charVolFraction_,
+                                const std::vector<double>& ashVolFraction_,
+                                const std::vector<double>& particleO2MassFraction_) 
 {
-    for (int i = 0; i < numCells; i++)
+    R1reactionRate.assign(numCells_old, 0.0);
+    R2reactionRate.assign(numCells_old, 0.0);
+    R3reactionRate.assign(numCells_old, 0.0);
+    R4reactionRate.assign(numCells_old, 0.0);
+
+    for (int i = 0; i < numCells_old; i++)
     {
+        R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_[i]) * wetSolidVolFraction_[i]
+            * cellVolume_old[i], R1->get_n())
+            * pow(integralWetSolidMass[i] + initWetSolidMass[i], 1.0 - R1->get_n())
+            * R1->get_A()
+            * exp(-R1->get_Ta() / Temp_[i]);
 
-        R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_oldIter[i]) * wetSolidVolFraction_oldIter[i]
-                            * cellVolume_old[i], R1->get_n())
-                            * pow(integralWetSolidMass[i] + initWetSolidMass[i] , 1.0 - R1->get_n())
-                            * R1->get_A()
-                            * exp(-R1->get_Ta() / Temp_oldIter[i]);
+        R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
+            * cellVolume_old[i], R2->get_n())
+            * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R2->get_n())
+            * R2->get_A()
+            * exp(-R2->get_Ta() / Temp_[i]);
 
-        R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_oldIter[i]) * drySolidVolFraction_oldIter[i]
-                            * cellVolume_old[i], R2->get_n())
-                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R2->get_n())
-                            * R2->get_A()
-                            * exp(-R2->get_Ta() / Temp_oldIter[i]);
+        R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
+            * cellVolume_old[i], R3->get_n())
+            * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R3->get_n())
+            * pow(particleO2MassFraction_[i] / 0.226, R3->get_nO2())
+            * R3->get_A()
+            * exp(-R3->get_Ta() / Temp_[i]);
 
-        R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_oldIter[i]) * drySolidVolFraction_oldIter[i]
-                            * cellVolume_old[i], R3->get_n())
-                            * pow(integralDrySolidMass[i] + initDrySolidMass[i] , 1.0 - R3->get_n())
-                            * pow(particleO2MassFraction_oldIter[i] / 0.226 , R3->get_nO2())
-                            * R3->get_A()
-                            * exp(-R3->get_Ta() / Temp_oldIter[i]);
-
-        R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_oldIter[i]) * charVolFraction_oldIter[i]
-                            * cellVolume_old[i], R4->get_n())
-                            * pow(integralCharMass[i] + initCharMass[i] , 1.0 - R4->get_n())
-                            * pow(particleO2MassFraction_oldIter[i] / 0.226, R4->get_nO2())
-                            * R4->get_A()
-                            * exp(-R4->get_Ta() / Temp_oldIter[i]);
+        R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_[i]) * charVolFraction_[i]
+            * cellVolume_old[i], R4->get_n())
+            * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
+            * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
+            * R4->get_A()
+            * exp(-R4->get_Ta() / Temp_[i]);
     }
-
 }
 
 /**
@@ -988,7 +972,7 @@ void particle_1D::mass_conservation()
 
         wetSolidVolume_newIter = 
                 (wetSolidVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * wetSolidVolume_oldIter)
-                / (1 - localTimeStepSize * RHSm / max(wetSolidVolume_oldIter, 1e-14) + solidSpeciesURF);
+                / (1.0 - localTimeStepSize * RHSm / max(wetSolidVolume_oldIter, 1e-14) + solidSpeciesURF);
 
 
         // Update dry solid volume in the cell
@@ -1000,7 +984,7 @@ void particle_1D::mass_conservation()
 
         drySolidVolume_newIter =
             (drySolidVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * drySolidVolume_oldIter)
-            / (1 - localTimeStepSize * RHSm / max(drySolidVolume_oldIter, 1e-14) + solidSpeciesURF);
+            / (1.0 - localTimeStepSize * RHSm / max(drySolidVolume_oldIter, 1e-14) + solidSpeciesURF);
 
 
         // Update char volume in the cell
@@ -1013,7 +997,7 @@ void particle_1D::mass_conservation()
 
         charVolume_newIter =
             (charVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * charVolume_oldIter)
-            / (1 - localTimeStepSize * RHSm / max(charVolume_oldIter, 1e-14) + solidSpeciesURF);
+            / (1.0 - localTimeStepSize * RHSm / max(charVolume_oldIter, 1e-14) + solidSpeciesURF);
 
 
         // Update ash volume in the cell
@@ -1098,16 +1082,16 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
 
     // ---- Exposed surface boundary cell
     i = numCells_old - 1;
-    FO_R = 0;
+    FO_R = 0.0;
     set_heatFO_L(i, localTimeStepSize);
-    CFL_R = 0;
+    CFL_R = 0.0;
     set_heatCFL_L(i, localTimeStepSize);
 
     vectA[i] = -0.5 * FO_L - 0.5 * CFL_L;
-    vectB[i] = 1 + 0.5 * FO_L + 0.5 * CFL_L + bRRTemp[i];
-    vectC[i] = 0;
+    vectB[i] = 1.0 + 0.5 * FO_L + 0.5 * CFL_L + bRRTemp[i];
+    vectC[i] = 0.0;
     vectD[i] = (0.5 * FO_L + 0.5 * CFL_L) * Temp_old[i-1]
-                + (1 - 0.5 * FO_L - 0.5 * CFL_L) * Temp_old[i] + dRRTemp[i];
+                + (1.0 - 0.5 * FO_L - 0.5 * CFL_L) * Temp_old[i] + dRRTemp[i];
 
     h_rad = surfaceEmissivity * sigma * pow(surfaceTemp_oldIter, 3.0);
 
@@ -1115,12 +1099,12 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
 
     surfaceTemp_newIter = (Temp_oldIter.back() + (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation) 
                           * surfaceGridSpacing / surfaceConductivity) 
-                          / (1 + Bi);
+                          / (1.0 + Bi);
 
-	vectB[i] = vectB[i] + ((h_conv + h_rad) / (1 + Bi))
+	vectB[i] = vectB[i] + ((h_conv + h_rad) / (1.0 + Bi))
              * localTimeStepSize / effectiveVolHeatCapacity[i] * areaFacePositive[i]/cellVolume[i];
     
-    vectD[i] = vectD[i] + ((h_conv * externalTemperature + surfaceEmissivity * externalIrradiation) / (1 + Bi))
+    vectD[i] = vectD[i] + ((h_conv * externalTemperature + surfaceEmissivity * externalIrradiation) / (1.0 + Bi))
              * localTimeStepSize / effectiveVolHeatCapacity[i] * areaFacePositive[i]/cellVolume[i];
 
     vectB[i] += temperatureURF; //apply under-relaxation
@@ -1135,10 +1119,10 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
         set_heatCFL_R(i, localTimeStepSize);
 
         vectA[i] = -0.5 * FO_L - 0.5 * CFL_L;
-        vectB[i] = 1 + 0.5 * FO_L + 0.5 * FO_R + 0.5 * CFL_L - 0.5 * CFL_R + bRRTemp[i];
+        vectB[i] = 1.0 + 0.5 * FO_L + 0.5 * FO_R + 0.5 * CFL_L - 0.5 * CFL_R + bRRTemp[i];
         vectC[i] = -0.5 * FO_R + 0.5 * CFL_R;
         vectD[i] = (0.5 * FO_L + 0.5 * CFL_L) * Temp_old[i-1]
-                    + (1 - 0.5 * FO_L - 0.5 * FO_R - 0.5 * CFL_L + 0.5 * CFL_R) * Temp_old[i]
+                    + (1.0 - 0.5 * FO_L - 0.5 * FO_R - 0.5 * CFL_L + 0.5 * CFL_R) * Temp_old[i]
                     + (0.5 * FO_R - 0.5 * CFL_R) * Temp_old[i+1] + dRRTemp[i];
 
         vectB[i] += temperatureURF; //apply under-relaxation
@@ -1176,15 +1160,15 @@ void particle_1D::O2_mass_conservation(const double externalO2MassFrac)
 
     // ---- Innermost surface boundary cell
     i = 0;
-    FO_L = 0;
+    FO_L = 0.0;
     set_massFO_R(i, localTimeStepSize);
-    CFL_L = 0;
+    CFL_L = 0.0;
     set_massCFL_R(i, localTimeStepSize);
 
-    vectA[i] = 0;
-    vectB[i] = 1 + 0.5 * FO_R - 0.5 * CFL_R + bRRO2[i];
+    vectA[i] = 0.0;
+    vectB[i] = 1.0 + 0.5 * FO_R - 0.5 * CFL_R + bRRO2[i];
     vectC[i] = -0.5 * FO_R + 0.5 * CFL_R;
-    vectD[i] = (1 - 0.5 * FO_R + 0.5 * CFL_R) * particleO2MassFraction_old[i]
+    vectD[i] = (1.0 - 0.5 * FO_R + 0.5 * CFL_R) * particleO2MassFraction_old[i]
              + (0.5 * FO_R - 0.5 * CFL_R) * particleO2MassFraction_old[i+1];
 
     vectB[i] += O2URF; //apply under-relaxation
@@ -1198,20 +1182,20 @@ void particle_1D::O2_mass_conservation(const double externalO2MassFrac)
     set_massCFL_L(i, localTimeStepSize);
 
     vectA[i] = -0.5 * FO_L - 0.5 * CFL_L;
-    vectB[i] = 1 + 0.5 * FO_L + 0.5 * CFL_L + bRRO2[i];
-    vectC[i] = 0;
+    vectB[i] = 1.0 + 0.5 * FO_L + 0.5 * CFL_L + bRRO2[i];
+    vectC[i] = 0.0;
     vectD[i] = (0.5 * FO_L + 0.5 * CFL_L) * particleO2MassFraction_old[i-1]
-             + (1 - 0.5 * FO_L - 0.5 * CFL_L) * particleO2MassFraction_old[i];
+             + (1.0 - 0.5 * FO_L - 0.5 * CFL_L) * particleO2MassFraction_old[i];
 
     h_mass = h_conv / air->get_cSubP(Temp_oldIter[i]);
 
     Bi = h_mass * surfaceGridSpacing 
         / (porosity[i] * air->get_rho(Temp_oldIter[i]) * diffusivity[i]);
 
-    vectB[i] = vectB[i] + (h_mass / (1 + Bi))
+    vectB[i] = vectB[i] + (h_mass / (1.0 + Bi))
              * localTimeStepSize / air->get_rho(Temp_oldIter[i]) /porosity[i] * areaFacePositive[i] / cellVolume[i];
 
-    vectD[i] = vectD[i] + ((h_mass * externalO2MassFrac) / (1 + Bi))
+    vectD[i] = vectD[i] + ((h_mass * externalO2MassFrac) / (1.0 + Bi))
              * localTimeStepSize / air->get_rho(Temp_oldIter[i]) / porosity[i] * areaFacePositive[i] / cellVolume[i];
 
     vectB[i] += O2URF; //apply under-relaxation
@@ -1226,10 +1210,10 @@ void particle_1D::O2_mass_conservation(const double externalO2MassFrac)
         set_massCFL_R(i, localTimeStepSize);
 
         vectA[i] = -0.5 * FO_L - 0.5 * CFL_L;
-        vectB[i] = 1 + 0.5 * FO_L + 0.5 * FO_R + 0.5 * CFL_L - 0.5 * CFL_R + bRRO2[i];
+        vectB[i] = 1.0 + 0.5 * FO_L + 0.5 * FO_R + 0.5 * CFL_L - 0.5 * CFL_R + bRRO2[i];
         vectC[i] = -0.5 * FO_R + 0.5 * CFL_R;
         vectD[i] = (0.5 * FO_L + 0.5 * CFL_L) * particleO2MassFraction_old[i-1]
-                    + (1 - 0.5 * FO_L - 0.5 * FO_R - 0.5 * CFL_L + 0.5 * CFL_R) * particleO2MassFraction_old[i]
+                    + (1.0 - 0.5 * FO_L - 0.5 * FO_R - 0.5 * CFL_L + 0.5 * CFL_R) * particleO2MassFraction_old[i]
                     + (0.5 * FO_R - 0.5 * CFL_R) * particleO2MassFraction_old[i+1];
 
         vectB[i] += O2URF; //apply under-relaxation
@@ -1694,7 +1678,7 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
         / (surfacePorosity * air->get_rho(Temp.back()) * surfaceDiffusivity);
 
     surfaceO2MassFrac = (Bi * externalO2MassFrac + particleO2MassFraction.back())
-                        / (1 + Bi);
+                        / (1.0 + Bi);
 
     surfaceO2MassFrac = max(0.0, min(surfaceO2MassFrac, 1.0));
 

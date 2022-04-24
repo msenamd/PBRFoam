@@ -1,5 +1,5 @@
-#ifndef REACTION_H
-#define REACTION_H
+#ifndef SOLIDREACTION_H
+#define SOLIDREACTION_H
 
 #include <string>
 #include <iostream>

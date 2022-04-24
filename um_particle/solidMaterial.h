@@ -54,4 +54,4 @@ private:
         permeability;
 };
 
-#endif //SOLIDMATERIAL_H
+#endif
