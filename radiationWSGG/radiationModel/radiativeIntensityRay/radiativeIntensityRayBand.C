@@ -239,9 +239,11 @@ Foam::scalar Foam::radiation::radiativeIntensityRayBand::correct()
         ==
             1.0/constant::mathematical::pi*omega_
           * (
-                (k - absorptionEmissionModel_.aDisp(lambdaI)) * wsggmWeightingCoeff * blackBody_.bLambda(lambdaI)
-                + absorptionEmissionModel_.ECont(lambdaI)/4
-                + absorptionEmissionModel_.EDisp(lambdaI)/4
+                (k - absorptionEmissionModel_.aDisp(lambdaI))     // remove aDisp from k
+                *wsggmWeightingCoeff*blackBody_.bLambda(lambdaI)  // added WSGGM weighting coeff (Ivan Sikic 10/10/2014)
+
+              + absorptionEmissionModel_.ECont(lambdaI)/4
+              + absorptionEmissionModel_.EDisp(lambdaI)/4         // add EDisp
             )
         );
 
@@ -276,8 +278,11 @@ void Foam::radiation::radiativeIntensityRayBand::addIntensity()
 
         I_ += absorptionEmissionModel_.addIntensity(lambdaI, ILambda_[lambdaI]);
 
-        kI_ += k*absorptionEmissionModel_.addIntensity(lambdaI, ILambda_[lambdaI]);
+//        kI_ += k*absorptionEmissionModel_.addIntensity(lambdaI, ILambda_[lambdaI]);
 
+        // remove aDisp from k
+        kI_ += (k - absorptionEmissionModel_.aDisp(lambdaI)) 
+                *absorptionEmissionModel_.addIntensity(lambdaI, ILambda_[lambdaI]);
     }
 }
 

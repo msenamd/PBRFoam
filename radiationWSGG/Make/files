@@ -2,6 +2,7 @@
 radiationModel/fvDOMBand/fvDOMBand.C
 radiationModel/radiativeIntensityRay/radiativeIntensityRayBand.C
 
+
 /* Absorption/Emission model */
 submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModelBand.C
 submodels/absorptionEmissionModel/absorptionEmissionModel/absorptionEmissionModelBandNew.C

@@ -584,275 +584,31 @@ void Foam::radiation::fvDOMBand::calculate()
 Foam::tmp<Foam::volScalarField> Foam::radiation::fvDOMBand::Rp() const
 {
 
-    if(nLambda_ == 4) // WSGGM Smith
-    {
-        return tmp<volScalarField>
+    tmp<volScalarField> tRp
+    (
+        new volScalarField
         (
-            new volScalarField
+            IOobject
             (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
+                "Rp",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            // Only include continuous phase emission
+            0.0*absorptionEmission_->aCont()*physicoChemical::sigma
         )
     );
+
+    forAll(aLambda_, lambdaI)
+    {         
+            tRp.ref() += 4.0*(aLambda_[lambdaI] - absorptionEmission_->aDisp(lambdaI))
+                        *ggCoeffLambda_[lambdaI]*physicoChemical::sigma;
     }
 
-    if(nLambda_ == 5) // WSGGM Cassol or Johansson
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 6) // Box model, CO2
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 7) // Box model, H2O (overlapping bands seperately)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    // additional bands for mixture box model 30/08/2016
-    if(nLambda_ == 8)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 9)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7] + aLambda_[8]*ggCoeffLambda_[8])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 10)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7] + aLambda_[8]*ggCoeffLambda_[8] + aLambda_[9]*ggCoeffLambda_[9])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 11)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7] + aLambda_[8]*ggCoeffLambda_[8] + aLambda_[9]*ggCoeffLambda_[9] + aLambda_[10]*ggCoeffLambda_[10])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 12)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7] + aLambda_[8]*ggCoeffLambda_[8] + aLambda_[9]*ggCoeffLambda_[9] + aLambda_[10]*ggCoeffLambda_[10] + aLambda_[11]*ggCoeffLambda_[11])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-    if(nLambda_ == 13)
-    {
-        return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
-                ),
-
-            4.0*(aLambda_[0]*ggCoeffLambda_[0]+aLambda_[1]*ggCoeffLambda_[1]+aLambda_[2]*ggCoeffLambda_[2]+aLambda_[3]*ggCoeffLambda_[3] + aLambda_[4]*ggCoeffLambda_[4] + aLambda_[5]*ggCoeffLambda_[5] + aLambda_[6]*ggCoeffLambda_[6] + aLambda_[7]*ggCoeffLambda_[7] + aLambda_[8]*ggCoeffLambda_[8] + aLambda_[9]*ggCoeffLambda_[9] + aLambda_[10]*ggCoeffLambda_[10] + aLambda_[11]*ggCoeffLambda_[11] + aLambda_[12]*ggCoeffLambda_[12])*physicoChemical::sigma
-           // 4.0*a_*physicoChemical::sigma //absorptionEmission_->a()
-        )
-    );
-    }
-
-   if(nLambda_==25)
-   {
-     return tmp<volScalarField>
-        (
-            new volScalarField
-            (
-                IOobject
-                (
-                    "Rp",
-                    mesh_.time().timeName(),
-                    mesh_,
-                    IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-		    false
-		),
-
-		4*(aLambda_[0]*ggCoeffLambda_[0]+
-			aLambda_[1]*ggCoeffLambda_[1]+
-			aLambda_[2]*ggCoeffLambda_[2]+
-			aLambda_[3]*ggCoeffLambda_[3]+
-			aLambda_[4]*ggCoeffLambda_[4]+
-			aLambda_[5]*ggCoeffLambda_[5]+
-			aLambda_[6]*ggCoeffLambda_[6]+
-			aLambda_[7]*ggCoeffLambda_[7]+
-			aLambda_[8]*ggCoeffLambda_[8]+
-			aLambda_[9]*ggCoeffLambda_[9]+
-			aLambda_[10]*ggCoeffLambda_[10]+
-			aLambda_[11]*ggCoeffLambda_[11]+
-			aLambda_[12]*ggCoeffLambda_[12]+
-			aLambda_[13]*ggCoeffLambda_[13]+
-			aLambda_[14]*ggCoeffLambda_[14]+
-			aLambda_[15]*ggCoeffLambda_[15]+
-			aLambda_[16]*ggCoeffLambda_[16]+
-			aLambda_[17]*ggCoeffLambda_[17]+
-			aLambda_[18]*ggCoeffLambda_[18]+
-			aLambda_[19]*ggCoeffLambda_[19]+
-			aLambda_[20]*ggCoeffLambda_[20]+
-			aLambda_[21]*ggCoeffLambda_[21]+
-			aLambda_[22]*ggCoeffLambda_[22]+
-			aLambda_[23]*ggCoeffLambda_[23]+
-			aLambda_[24]*ggCoeffLambda_[24]
-			)*physicoChemical::sigma
-			)
-			);
-
-
-   }
-
+    return tRp;
 }
 
 // WSGGM
@@ -863,10 +619,13 @@ Foam::radiation::fvDOMBand::Ru() const
 
 	const DimensionedField<scalar, volMesh>& kG =
 		kG_();
+
 	const DimensionedField<scalar, volMesh> E =
 		absorptionEmission_->ECont()()();
-	//  const DimensionedField<scalar, volMesh> a =
-	//     a_.dimensionedInternalField();
+
+    // Only include continuous phase absorption
+    //const DimensionedField<scalar, volMesh> a =
+    //    absorptionEmission_->aCont()()();
 
 	return kG - E;
 	//  return  a*G - E;

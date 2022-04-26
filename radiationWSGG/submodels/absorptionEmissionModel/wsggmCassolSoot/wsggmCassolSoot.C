@@ -54,8 +54,8 @@ Foam::radiation::wsggmCassolSoot::wsggmCassolSoot
 )
 :
     absorptionEmissionModel(dict, mesh),
-    cloudNames_(coeffsDict_.lookup("cloudNames")),
     coeffsDict_((dict.subDict(typeName + "Coeffs"))),
+    cloudNames_(coeffsDict_.lookup("cloudNames")),
     speciesNames_(0),
     specieIndex_(label(0)),
     thermo_(mesh.lookupObject<fluidThermo>("thermophysicalProperties")),
