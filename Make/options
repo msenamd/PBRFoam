@@ -32,10 +32,6 @@ EXE_INC = \
 -I./radiation/lnInclude
 
 EXE_LIBS = \
-    -L$(FOAM_USER_LIBBIN) \
-         -lpatchFieldsFireFOAM  \
-         -lcombustionModelsEDC  \
-         -lgreyMeanAbsorptionEmission_FMG  \
     -lfiniteVolume \
     -lfvOptions \
     -lmeshTools \

@@ -177,7 +177,6 @@ private:
 
 		//variables at the old local timestep
         int numCells_old;
-        double localTimeStepSize_old;
         double surfaceTemp_old;
         std::vector<double> xCellCenter_old;
         std::vector<double> cellVolume_old;

@@ -128,24 +128,24 @@ void solidReaction::set_knownReaction(std::string reactionName, const double& pr
     else if (reactionName == "cardboard_oxidativePyrolysis")
     {
         // Source: Optimized by developers
-        // Source(DeltaH) : Agarwal et al. Proc. IAFSS, 2014 124-137
-        A = 6.663e34;
-        Ea = 41.1658e4;
-        n = 4.99;
-        nO2 = 1.7654;
-        deltaH = 16200e3;
+        // Source(DeltaH) : Semmes et al. Proc. IAFSS, 2014 111-123
+        A = 1.2885e12;
+        Ea = 16.3901e4;
+        n = 2.0;
+        nO2 = 0.7839;
+        deltaH = 0.0;
         productYield = productYield_;
         O2Yield = 0.1 * (1.0 - productYield_);
     }
     else if (reactionName == "cardboard_charOxidation")
     {
         // Source: Optimized by developers
-        // Source(DeltaH) : Agarwal et al. Proc. IAFSS, 2014 124-137
-        A = 8.7205e75;
-        Ea = 101.9345e4;
-        n = 1.5694;
-        nO2 = 4.99;
-        deltaH = 32860e3;
+        // Source(DeltaH) : Semmes et al. Proc. IAFSS, 2014 111-123
+        A = 1.1168e49;
+        Ea = 66.9432e4;
+        n = 1.049;
+        nO2 = 2.0;
+        deltaH = 32900e3;
         productYield = productYield_;
         O2Yield = 2.0 * (1.0 - productYield_);
     }

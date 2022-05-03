@@ -136,12 +136,12 @@ void solidMaterial::set_knownType(const std::string& materialName)
     else if (materialName == "cardboard_ash")
     {
         bulkDensity = 21.6944;          // Estimated from ash yield
-        conductivity = 0.058;           // Assume equal to pinewood ash
-        conductivityExponent = 0.353;   // Assume equal to pinewood ash
+        conductivity = 0.00405;         // Semmes et al. (2014) Proc. IAFSS : 111-123
+        conductivityExponent = 3.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
         radConductivity = 6.4e-3;       // Assume equal to pinewood ash
-        specificHeat = 1244.0;          // Assume equal to pinewood ash
-        specificHeatExponent = 0.315;   // Assume equal to pinewood ash
-        emissivity = 0.955;             // Assume equal to pinewood ash
+        specificHeat = 1300.0;          // Semmes et al. (2014) Proc. IAFSS : 111-123
+        specificHeatExponent = 0.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
+        emissivity = 0.85;              // Semmes et al. (2014) Proc. IAFSS : 111-123
         porosity = 0.9854;              // Estimated from density
         permeability = 1e-10;           // Assume equal to pinewood ash
     }

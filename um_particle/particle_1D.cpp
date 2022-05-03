@@ -58,7 +58,6 @@ particle_1D::particle_1D() : Particle()
     pressureError = 0.0;
 
     numCells_old = 0;
-    localTimeStepSize_old = 0.0;
     surfaceTemp_old = 0.0;
 
     surfaceTemp_oldIter = 0.0;
@@ -149,7 +148,6 @@ particle_1D::particle_1D(const particle_1D& rhs) : Particle(rhs)
     pressureError = rhs.pressureError;
 
     numCells_old = rhs.numCells_old;
-    localTimeStepSize_old = rhs.localTimeStepSize_old;
     surfaceTemp_old = rhs.surfaceTemp_old;
 
     surfaceTemp_oldIter = rhs.surfaceTemp_oldIter;
@@ -229,7 +227,6 @@ particle_1D& particle_1D::operator=(const particle_1D& rhs)
         pressureError = rhs.pressureError;
 
         numCells_old = rhs.numCells_old;
-        localTimeStepSize_old = rhs.localTimeStepSize_old;
         surfaceTemp_old = rhs.surfaceTemp_old;
 
         surfaceTemp_oldIter = rhs.surfaceTemp_oldIter;
@@ -599,7 +596,6 @@ void particle_1D::stepForward(
         numCells_old = numCells;
         cellVolume_old = cellVolume;
         cellSize_old = cellSize;
-        localTimeStepSize_old = localTimeStepSize;
         Temp_old = Temp;
         wetSolidVolFraction_old = wetSolidVolFraction;
         drySolidVolFraction_old = drySolidVolFraction;
@@ -718,7 +714,7 @@ void particle_1D::stepForward(
             for (int i = 0; i < numCells_old; i++)
             {
                 particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
-                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
+                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 2600.0));
             }
 
             // Calculate the numerical error of the iterative loop
@@ -750,8 +746,9 @@ void particle_1D::stepForward(
             cout << "   --ash error = " << ashError << endl;
             cout << "   --O2 error = " << O2Error << endl;
             cout << "   --pressure error = " << pressureError << endl;
-            cout << "   --max temperature = " << *std::max_element(Temp.begin(), Temp.end()) << endl;
-            cout << "   --max pressure = " << *std::max_element(particlePressure.begin(), particlePressure.end()) << endl;
+            cout << "   --max temperature = " << *std::max_element(Temp_newIter.begin(), Temp_newIter.end()) << endl;
+            cout << "   --max pressure = " << *std::max_element(particlePressure_newIter.begin(), particlePressure_newIter.end()) << endl;
+            cout << "   --surface temperature = " << surfaceTemp_newIter << endl;
             throw exception();
         }
 
@@ -905,33 +902,36 @@ void particle_1D::calcReaction(const std::vector<double>& Temp_,
     R3reactionRate.assign(numCells_old, 0.0);
     R4reactionRate.assign(numCells_old, 0.0);
 
-    for (int i = 0; i < numCells_old; i++)
+    if (state != ashed)
     {
-        R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_[i]) * wetSolidVolFraction_[i]
-            * cellVolume_old[i], R1->get_n())
-            * pow(integralWetSolidMass[i] + initWetSolidMass[i], 1.0 - R1->get_n())
-            * R1->get_A()
-            * exp(-R1->get_Ta() / Temp_[i]);
+        for (int i = 0; i < numCells_old; i++)
+        {
+            R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_[i]) * wetSolidVolFraction_[i]
+                * cellVolume_old[i], R1->get_n())
+                * pow(integralWetSolidMass[i] + initWetSolidMass[i], 1.0 - R1->get_n())
+                * R1->get_A()
+                * exp(-R1->get_Ta() / Temp_[i]);
 
-        R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
-            * cellVolume_old[i], R2->get_n())
-            * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R2->get_n())
-            * R2->get_A()
-            * exp(-R2->get_Ta() / Temp_[i]);
+            R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
+                * cellVolume_old[i], R2->get_n())
+                * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R2->get_n())
+                * R2->get_A()
+                * exp(-R2->get_Ta() / Temp_[i]);
 
-        R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
-            * cellVolume_old[i], R3->get_n())
-            * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R3->get_n())
-            * pow(particleO2MassFraction_[i] / 0.226, R3->get_nO2())
-            * R3->get_A()
-            * exp(-R3->get_Ta() / Temp_[i]);
+            R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
+                * cellVolume_old[i], R3->get_n())
+                * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R3->get_n())
+                * pow(particleO2MassFraction_[i] / 0.226, R3->get_nO2())
+                * R3->get_A()
+                * exp(-R3->get_Ta() / Temp_[i]);
 
-        R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_[i]) * charVolFraction_[i]
-            * cellVolume_old[i], R4->get_n())
-            * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
-            * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
-            * R4->get_A()
-            * exp(-R4->get_Ta() / Temp_[i]);
+            R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_[i]) * charVolFraction_[i]
+                * cellVolume_old[i], R4->get_n())
+                * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
+                * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
+                * R4->get_A()
+                * exp(-R4->get_Ta() / Temp_[i]);
+        }
     }
 }
 
@@ -1097,10 +1097,6 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
 
 	Bi = (h_conv + h_rad) * surfaceGridSpacing / surfaceConductivity;
 
-    surfaceTemp_newIter = (Temp_oldIter.back() + (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation) 
-                          * surfaceGridSpacing / surfaceConductivity) 
-                          / (1.0 + Bi);
-
 	vectB[i] = vectB[i] + ((h_conv + h_rad) / (1.0 + Bi))
              * localTimeStepSize / effectiveVolHeatCapacity[i] * areaFacePositive[i]/cellVolume[i];
     
@@ -1128,6 +1124,14 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
         vectB[i] += temperatureURF; //apply under-relaxation
         vectD[i] += temperatureURF * Temp_oldIter[i];
     }
+
+    // Update surface temperature at new iteration
+    surfaceTemp_newIter = (Temp_oldIter.back() + (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation) 
+                          * surfaceGridSpacing / surfaceConductivity) 
+                          / (1.0 + Bi);
+
+    // Safety: limit surface temperature
+    surfaceTemp_newIter = max(273.0, min(surfaceTemp_newIter, 2600.0));                      
 }
 
 /**
@@ -1530,8 +1534,22 @@ void particle_1D::calcIterError()
     O2Difference_time = maxAbsDifference(particleO2MassFraction_old, particleO2MassFraction_newIter);
     pressureDifference_time = maxAbsDifference(particlePressure_old, particlePressure_newIter);
 
-    TempError = temperatureURF * TempDifference_iter / max(TempDifference_time, 1e-14);
-    O2Error = O2URF * O2Difference_iter / max(O2Difference_time, 1e-14);
+    if (TempDifference_time > 1e-9)
+    {
+        TempError = temperatureURF * TempDifference_iter / TempDifference_time;
+    }
+    else
+    {
+        TempError = 0.0;
+    }
+    if (O2Difference_time > 1e-9)
+    {
+        O2Error = O2URF * O2Difference_iter / O2Difference_time;
+    }
+    else
+    {
+        O2Error = 0.0;
+    }
     
     wetSolidError = wetSolidDifference_iter / solidSpeciesThreshold;
     drySolidError = drySolidDifference_iter / solidSpeciesThreshold;
@@ -1551,7 +1569,7 @@ void particle_1D::getNumLocalTimeSteps(const double remainingTime)
     localTimeStepSize = max(1e-9, min(localTimeStepSize, remainingTime));
     finalTimeStepIndex = floor(remainingTime / localTimeStepSize);
 
-    if ((finalTimeStepIndex * localTimeStepSize) < remainingTime)
+    if ((finalTimeStepIndex * localTimeStepSize) != remainingTime)
     {
         finalTimeStepIndex = finalTimeStepIndex + 1;
         localTimeStepSize = remainingTime / finalTimeStepIndex;
@@ -1568,22 +1586,22 @@ void particle_1D::adjustTimeStep(const double remainingTime)
     double dt_Temp, dt_wetSolid, dt_drySolid, dt_char, dt_ash, dt_O2, dt_pressure;
 
     // Limit the time step dt so that variations in Q are less than a user defined Threshold
-    dt_Temp = localTimeStepSize_old * temperatureThreshold / max(TempDifference_time, 1e-14);
-    dt_wetSolid = localTimeStepSize_old * solidSpeciesThreshold / max(wetSolidDifference_time, 1e-14);
-    dt_drySolid = localTimeStepSize_old * solidSpeciesThreshold / max(drySolidDifference_time, 1e-14);
-    dt_char = localTimeStepSize_old * solidSpeciesThreshold / max(charDifference_time, 1e-14);
-    dt_ash = localTimeStepSize_old * solidSpeciesThreshold / max(ashDifference_time, 1e-14);
-    dt_O2 = localTimeStepSize_old * O2Threshold / max(O2Difference_time, 1e-14);
-    dt_pressure = localTimeStepSize_old * pressureThreshold / max(pressureDifference_time, 1e-14);
+    dt_Temp = localTimeStepSize * temperatureThreshold / max(TempDifference_time, 1e-14);
+    dt_wetSolid = localTimeStepSize * solidSpeciesThreshold / max(wetSolidDifference_time, 1e-14);
+    dt_drySolid = localTimeStepSize * solidSpeciesThreshold / max(drySolidDifference_time, 1e-14);
+    dt_char = localTimeStepSize * solidSpeciesThreshold / max(charDifference_time, 1e-14);
+    dt_ash = localTimeStepSize * solidSpeciesThreshold / max(ashDifference_time, 1e-14);
+    dt_O2 = localTimeStepSize * O2Threshold / max(O2Difference_time, 1e-14);
+    dt_pressure = localTimeStepSize * pressureThreshold / max(pressureDifference_time, 1e-14);
 
     // Limit the time step to a maximum of 10 % variations or a user defined threshold
-    dt_Temp = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_Temp));
-    dt_wetSolid = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_wetSolid));
-    dt_drySolid = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_drySolid));
-    dt_char = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_char));
-    dt_ash = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_ash));
-    dt_O2 = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_O2));
-    dt_pressure = max(0.9 * localTimeStepSize_old, min(1.1 * localTimeStepSize_old, dt_pressure));
+    dt_Temp = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_Temp));
+    dt_wetSolid = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_wetSolid));
+    dt_drySolid = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_drySolid));
+    dt_char = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_char));
+    dt_ash = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_ash));
+    dt_O2 = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_O2));
+    dt_pressure = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_pressure));
 
     localTimeStepSize = min({ timeStepThreshold,
                               dt_Temp,
@@ -1596,7 +1614,7 @@ void particle_1D::adjustTimeStep(const double remainingTime)
     localTimeStepIndex = 0;
     finalTimeStepIndex = floor(remainingTime / localTimeStepSize);
 
-    if ((finalTimeStepIndex * localTimeStepSize) < remainingTime)
+    if ((finalTimeStepIndex * localTimeStepSize) != remainingTime)
     {
         finalTimeStepIndex = finalTimeStepIndex + 1;
         localTimeStepSize = remainingTime / finalTimeStepIndex;
@@ -1661,7 +1679,8 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
                     (h_conv * externalTemperature + surfaceEmissivity * externalIrradiation)
                     * surfaceGridSpacing / surfaceConductivity) / (1.0 + Bi);
 
-    surfaceTemp = max(273.0, min(surfaceTemp, 3000.0));
+    // Safety: limit surface temperature
+    surfaceTemp = max(273.0, min(surfaceTemp, 2600.0));
 
     surfaceHeatFluxConv = h_conv * (externalTemperature - surfaceTemp);
 
@@ -1698,14 +1717,12 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
 void particle_1D::correctForBlowing()
 {
 
-    double outletMassFlux = 0.0;
+    double outletMassFlux = permeability.back() / diffusivity.back()
+                      * (particlePressure[numCells-2]  - particlePressure[numCells-1]) 
+                      / (xCellCenter[numCells-1] - xCellCenter[numCells-2]);
 
-    if (particlePressure[numCells-2] > particlePressure[numCells-1])
+    if (outletMassFlux > 1e-12)
     {
-        outletMassFlux = permeability.back() / diffusivity.back()
-                          * (particlePressure[numCells-2]  - particlePressure[numCells-1]) 
-                          / (xCellCenter[numCells-1] - xCellCenter[numCells-2]);
-
         h_conv = outletMassFlux * air->get_cSubP(surfaceTemp) 
                 / (exp(outletMassFlux * air->get_cSubP(surfaceTemp) / h_conv) - 1.0 );
     }
@@ -2018,7 +2035,7 @@ void particle_1D::interpolateOnNewMesh()
 
             //Safety: disallow negative oxygen mass fraction or extreme temperatures
             particleO2MassFraction[i] = max(0.0, min(particleO2MassFraction[i], 1.0));
-            Temp[i] = max(273.0, min(Temp[i], 3000.0));
+            Temp[i] = max(273.0, min(Temp[i], 2600.0));
 
             // Safety: disallow negative mass
             integralWetSolidMass[i] = max(1e-14, integralWetSolidMass[i]);
