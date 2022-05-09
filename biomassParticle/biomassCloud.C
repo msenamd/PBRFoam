@@ -192,6 +192,7 @@ Foam::biomassCloud::biomassCloud
     solidSpeciesURF(readScalar(particleProperties_.lookup("solidSpeciesURF"))),
     O2URF(readScalar(particleProperties_.lookup("O2URF"))),
     pressureURF(readScalar(particleProperties_.lookup("pressureURF"))),
+    flagRemeshing(readBool(particleProperties_.lookup("flagRemeshing"))),
 
     shapeName(particleProperties_.lookup("shapeName")),
     length(readScalar(particleProperties_.lookup("length"))),
@@ -520,7 +521,8 @@ Foam::biomassCloud::biomassCloud
                                     temperatureURF,
                                     solidSpeciesURF,
                                     O2URF,
-                                    pressureURF
+                                    pressureURF,
+                                    flagRemeshing
                                 );
 
     Info << "   setting particle information at time Zero  " << endl;

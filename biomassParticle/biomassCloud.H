@@ -150,6 +150,7 @@ public:
             scalar solidSpeciesURF;              // Under relaxation factor for solid species [-]
             scalar O2URF;                        // Under relaxation factor for O2 [-]
             scalar pressureURF;                  // Under relaxation factor for pressure [-]
+            bool flagRemeshing;                  // Optional remeshing
 
         // Particle geometric properties
             word shapeName;                     // Particle shape: slab/cylinder/sphere

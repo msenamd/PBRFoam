@@ -153,8 +153,8 @@ double cylinder::get_convectiveHeatTransferCoefficient(double T_g , double T_sur
     D_eff       = 2*particleSize;              // Effective diameter of particle [m]
     Re_D        = u_g*D_eff/nu_g;       // Reynolds number at film temp.
     // Nusselt number at film temp. , Ref: Churchill and Bernstein
-    Nu_D        = 0.3 + (0.62*pow(Re_D,0.5)*pow(Pr,0.3333))/pow((1+pow(0.4/Pr,2.0/3.0)),0.25)
-            * pow((1+pow(Re_D/282000,5.0/8.0)),4.0/5.0) ;
+    Nu_D        = 0.3 + (0.62*pow(Re_D,0.5)*pow(Pr,0.3333))/pow((1.0+pow(0.4/Pr,2.0/3.0)),0.25)
+                * pow((1.0+pow(Re_D/282000.0,5.0/8.0)),4.0/5.0) ;
 
     h    = Nu_D*k_g/D_eff;   // Convective heat transfer coef. [W/m2/K]
 

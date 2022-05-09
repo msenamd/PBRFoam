@@ -69,7 +69,8 @@ public:
             const double temperatureURF_,
             const double solidSpeciesURF_,
             const double O2URF_,
-            const double pressureURF_
+            const double pressureURF_,
+            const bool flagRemeshing_
         );
 
         //write data at global time
@@ -128,6 +129,7 @@ private:
         double solidSpeciesURF;         // Under relaxation factor for solid species [-]
         double O2URF;                   // Under relaxation factor for O2 [-]
         double pressureURF;             // Under relaxation factor for pressure [-]
+        bool flagRemeshing;             // Flag for optional remeshing
 
         double TempDifference_iter;     // temperature difference of old and new iterations [K]
         double wetSolidDifference_iter; // wetSolid vol. frac. difference of old and new iterations [-]

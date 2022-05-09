@@ -72,7 +72,7 @@ forAll (mesh.C(),cellI)
 	QconvPUVbed[cellI] = 0.0;
 	QradPUVbed[cellI] = 0.0;
 
-	if (mesh.C()[cellI].x() > maxPyrolysisFront) 
+	if (mesh.C()[cellI].x() > maxPyrolysisFront && particles.packingRatio[cellI] > 1e-12) 
 	{ 
 			nCells = nCells + 1;
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];

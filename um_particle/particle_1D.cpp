@@ -32,6 +32,7 @@ particle_1D::particle_1D() : Particle()
     solidSpeciesURF = 0.0;
     O2URF = 0.01;
     pressureURF = 0.0;
+    flagRemeshing = true;
 
     TempDifference_iter = 0.0;     
     wetSolidDifference_iter = 0.0;
@@ -122,6 +123,7 @@ particle_1D::particle_1D(const particle_1D& rhs) : Particle(rhs)
     solidSpeciesURF = rhs.solidSpeciesURF;
     O2URF = rhs.O2URF;
     pressureURF = rhs.pressureURF;
+    flagRemeshing = rhs.flagRemeshing;
 
     TempDifference_iter = rhs.TempDifference_iter;
     wetSolidDifference_iter = rhs.wetSolidDifference_iter;
@@ -201,6 +203,7 @@ particle_1D& particle_1D::operator=(const particle_1D& rhs)
         solidSpeciesURF = rhs.solidSpeciesURF;
         O2URF = rhs.O2URF;
         pressureURF = rhs.pressureURF;
+        flagRemeshing = rhs.flagRemeshing;
 
         TempDifference_iter = rhs.TempDifference_iter;
         wetSolidDifference_iter = rhs.wetSolidDifference_iter;
@@ -271,7 +274,8 @@ void particle_1D::setSolutionControl(
     const double temperatureURF_,
     const double solidSpeciesURF_,
     const double O2URF_,
-    const double pressureURF_
+    const double pressureURF_,
+    const bool flagRemeshing_
 )
 {
     maxIter = maxIter_;
@@ -285,6 +289,7 @@ void particle_1D::setSolutionControl(
     solidSpeciesURF = solidSpeciesURF_;
     O2URF = O2URF_;
     pressureURF = pressureURF_;
+    flagRemeshing = flagRemeshing_;
 }
 
 /**
@@ -414,9 +419,9 @@ void particle_1D::initialize(
 
     for (int j = 0; j < numCells; j++)
     {
-        initWetSolidMass[j] = max(wetSolid->get_bulkDensity(Temp[j]) * wetSolidVolFraction[j] * cellVolume[j], 1e-14);
-        initDrySolidMass[j] = max(drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j] * cellVolume[j], 1e-14);
-        initCharMass[j] = max(Char->get_bulkDensity(Temp[j]) * charVolFraction[j] * cellVolume[j], 1e-14);
+        initWetSolidMass[j] = max(wetSolid->get_bulkDensity(Temp[j]) * wetSolidVolFraction[j] * cellVolume[j], 1e-100);
+        initDrySolidMass[j] = max(drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j] * cellVolume[j], 1e-100);
+        initCharMass[j] = max(Char->get_bulkDensity(Temp[j]) * charVolFraction[j] * cellVolume[j], 1e-100);
     }
 
     // Initialize arrays for integration of solid masses
@@ -714,7 +719,7 @@ void particle_1D::stepForward(
             for (int i = 0; i < numCells_old; i++)
             {
                 particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
-                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 2600.0));
+                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
             }
 
             // Calculate the numerical error of the iterative loop
@@ -768,7 +773,10 @@ void particle_1D::stepForward(
         moveMesh(xFacePositive, xCellCenter, cellSize, numCells_old, cellVolume);
 
         // Re-mesh the particle due to size change
-        remeshing();
+        if (flagRemeshing)
+        {
+            remeshing();
+        }
  
         // Update the conditions at the exposed surface
         updateExposedSurface(externalTemperature, externalVelocity,
@@ -925,12 +933,13 @@ void particle_1D::calcReaction(const std::vector<double>& Temp_,
                 * R3->get_A()
                 * exp(-R3->get_Ta() / Temp_[i]);
 
+            // Safety: Avoid extremely high reaction rate at high particle temperature
             R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_[i]) * charVolFraction_[i]
                 * cellVolume_old[i], R4->get_n())
                 * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
                 * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
                 * R4->get_A()
-                * exp(-R4->get_Ta() / Temp_[i]);
+                * exp(-R4->get_Ta() / min(Temp_[i], 1600.0)); 
         }
     }
 }
@@ -972,7 +981,7 @@ void particle_1D::mass_conservation()
 
         wetSolidVolume_newIter = 
                 (wetSolidVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * wetSolidVolume_oldIter)
-                / (1.0 - localTimeStepSize * RHSm / max(wetSolidVolume_oldIter, 1e-14) + solidSpeciesURF);
+                / (1.0 - localTimeStepSize * RHSm / max(wetSolidVolume_oldIter, 1e-100) + solidSpeciesURF);
 
 
         // Update dry solid volume in the cell
@@ -984,7 +993,7 @@ void particle_1D::mass_conservation()
 
         drySolidVolume_newIter =
             (drySolidVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * drySolidVolume_oldIter)
-            / (1.0 - localTimeStepSize * RHSm / max(drySolidVolume_oldIter, 1e-14) + solidSpeciesURF);
+            / (1.0 - localTimeStepSize * RHSm / max(drySolidVolume_oldIter, 1e-100) + solidSpeciesURF);
 
 
         // Update char volume in the cell
@@ -997,7 +1006,7 @@ void particle_1D::mass_conservation()
 
         charVolume_newIter =
             (charVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * charVolume_oldIter)
-            / (1.0 - localTimeStepSize * RHSm / max(charVolume_oldIter, 1e-14) + solidSpeciesURF);
+            / (1.0 - localTimeStepSize * RHSm / max(charVolume_oldIter, 1e-100) + solidSpeciesURF);
 
 
         // Update ash volume in the cell
@@ -1009,7 +1018,7 @@ void particle_1D::mass_conservation()
 
         ashVolume_newIter =
             (ashVolume_old + localTimeStepSize * RHSp + solidSpeciesURF * ashVolume_oldIter)
-            / (1 - localTimeStepSize * RHSm / max(ashVolume_oldIter, 1e-14) + solidSpeciesURF);
+            / (1 - localTimeStepSize * RHSm / max(ashVolume_oldIter, 1e-100) + solidSpeciesURF);
 
 
         // Update the cell volume
@@ -1131,7 +1140,7 @@ void particle_1D::energy_conservation(const double externalTemperature, const do
                           / (1.0 + Bi);
 
     // Safety: limit surface temperature
-    surfaceTemp_newIter = max(273.0, min(surfaceTemp_newIter, 2600.0));                      
+    surfaceTemp_newIter = max(273.0, min(surfaceTemp_newIter, 3000.0));                      
 }
 
 /**
@@ -1156,7 +1165,7 @@ void particle_1D::O2_mass_conservation(const double externalO2MassFrac)
                     ) / cellVolume_old[i];
 
         bRRO2[i] *= localTimeStepSize / air->get_rho(Temp_oldIter[i]) / porosity[i] 
-                    / max(particleO2MassFraction_oldIter[i], 1e-14);
+                    / max(particleO2MassFraction_oldIter[i], 1e-100);
     }
 
     // Constructing Temperature matrix (filling vectors A,B,C,D)
@@ -1586,13 +1595,13 @@ void particle_1D::adjustTimeStep(const double remainingTime)
     double dt_Temp, dt_wetSolid, dt_drySolid, dt_char, dt_ash, dt_O2, dt_pressure;
 
     // Limit the time step dt so that variations in Q are less than a user defined Threshold
-    dt_Temp = localTimeStepSize * temperatureThreshold / max(TempDifference_time, 1e-14);
-    dt_wetSolid = localTimeStepSize * solidSpeciesThreshold / max(wetSolidDifference_time, 1e-14);
-    dt_drySolid = localTimeStepSize * solidSpeciesThreshold / max(drySolidDifference_time, 1e-14);
-    dt_char = localTimeStepSize * solidSpeciesThreshold / max(charDifference_time, 1e-14);
-    dt_ash = localTimeStepSize * solidSpeciesThreshold / max(ashDifference_time, 1e-14);
-    dt_O2 = localTimeStepSize * O2Threshold / max(O2Difference_time, 1e-14);
-    dt_pressure = localTimeStepSize * pressureThreshold / max(pressureDifference_time, 1e-14);
+    dt_Temp = localTimeStepSize * temperatureThreshold / max(TempDifference_time, 1e-100);
+    dt_wetSolid = localTimeStepSize * solidSpeciesThreshold / max(wetSolidDifference_time, 1e-100);
+    dt_drySolid = localTimeStepSize * solidSpeciesThreshold / max(drySolidDifference_time, 1e-100);
+    dt_char = localTimeStepSize * solidSpeciesThreshold / max(charDifference_time, 1e-100);
+    dt_ash = localTimeStepSize * solidSpeciesThreshold / max(ashDifference_time, 1e-100);
+    dt_O2 = localTimeStepSize * O2Threshold / max(O2Difference_time, 1e-100);
+    dt_pressure = localTimeStepSize * pressureThreshold / max(pressureDifference_time, 1e-100);
 
     // Limit the time step to a maximum of 10 % variations or a user defined threshold
     dt_Temp = max(0.9 * localTimeStepSize, min(1.1 * localTimeStepSize, dt_Temp));
@@ -1609,6 +1618,9 @@ void particle_1D::adjustTimeStep(const double remainingTime)
                               dt_O2,
                               dt_pressure
                             });
+
+    // Avoid exrremely low time-steps
+    localTimeStepSize = max(localTimeStepSize, 1e-6);
 
     // Update the total number of time-steps according to the new dt
     localTimeStepIndex = 0;
@@ -1680,7 +1692,7 @@ void particle_1D::updateExposedSurface(const double externalTemperature, const d
                     * surfaceGridSpacing / surfaceConductivity) / (1.0 + Bi);
 
     // Safety: limit surface temperature
-    surfaceTemp = max(273.0, min(surfaceTemp, 2600.0));
+    surfaceTemp = max(273.0, min(surfaceTemp, 3000.0));
 
     surfaceHeatFluxConv = h_conv * (externalTemperature - surfaceTemp);
 
@@ -1990,10 +2002,6 @@ void particle_1D::interpolateOnNewMesh()
                 + (charVolFraction_old[ii + 1] - charVolFraction_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
                 / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
 
-            ashVolFraction[i] = ashVolFraction_old[ii]
-                + (ashVolFraction_old[ii + 1] - ashVolFraction_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
-                / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
-
             particleO2MassFraction[i] = particleO2MassFraction_old[ii]
                 + (particleO2MassFraction_old[ii + 1] - particleO2MassFraction_old[ii]) * (xCellCenter[i] - xCellCenter_old[ii])
                 / (xCellCenter_old[ii + 1] - xCellCenter_old[ii]);
@@ -2031,16 +2039,16 @@ void particle_1D::interpolateOnNewMesh()
             wetSolidVolFraction[i] = max(0.0, min(1.0, wetSolidVolFraction[i]));
             drySolidVolFraction[i] = max(0.0, min(1.0, drySolidVolFraction[i]));
             charVolFraction[i] = max(0.0, min(1.0, charVolFraction[i]));
-            ashVolFraction[i] = max(0.0, min(1.0, ashVolFraction[i]));  
+            ashVolFraction[i] = max(0.0, min(1.0, 1.0 - (wetSolidVolFraction[i]+drySolidVolFraction[i]+charVolFraction[i])));  
 
             //Safety: disallow negative oxygen mass fraction or extreme temperatures
             particleO2MassFraction[i] = max(0.0, min(particleO2MassFraction[i], 1.0));
-            Temp[i] = max(273.0, min(Temp[i], 2600.0));
+            Temp[i] = max(273.0, min(Temp[i], 3000.0));
 
             // Safety: disallow negative mass
-            integralWetSolidMass[i] = max(1e-14, integralWetSolidMass[i]);
-            integralDrySolidMass[i] = max(1e-14, integralDrySolidMass[i]);
-            integralCharMass[i] = max(1e-14, integralCharMass[i]);
+            integralWetSolidMass[i] = max(1e-100, integralWetSolidMass[i]);
+            integralDrySolidMass[i] = max(1e-100, integralDrySolidMass[i]);
+            integralCharMass[i] = max(1e-100, integralCharMass[i]);
 
         }
         if (ii == -1)

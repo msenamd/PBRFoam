@@ -142,7 +142,7 @@ void solidMaterial::set_knownType(const std::string& materialName)
         specificHeat = 1300.0;          // Semmes et al. (2014) Proc. IAFSS : 111-123
         specificHeatExponent = 0.0;     // Semmes et al. (2014) Proc. IAFSS : 111-123
         emissivity = 0.85;              // Semmes et al. (2014) Proc. IAFSS : 111-123
-        porosity = 0.9854;              // Estimated from density
+        porosity = 0.9614;              // Estimated from density
         permeability = 1e-10;           // Assume equal to pinewood ash
     }
     else
