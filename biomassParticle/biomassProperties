@@ -37,7 +37,7 @@ temperatureURF  0.1;         	    // Under relaxation factor for temperature [-]
 solidSpeciesURF  0.0;               // Under relaxation factor for solid species [-]
 O2URF  0.1;      	            // Under relaxation factor for O2 [-]
 pressureURF  0.0;                   // Under relaxation factor for pressure [-]                
-
+flagRemeshing	false;	            // Optional remeshing
 
 // Particle geometric properties
 shapeName  slab;          	// Particle shape: slab/cylinder/sphere
