@@ -235,6 +235,7 @@ public:
             volScalarField packingRatio;                    // Packing Ratio [-]
 
             volScalarField state;                           // state [-]
+            volScalarField mass;                            // mass [kg]
 
             volScalarField massLossRatePUVbed;              // Total mass loss rate [kg/s/m3]
             volScalarField gasFuelReleaseRatePUVbed;        // Fuel mass prod. rate [kg/s/m3]

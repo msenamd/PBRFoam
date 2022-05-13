@@ -361,6 +361,9 @@ void Foam::biomassParticle::updateParticle
     // vegetaion bed stat (-)
     td.cloud().state[celli] = particleState_;
 
+    // vegetaion bed mass (kg)
+    td.cloud().mass[celli] = td.cloud().nParticles * p1D.particleMass;
+
     // Mass rates (kg/s/m3)
     td.cloud().massLossRatePUVbed[celli]        = td.cloud().nParticles * p1D.globalMassLossRate / mesh_.cellVolumes()[celli];
     td.cloud().gasFuelReleaseRatePUVbed[celli]  = td.cloud().nParticles * p1D.globalGasFuelReleaseRate / mesh_.cellVolumes()[celli];

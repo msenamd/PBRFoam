@@ -292,7 +292,20 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimensionSet(0, 0, 0, 0, 0, 0 ,0) , 0.0)
-    ),    
+    ),
+    mass
+    (
+        IOobject
+        (
+            this->name() + "_mass",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimensionSet(1, 0, 0, 0, 0, 0 ,0) , 0.0)
+    ),         
     massLossRatePUVbed
     (
         IOobject
