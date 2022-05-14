@@ -299,13 +299,17 @@ void Foam::biomassParticle::updateParticle
     massLossRate_      = p1D.globalMassLossRate;
 
     // update particle velocity
-    if(td.cloud().dragModel == "constant")
+    if(td.cloud().dragModel == "constant" && particleState_ != 6)
     {
         CD_ = td.cloud().dragCoeff;
     }
-    else
+    else if(td.cloud().dragModel != "constant" && particleState_ != 6)
     {
         CD_ = p1D.dragCoeff;
+    }
+    else //particle is ash and collapsed
+    {
+        CD_ = 0.0;
     } 
 
     if (td.cloud().firebrands)

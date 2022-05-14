@@ -35,10 +35,15 @@ forAll (mesh.C(),cellI)
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 	// pyrolysis front
-	if (particles.state[cellI] == 2 || particles.state[cellI] == 3) 
+	if (particles.state[cellI] == 3) 
 	{ 
 	    pyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
+	// pyrolysis back
+	if (particles.state[cellI] == 4) 
+	{ 
+	    pyrolysisBack[cellI] = mesh.C()[cellI].x();
+	}	
 	// smoldering front
 	if (particles.state[cellI] == 5) 
 	{ 
@@ -48,7 +53,7 @@ forAll (mesh.C(),cellI)
 
 scalar maxFlameHeight = max(flameHeight).value();
 scalar maxFlameFront = max(flameFront).value();
-scalar maxpyrolysisBack = min(pyrolysisFront).value();
+scalar maxpyrolysisBack = max(pyrolysisBack).value();
 scalar maxPyrolysisFront = max(pyrolysisFront).value();
 scalar maxSmolderingFront = max(smolderingFront).value();
 
@@ -63,11 +68,11 @@ label nCells = 0;
 
 forAll (mesh.C(),cellI)
 {
-	// heat flux ahead of the flame
+	// heat flux ahead of the flame (drying particles)
 	QconvPUVbed[cellI] = 0.0;
 	QradPUVbed[cellI] = 0.0;
 
-	if (mesh.C()[cellI].x() > maxPyrolysisFront && particles.packingRatio[cellI] > 1e-12) 
+	if (mesh.C()[cellI].x() > maxPyrolysisFront && particles.state[cellI] == 1) 
 	{ 
 			nCells = nCells + 1;
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];
