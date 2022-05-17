@@ -334,6 +334,7 @@ void particle_1D::setMesh(
 * @return
 */
 void particle_1D::preStepForward(
+                                eState state_,
                                 double localTimeStepSize_,
                                 double particleSize_,
                                 std::vector<double> Temp_,
@@ -348,6 +349,8 @@ void particle_1D::preStepForward(
                                 std::vector<double> integralCharMass_
 )
 {
+    state = state_;
+
     localTimeStepSize = localTimeStepSize_;
 
     numCells = Temp_.size();

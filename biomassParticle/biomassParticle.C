@@ -75,15 +75,6 @@ bool Foam::biomassParticle::move
             updateParticle(td, dt, celli);
         }
 
-        // Check if a patch is hit 
-        if (onBoundary() && td.keepParticle)
-        {
-            if (isA<processorPolyPatch>(pbMesh[patch(face())]))
-            {
-                td.switchProcessor = true;
-            }
-        }
-
         // Remove or collapse the particle to ground
         if(particleState_ == 6)
         {
@@ -94,6 +85,15 @@ bool Foam::biomassParticle::move
         {
             // remove if gassified
             td.keepParticle = false;
+        }
+
+        // Check if a patch is hit 
+        if (onBoundary() && td.keepParticle)
+        {
+            if (isA<processorPolyPatch>(pbMesh[patch(face())]))
+            {
+                td.switchProcessor = true;
+            }
         }
     }
     
@@ -230,6 +230,7 @@ void Foam::biomassParticle::updateParticle
     }
 
     p1D.preStepForward(
+                            (Particle::eState)particleState_,
                             particledt_,
                             particleSize_,
                             particleTemp_std, 
@@ -297,6 +298,7 @@ void Foam::biomassParticle::updateParticle
     oxidPyrolysisRate_ = p1D.globalR3reactionRate;
     charOxidRate_      = p1D.globalR4reactionRate;
     massLossRate_      = p1D.globalMassLossRate;
+    heatReleaseRate_   = p1D.globalHeatReleaseRate;
 
     // update particle velocity
     if(td.cloud().dragModel == "constant" && particleState_ != 6)
@@ -407,7 +409,7 @@ void Foam::biomassParticle::updateParticle
                     << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
                     << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
                     << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
-                    << charOxidRate_ << "," << massLossRate_ << "\n";
+                    << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
 
 
         std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);

@@ -32,6 +32,7 @@ public:
                         );
 
         void preStepForward(
+                            eState state_,
                             double localTimeStepSize_,            
                             double particleSize_,
                             std::vector<double> Temp_,

@@ -164,6 +164,9 @@ class biomassParticle
             // total mass loss rate [kg/s]
             scalar massLossRate_;  
 
+            // total mass loss rate [W]
+            scalar heatReleaseRate_; 
+
             // Auxilary vectors for data transfer
             std::vector<double> particleTemp_std; 
             std::vector<double> wetSolidVolFraction_std;

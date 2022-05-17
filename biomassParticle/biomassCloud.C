@@ -624,6 +624,26 @@ void Foam::biomassCloud::resetSourceTerms()
 
     absorptionCoeff().field() = 0.0;
     emissionTrans().field() = 0.0;
+
+    packingRatio.field() = 0.0;
+
+    state.field() = 0.0;
+    mass.field() = 0.0;
+
+    massLossRatePUVbed.field() = 0.0;
+    gasFuelReleaseRatePUVbed.field() = 0.0;
+    dryingRatePUVbed.field() = 0.0;
+    pyrolysisRatePUVbed.field() = 0.0;
+    oxidPyrolysisRatePUVbed.field() = 0.0;
+    charOxidRatePUVbed.field() = 0.0;
+
+    surfaceTemp.field() = 0.0;  
+    surfaceHeatFluxConv.field() = 0.0; 
+    surfaceHeatFluxRad.field() = 0.0; 
+    surfaceO2MassFrac.field() = 0.0;
+
+    momentum.field() = Zero;        
+
 }
 
 

@@ -78,6 +78,7 @@ Foam::biomassParticle::biomassParticle
     oxidPyrolysisRate_(0.0),
     charOxidRate_(0.0),
     massLossRate_(0.0),
+    heatReleaseRate_(0.0),
     outputPath("")
 {
 
@@ -300,7 +301,7 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
                         << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","
                         << "surfaceO2MassFrac(-)" << "," << "hConv(W/m2/K)" << "," << "CD(-)" << ","
                         << "dryingRate(kg/s)" << "," << "pyrolysisRate(kg/s)" << "," << "oxidPyrolysisRate(kg/s)" << ","
-                        << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "\n";        
+                        << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "," << "heatReleaseRate(kg/s)" << "\n";        
         }
         i++;
     }
@@ -348,6 +349,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalar> oxidPyrolysisRate(c.fieldIOobject("oxidPyrolysisRate", IOobject::NO_READ), np);
     IOField<scalar> charOxidRate(c.fieldIOobject("charOxidRate", IOobject::NO_READ), np);
     IOField<scalar> massLossRate(c.fieldIOobject("massLossRate", IOobject::NO_READ), np);
+    IOField<scalar> heatReleaseRate(c.fieldIOobject("heatReleaseRate", IOobject::NO_READ), np);
 
     label i = 0;
     forAllConstIter(Cloud<biomassParticle>, c, iter)
@@ -387,6 +389,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
         oxidPyrolysisRate[i]      = bp.oxidPyrolysisRate_;
         charOxidRate[i]           = bp.charOxidRate_;
         massLossRate[i]           = bp.massLossRate_;
+        heatReleaseRate[i]        = bp.heatReleaseRate_;
 
         i++;
     }
@@ -424,6 +427,8 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     oxidPyrolysisRate.write();
     charOxidRate.write();
     massLossRate.write();
+    heatReleaseRate.write();
+
 }
 
 
