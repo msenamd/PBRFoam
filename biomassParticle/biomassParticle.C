@@ -79,7 +79,8 @@ bool Foam::biomassParticle::move
         if(particleState_ == 6)
         {
             // collapse to ground if ashed
-            particleVelo_ = particleVelo_ + dt * td.g();
+            //particleVelo_ = particleVelo_ + dt * td.g();
+            td.keepParticle = false;
         }
         else if(particleState_ == 7)
         {

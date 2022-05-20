@@ -72,7 +72,7 @@ forAll (mesh.C(),cellI)
 	QconvPUVbed[cellI] = 0.0;
 	QradPUVbed[cellI] = 0.0;
 
-	if (mesh.C()[cellI].x() > maxPyrolysisFront && particles.state[cellI] == 1) 
+	if (particles.state[cellI] == 1) 
 	{ 
 			nCells = nCells + 1;
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];
@@ -85,3 +85,9 @@ forAll (mesh.C(),cellI)
 
 QconvPUVbed = QconvPUVbed/max(nCells,1);
 QradPUVbed = QradPUVbed/max(nCells,1);
+
+
+// Radiation absorption/emission by the dispersed particles
+radEmPUVbed = particles.Ep();
+radAbsPUVbed = particles.ap() * 4*G_projected;
+

@@ -158,47 +158,39 @@ public:
             scalar width;                       // Width of the particle [m]
 
         // Particle components density
-            scalar wetSolidDensity;             // Measured density of the wet solid [kg/m3]
+            scalar moistureContent;             // Moisture content [-]
             scalar drySolidDensity;             // Density of the dry solid [kg/m3]
             scalar charDensity;                 // Mass density of char [kg/m3]
             scalar ashDensity;                  // Mass density of ash [kg/m3]   
 
         // User-defined conductivity, heat capacity, emissivity, porosity & permeabiltiy  
 
-            scalar k0_ws;       // Conductivity of wet solid (at 300 K) [W/m/K]
             scalar k0_ds;       // Conductivity of dry solid (at 300 K) [W/m/K]
             scalar k0_c;        // Conductivity of char (at 300 K) [W/m/K]
             scalar k0_a;        // Conductivity of ash (at 300 K) [W/m/K]
-            scalar nk_ws;       // Temperature exponent of conductivity of wet solid
             scalar nk_ds;       // Temperature exponent of conductivity of dry solid
             scalar nk_c;        // Temperature exponent of conductivity of char
             scalar nk_a;        // Temperature exponent of conductivity of ash
 
-            scalar gamma_ws;    // Effective radiation conductivity of wet solid [m]
             scalar gamma_ds;    // Effective radiation conductivity of dry solid [m]
             scalar gamma_c;     // Effective radiation conductivity of char [m]
             scalar gamma_a;     // Effective radiation conductivity of ash [m]
 
-            scalar c0_ws;       // Heat capacity of wet solid [J/kg/K]
             scalar c0_ds;       // Heat capacity of dry solid [J/kg/K]
             scalar c0_c;        // Heat capacity of char [J/kg/K]
             scalar c0_a;        // Heat capacity of ash [J/kg/K]
-            scalar nc_ws;       // Temperature exponent of heat capacity of wet solid
             scalar nc_ds;       // Temperature exponent of heat capacity of dry solid
             scalar nc_c;        // Temperature exponent of heat capacity of char
             scalar nc_a;        // Temperature exponent of heat capacity of ash
 
-            scalar eps_ws;      // Surface emissivity of wet solid [-]
             scalar eps_ds;      // Surface emissivity of dry solid [-]
             scalar eps_c;       // Surface emissivity of char [-]
             scalar eps_a;       // Surface emissivity of ash [-]
 
-            scalar psi_ws;      // Porosity of the particle when pure wet solid [-]
             scalar psi_ds;      // Porosity of the particle when pure solid [-]
             scalar psi_c;       // Porosity of the particle when pure char [-]
             scalar psi_a;       // Porosity of the particle when pure ash [-]
 
-            scalar Kperm_ws;    // Permeability of the particle when pure wet solid [m2]
             scalar Kperm_ds;    // Permeability of the particle when pure solid [m2]
             scalar Kperm_c;     // Permeability of the particle when pure char [m2]
             scalar Kperm_a;     // Permeability of the particle when pure ash [m2]
@@ -208,7 +200,6 @@ public:
             scalar Ea_R1;                // Activation energy [J/mol]
             scalar n_R1;                 // Solid-phase reactant exponent [-]
             scalar DeltaH_R1;            // Heat of evaporation [J/kg] (< 0, endothermic) 
-            scalar drySolidYield;        // Mass yield of dry solid in drying reaction [-]
 
             scalar A_R2;                 // Pre-exponential factor [1/s]
             scalar Ea_R2;                // Activation energy [J/mol]

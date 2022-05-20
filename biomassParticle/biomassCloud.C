@@ -198,45 +198,37 @@ Foam::biomassCloud::biomassCloud
     length(readScalar(particleProperties_.lookup("length"))),
     width(readScalar(particleProperties_.lookup("width"))),
     
-    wetSolidDensity(readScalar(particleProperties_.lookup("wetSolidDensity"))),
+    moistureContent(readScalar(particleProperties_.lookup("moistureContent"))),
     drySolidDensity(readScalar(particleProperties_.lookup("drySolidDensity"))),
     charDensity(readScalar(particleProperties_.lookup("charDensity"))),
     ashDensity(readScalar(particleProperties_.lookup("ashDensity"))),
    
-    k0_ws(readScalar(particleProperties_.lookup("k0_ws"))),
     k0_ds(readScalar(particleProperties_.lookup("k0_ds"))),
     k0_c(readScalar(particleProperties_.lookup("k0_c"))),
     k0_a(readScalar(particleProperties_.lookup("k0_a"))),
-    nk_ws(readScalar(particleProperties_.lookup("nk_ws"))),
     nk_ds(readScalar(particleProperties_.lookup("nk_ds"))),
     nk_c(readScalar(particleProperties_.lookup("nk_c"))),
     nk_a(readScalar(particleProperties_.lookup("nk_a"))),
 
-    gamma_ws(readScalar(particleProperties_.lookup("gamma_ws"))),
     gamma_ds(readScalar(particleProperties_.lookup("gamma_ds"))),
     gamma_c(readScalar(particleProperties_.lookup("gamma_c"))),
     gamma_a(readScalar(particleProperties_.lookup("gamma_a"))),
 
-    c0_ws(readScalar(particleProperties_.lookup("c0_ws"))),
     c0_ds(readScalar(particleProperties_.lookup("c0_ds"))),
     c0_c(readScalar(particleProperties_.lookup("c0_c"))),
     c0_a(readScalar(particleProperties_.lookup("c0_a"))),
-    nc_ws(readScalar(particleProperties_.lookup("nc_ws"))),
     nc_ds(readScalar(particleProperties_.lookup("nc_ds"))),
     nc_c(readScalar(particleProperties_.lookup("nc_c"))),
     nc_a(readScalar(particleProperties_.lookup("nc_a"))),
 
-    eps_ws(readScalar(particleProperties_.lookup("eps_ws"))),
     eps_ds(readScalar(particleProperties_.lookup("eps_ds"))),
     eps_c(readScalar(particleProperties_.lookup("eps_c"))),
     eps_a(readScalar(particleProperties_.lookup("eps_a"))),
 
-    psi_ws(readScalar(particleProperties_.lookup("psi_ws"))),
     psi_ds(readScalar(particleProperties_.lookup("psi_ds"))),
     psi_c(readScalar(particleProperties_.lookup("psi_c"))),
     psi_a(readScalar(particleProperties_.lookup("psi_a"))),
 
-    Kperm_ws(readScalar(particleProperties_.lookup("Kperm_ws"))),
     Kperm_ds(readScalar(particleProperties_.lookup("Kperm_ds"))),
     Kperm_c(readScalar(particleProperties_.lookup("Kperm_c"))),
     Kperm_a(readScalar(particleProperties_.lookup("Kperm_a"))),
@@ -245,7 +237,6 @@ Foam::biomassCloud::biomassCloud
     Ea_R1(readScalar(particleProperties_.lookup("Ea_R1"))),
     n_R1(readScalar(particleProperties_.lookup("n_R1"))),
     DeltaH_R1(readScalar(particleProperties_.lookup("DeltaH_R1"))),
-    drySolidYield(readScalar(particleProperties_.lookup("drySolidYield"))),
 
     A_R2(readScalar(particleProperties_.lookup("A_R2"))),
     Ea_R2(readScalar(particleProperties_.lookup("Ea_R2"))),
@@ -463,56 +454,83 @@ Foam::biomassCloud::biomassCloud
 
     Info << "   setting solid material and reaction properties " << endl;
 
-    wetSolid.set_bulkDensity(wetSolidDensity);
+    // Set material properties from external input
     drySolid.set_bulkDensity(drySolidDensity);
     Char.set_bulkDensity(charDensity);
     ash.set_bulkDensity(ashDensity);
 
-    wetSolid.set_conductivity(k0_ws, nk_ws);
     drySolid.set_conductivity(k0_ds, nk_ds);
     Char.set_conductivity(k0_c, nk_c);
     ash.set_conductivity(k0_a, nk_a);
 
-    wetSolid.set_radConductivity(gamma_ws);
     drySolid.set_radConductivity(gamma_ds);
     Char.set_radConductivity(gamma_c);
     ash.set_radConductivity(gamma_a);
 
-    wetSolid.set_specificHeat(c0_ws, nc_ws);
     drySolid.set_specificHeat(c0_ds, nc_ds);
     Char.set_specificHeat(c0_c, nc_c);
     ash.set_specificHeat(c0_a, nc_a);
 
-    wetSolid.set_emissivity(eps_ws);
     drySolid.set_emissivity(eps_ds);
     Char.set_emissivity(eps_c);
     ash.set_emissivity(eps_a);
 
-    wetSolid.set_porosity(psi_ws);
     drySolid.set_porosity(psi_ds);
     Char.set_porosity(psi_c);
     ash.set_porosity(psi_a);
 
-    wetSolid.set_permeability(Kperm_ws);
     drySolid.set_permeability(Kperm_ds);
     Char.set_permeability(Kperm_c);
     ash.set_permeability(Kperm_a);
 
-    R1.set_reaction(A_R1, Ea_R1, n_R1, 0.0, DeltaH_R1, drySolidYield, 0.0);
-    R2.set_reaction(A_R2, Ea_R2, n_R2, 0.0, DeltaH_R2, thermalCharYield, 0.0);
-    R3.set_reaction(A_R3, Ea_R3, n_R3, nO2_R3, DeltaH_R3, oxidativeCharYield, 0.1*(1.0-oxidativeCharYield));
-    R4.set_reaction(A_R4, Ea_R4, n_R4, nO2_R4, DeltaH_R4, ashYield, 2.0*(1.0-ashYield));
+    // Set wet solid given the moisture content
+    wetSolid.set_wetSolid(moistureContent, drySolid);
 
-    superParticle.air = &air;
-    superParticle.wetSolid = &wetSolid;
-    superParticle.drySolid = &drySolid;
-    superParticle.Char = &Char;
-    superParticle.ash = &ash;
+    // Set reaction properties from external input
+    R1.set_reaction(
+                        A_R1, 
+                        Ea_R1, 
+                        n_R1, 
+                        0.0, 
+                        DeltaH_R1,  
+                        1.0 - moistureContent/(1.0 + moistureContent), 
+                        0.0
+                    );
 
-    superParticle.R1 = &R1;
-    superParticle.R2 = &R2;
-    superParticle.R3 = &R3;
-    superParticle.R4 = &R4;
+    R2.set_reaction(
+                        A_R2, 
+                        Ea_R2, 
+                        n_R2, 
+                        0.0, 
+                        DeltaH_R2, 
+                        thermalCharYield, 
+                        0.0
+                    );
+    
+    R3.set_reaction(
+                        A_R3, 
+                        Ea_R3, 
+                        n_R3, 
+                        nO2_R3, 
+                        DeltaH_R3, 
+                        oxidativeCharYield, 
+                        0.1*(1.0-oxidativeCharYield)
+                    );
+
+    R4.set_reaction(
+                        A_R4, 
+                        Ea_R4, 
+                        n_R4, 
+                        nO2_R4, 
+                        DeltaH_R4, 
+                        ashYield, 
+                        2.0*(1.0-ashYield)
+                    );
+
+    // Pass the material and reactions to the particle model
+    superParticle.setMaterials(air, wetSolid, drySolid, Char, ash);
+    superParticle.setBurningRateModel(Particle::pyrolysisCharring, R1, R2, R3, R4);
+
 
     Info << "   setting particle geometry " << endl;
     superParticle.setGeometry(

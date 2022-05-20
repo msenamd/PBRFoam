@@ -1,138 +1,168 @@
 
 // for outputing fire front
-    OFstream outFireFront("outFireFront_"+runTime.timeName());
+OFstream outFireFront("outFireFront_"+runTime.timeName());
 
-    outFireFront << "time(s)" << "," << "flameHeight(m)" << "," << "flameFront(m)" 
-    << "," << "pyrolysisBack(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingFront(m)" << endl;
+outFireFront << "time(s)" << "," << "flameHeight(m)" << "," << "flameFront(m)" 
+<< "," << "pyrolysisBack(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingFront(m)" << endl;
 
-    volScalarField flameHeight
+volScalarField flameHeight
+(
+    IOobject
     (
-        IOobject
-        (
-            "flameHeight",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "flameHeight",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimLength,0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
 
-    volScalarField flameFront
+volScalarField flameFront
+(
+    IOobject
     (
-        IOobject
-        (
-            "flameFront",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "flameFront",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimLength,0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
 
-    volScalarField pyrolysisBack
+volScalarField pyrolysisBack
+(
+    IOobject
     (
-        IOobject
-        (
-            "pyrolysisBack",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "pyrolysisBack",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimLength,0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
 
-    volScalarField pyrolysisFront
+volScalarField pyrolysisFront
+(
+    IOobject
     (
-        IOobject
-        (
-            "pyrolysisFront",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "pyrolysisFront",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimLength,0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
 
-    volScalarField smolderingFront
+volScalarField smolderingFront
+(
+    IOobject
     (
-        IOobject
-        (
-            "smolderingFront",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "smolderingFront",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimLength,0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
 
 // Momentum of the flow [kg m/s]
-    volVectorField fluidMomentum
+volVectorField fluidMomentum
+(
+    IOobject
     (
-        IOobject
-        (
-            "fluidMomentum",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
+        "fluidMomentum",
+        runTime.timeName(),
         mesh,
-        dimensionedVector("zero", dimMass*dimLength/dimTime, Zero)
-    );
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedVector("zero", dimMass*dimLength/dimTime, Zero)
+);
 
 
 // Convective heat flux at boundary surfaces [W/m2]
-    surfaceScalarField convectiveHeatFlux
+surfaceScalarField convectiveHeatFlux
+(
+    IOobject
     (
-        IOobject
-        (
-            "convectiveHeatFlux",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
+        "convectiveHeatFlux",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0), 0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::AUTO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimensionSet(1, 0, -3, 0 , 0, 0, 0), 0.0)
+);
 
 
-    // Radiative heat to the particles per unit bed volume [W/m3]
-    volScalarField QconvPUVbed
+// Radiative heat to the particles per unit bed volume [W/m3]
+volScalarField QconvPUVbed
+(
+    IOobject
     (
-        IOobject
-        (
-            "QconvPUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "QconvPUVbed",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
+);
 
 // Convective heat flux to the particles per unit bed volume [W/m3]
-    volScalarField QradPUVbed
+volScalarField QradPUVbed
+(
+    IOobject
     (
-        IOobject
-        (
-            "QradPUVbed",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
+        "QradPUVbed",
+        runTime.timeName(),
         mesh,
-        dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
-    );
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero", dimEnergy/dimTime/dimVolume, 0.0)
+);
+
+
+// Radiation absorption/emission by the dispersed particles
+volScalarField radAbsPUVbed
+(
+     IOobject
+     (
+      "radAbsPUVbed",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("radAbsPUVbed", dimEnergy/dimTime/dimVolume,0.0)
+ );
+
+volScalarField radEmPUVbed
+(
+     IOobject
+     (
+      "radEmPUVbed",
+      runTime.timeName(),
+      mesh,
+      IOobject::NO_READ,
+      IOobject::AUTO_WRITE
+     ),
+     mesh,
+     dimensionedScalar("radEmPUVbed", dimEnergy/dimTime/dimVolume,0.0)
+ );

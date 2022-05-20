@@ -71,19 +71,17 @@ tmp<fv::convectionScheme<scalar>> mvConvection
     }
 
     radiation->correct();
- 
-    const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
-    const volScalarField::Internal rad = (radiation->Ru() - radiation->Rp().ref()*T4);
-    volScalarField::Internal& radField = dQrad.ref();
-    radField = rad;
 
     const volScalarField::Internal radRu = radiation->Ru();
     volScalarField::Internal& radFieldRu = dQradAbs.ref();
     radFieldRu = radRu;
 
+    const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
     const volScalarField::Internal radRp = radiation->Rp().ref()*T4;
     volScalarField::Internal& radFieldRp = dQradEm.ref();
     radFieldRp = radRp;
+
+    dQrad = dQradAbs - dQradEm;
 
     if (mesh.foundObject<volScalarField>("G"))
     {
