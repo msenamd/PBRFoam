@@ -43,7 +43,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
               - fvm::laplacian(dEff, Yi)
               ==
                 particles.SYi(i)
-              +  combustion->R(Yi)
+              + combustion->R(Yi)
               + fvOptions(rho, Yi)
             );
 

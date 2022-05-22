@@ -51,11 +51,11 @@ forAll (mesh.C(),cellI)
 	}
 }
 
-scalar maxFlameHeight = max(flameHeight).value();
-scalar maxFlameFront = max(flameFront).value();
-scalar maxpyrolysisBack = min(pyrolysisBack).value();
-scalar maxPyrolysisFront = max(pyrolysisFront).value();
-scalar maxSmolderingFront = max(smolderingFront).value();
+scalar maxFlameHeight = max(flameHeight.internalField()).value();
+scalar maxFlameFront = max(flameFront.internalField()).value();
+scalar maxpyrolysisBack = min(pyrolysisBack.internalField()).value();
+scalar maxPyrolysisFront = max(pyrolysisFront.internalField()).value();
+scalar maxSmolderingFront = max(smolderingFront.internalField()).value();
 
 outFireFront << runTime.value() << "," << maxFlameHeight << "," << maxFlameFront
 << "," << maxpyrolysisBack << "," << maxPyrolysisFront << "," << maxSmolderingFront << endl;

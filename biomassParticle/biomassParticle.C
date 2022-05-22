@@ -75,16 +75,10 @@ bool Foam::biomassParticle::move
             updateParticle(td, dt, celli);
         }
 
-        // Remove or collapse the particle to ground
-        if(particleState_ == 6)
+        // Remove or collapse the particle at burnout
+        if(particleState_ == 7)
         {
-            // collapse to ground if ashed
-            //particleVelo_ = particleVelo_ + dt * td.g();
-            td.keepParticle = false;
-        }
-        else if(particleState_ == 7)
-        {
-            // remove if gassified
+            // remove if completely consumed
             td.keepParticle = false;
         }
 
@@ -186,8 +180,8 @@ void Foam::biomassParticle::updateParticle
 )
 {
     // Get the external gas phase properties of this cell
-    // Note: divide density and pressure by (1-packing ratio)
-    // to get the gas properties (not the gas bulk properties)
+    // Note: assume very small volume fraction of solid in a cell
+
     cellPointWeight cpw(mesh_, position(), celli, face());
 
     label indexFuel = (td.cloud().thermo()).carrier().species()[td.cloud().fuel];
@@ -195,8 +189,8 @@ void Foam::biomassParticle::updateParticle
     label indexH2O  = (td.cloud().thermo()).carrier().species()["H2O"];
     label indexCO2  = (td.cloud().thermo()).carrier().species()["CO2"];
 
-    scalar externalGasDensity     = td.rhoInterp().interpolate(cpw) / (1.0 - td.cloud().packingRatio[celli]);
-    scalar externalGasPressure    = (td.pInterp().interpolate(cpw) - 101325) / (1.0 - td.cloud().packingRatio[celli]);
+    scalar externalGasDensity     = td.rhoInterp().interpolate(cpw);
+    scalar externalGasPressure    = td.pInterp().interpolate(cpw) - 101325;
     scalar externalGasTemp        = td.TInterp().interpolate(cpw);
     vector externalGasVelo        = td.UInterp().interpolate(cpw);
     scalar externalO2MassFraction = td.YO2Interp().interpolate(cpw);
@@ -302,18 +296,14 @@ void Foam::biomassParticle::updateParticle
     heatReleaseRate_   = p1D.globalHeatReleaseRate;
 
     // update particle velocity
-    if(td.cloud().dragModel == "constant" && particleState_ != 6)
+    if(td.cloud().dragModel == "constant")
     {
         CD_ = td.cloud().dragCoeff;
     }
-    else if(td.cloud().dragModel != "constant" && particleState_ != 6)
+    else
     {
         CD_ = p1D.dragCoeff;
     }
-    else //particle is ash and collapsed
-    {
-        CD_ = 0.0;
-    } 
 
     if (td.cloud().firebrands)
     {
@@ -334,15 +324,12 @@ void Foam::biomassParticle::updateParticle
     // Packing Ratio (-)
     td.cloud().packingRatio[celli] = td.cloud().nParticles * p1D.particleVol / mesh_.cellVolumes()[celli];
 
-    // Mass (kg/s *1/m3 *s = kg/m3)
-    td.cloud().rhoTrans()[celli] +=  p1D.globalMassLossRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-
     // Species (kg/s *1/m3 *s = kg/m3)
-    td.cloud().rhoYTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().rhoYTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().rhoYTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
 
-    td.cloud().rhoYTrans(indexO2)[celli]   -= p1D.h_mass * (externalO2MassFraction - p1D.surfaceO2MassFrac)
+    td.cloud().rhoTrans(indexO2)[celli]   -= p1D.h_mass * (externalO2MassFraction - p1D.surfaceO2MassFrac)
                                             * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
 
     // Momentum (N/m3 *s)
@@ -382,9 +369,9 @@ void Foam::biomassParticle::updateParticle
     // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
-    // Surface heat fluxes per unit area of single particle (W/m2)
-    td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv;
-    td.cloud().surfaceHeatFluxRad[celli]  = p1D.surfaceHeatFluxRad;
+    // Surface heat fluxes per unit area of vegetation bed (W/m2)
+    td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv * td.cloud().nParticles;
+    td.cloud().surfaceHeatFluxRad[celli]  = p1D.surfaceHeatFluxRad * td.cloud().nParticles;
 
     // Surface O2 mass fraction (-)
     td.cloud().surfaceO2MassFrac[celli] = surfaceO2MassFrac_;

@@ -91,11 +91,8 @@ class biomassCloud
 
     // Sources
 
-        //- Mass Transfer - Total [kg/m3]
-        autoPtr<DimensionedField<scalar, volMesh>> rhoTrans_;
-
         //- Mass Transfer - one per carrier phase specie [kg/m3]
-        PtrList<DimensionedField<scalar, volMesh>> rhoYTrans_;
+        PtrList<DimensionedField<scalar, volMesh>> rhoTrans_;
 
         //- Momentum Transfer [kg m/s /m3 = N.s/m3]
         autoPtr<DimensionedField<vector, volMesh>> UTrans_;
@@ -271,32 +268,24 @@ public:
 
             // Sources
 
-            	// Mass
-
-                    //- Return reference to mass transfer fields [kg/m3]
-                    inline DimensionedField<scalar, volMesh>& rhoTrans();
-
-                    //- Return const access to mass transfer fields [kg/m3]
-                    inline const DimensionedField<scalar, volMesh>& rhoTrans() const;
-
-                    //- Return total mass source term [kg/s/m3]
-                    // - fully explicit    
-                    inline tmp<DimensionedField<scalar, volMesh>> Srho() const;
-
                 // Species Mass
 
                     //- Return reference to mass transfer for field i [kg/m3]
-                    inline DimensionedField<scalar, volMesh>& rhoYTrans(const label i);
+                    inline DimensionedField<scalar, volMesh>& rhoTrans(const label i);
 
                     //- Return reference to mass transfer fields [kg/m3]
-                    inline PtrList<DimensionedField<scalar, volMesh>>& rhoYTrans();
+                    inline PtrList<DimensionedField<scalar, volMesh>>& rhoTrans();
 
                     //- Return const access to mass transfer fields [kg/m3]
-                    inline const PtrList<DimensionedField<scalar, volMesh>>&  rhoYTrans() const;
+                    inline const PtrList<DimensionedField<scalar, volMesh>>&  rhoTrans() const;
 
                     //- Return mass source term for specie i - specie eqn [kg/s/m3]   
                     // - fully explicit                        
-                    inline tmp<DimensionedField<scalar, volMesh>> SYi(const label i) const;                 
+                    inline tmp<DimensionedField<scalar, volMesh>> SYi(const label i) const;         
+
+                    //- Return total mass source term [kg/s/m3]
+                    // - fully explicit    
+                    inline tmp<DimensionedField<scalar, volMesh>> Srho() const;                            
 
                 // Momentum
 

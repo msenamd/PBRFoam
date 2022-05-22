@@ -80,22 +80,6 @@ Foam::biomassCloud::biomassCloud
 
     rhoTrans_
     (
-        new DimensionedField<scalar, volMesh>
-        (
-            IOobject
-            (
-                this->name() + "_rhoTrans",
-                this->db().time().timeName(),
-                this->db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh_,
-            dimensionedScalar("zero", dimMass/dimVol, 0.0)
-        )
-    ),
-    rhoYTrans_
-    (
         thermo.carrier().species().size()
     ),
     UTrans_
@@ -568,17 +552,17 @@ Foam::biomassCloud::biomassCloud
                             );
 
     // Set storage for mass source fields and initialise to zero
-    forAll(rhoYTrans_, i)
+    forAll(rhoTrans_, i)
     {
         const word& specieName = thermo.carrier().species()[i];
-        rhoYTrans_.set
+        rhoTrans_.set
         (
             i,
             new DimensionedField<scalar, volMesh>
             (
                 IOobject
                 (
-                    this->name() + "_rhoYTrans_" + specieName,
+                    this->name() + "_rhoTrans_" + specieName,
                     this->db().time().timeName(),
                     this->db(),
                     IOobject::NO_READ,
@@ -629,11 +613,10 @@ void Foam::biomassCloud::evolve()
 
 void Foam::biomassCloud::resetSourceTerms()
 {
-    rhoTrans().field() = 0.0;
 
-    forAll(rhoYTrans_, i)
+    forAll(rhoTrans_, i)
     {
-        rhoYTrans_[i].field() = 0.0;
+        rhoTrans_[i].field() = 0.0;
     }
 
     UTrans().field() = Zero;
