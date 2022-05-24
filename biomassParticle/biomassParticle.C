@@ -53,35 +53,37 @@ bool Foam::biomassParticle::move
     scalar dtMax = tEnd;
 
     while (td.keepParticle && !td.switchProcessor && tEnd > ROOTVSMALL)
-   	{
+    {
         // Set the Lagrangian time-step
         scalar dt = min(dtMax, tEnd);
 
         // Cache the parcel current cell as this will change if a face is hit
-        const label celli = cell();
-
-        // Calculate thermal degradation at this time-step
-        updateParticle(td, dt, celli);
+        label celli = cell();
 
         // Track particle to a given position and returns 1.0 if the
         // trajectory is completed without hitting a face otherwise
         // stops at the face and returns the fraction of the trajectory
         // completed.
-        dt *= trackToFace(position() + dt*particleVelo_, td);
-
-        tEnd -= dt;
-        stepFraction() = 1.0 - tEnd/trackTime;      
-
-        // Remove or collapse the particle at burnout
-        if(particleState_ == 6)
+        if (mag(particleVelo_) > ROOTVSMALL)
         {
-            particleVelo_ = particleVelo_ + dt * td.g();
+            dt *= trackToFace(position() + dt*particleVelo_, td);                         
         }
-        if(particleState_ == 7)
+        tEnd -= dt;
+        stepFraction() = 1.0 - tEnd/trackTime;  
+
+        // Calculate thermal degradation, avoid problems with extremely small timesteps
+        if (dt > ROOTVSMALL)
         {
+            updateParticle(td, dt, celli);
+        }
+
+        // Check if particle is consumed
+        if (particleState_ == Particle::eState::consumed)
+        {
+            // remove the particle
             td.keepParticle = false;
         }
-
+          
         // Check if a patch is hit 
         if (onBoundary() && td.keepParticle)
         {
@@ -137,7 +139,7 @@ void Foam::biomassParticle::hitWallPatch
         particleVelo_ -= (1.0 + td.cloud().particleElasticity)*Un*nw;
     }
 
-    particleVelo_ -= td.cloud().particleViscosity*Ut;
+    particleVelo_ -= td.cloud().particleViscosity*Ut;        
 }
 
 
@@ -295,16 +297,21 @@ void Foam::biomassParticle::updateParticle
     massLossRate_      = p1D.globalMassLossRate;
     heatReleaseRate_   = p1D.globalHeatReleaseRate;
 
-    // update particle velocity
+    // update particle drag
     if(td.cloud().dragModel == "constant")
     {
         CD_ = td.cloud().dragCoeff;
+    }
+    else if (particleState_ == Particle::eState::ashed)
+    {
+        CD_ = 1.0;
     }
     else
     {
         CD_ = p1D.dragCoeff;
     }
 
+    // Update particle velocuty
     if (td.cloud().firebrands)
     {
         scalar B = 0.5 * externalGasDensity * CD_
@@ -313,6 +320,10 @@ void Foam::biomassParticle::updateParticle
 
         particleVelo_ = (particleVelo_ + dt_ * (B * externalGasVelo + td.g())) / (1.0 + B * dt_);
     }
+    else if (particleState_ == Particle::eState::ashed && !onBoundary())
+    {
+        particleVelo_ = particleVelo_ + dt_ *  td.g();
+    }      
     else
     {
         particleVelo_ = Zero;
@@ -352,7 +363,7 @@ void Foam::biomassParticle::updateParticle
     //  Additional diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    // vegetaion bed stat (-)
+    // vegetaion bed state (-)
     td.cloud().state[celli] = particleState_;
 
     // vegetaion bed mass (kg)
