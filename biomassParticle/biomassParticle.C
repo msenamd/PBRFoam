@@ -60,6 +60,9 @@ bool Foam::biomassParticle::move
         // Cache the parcel current cell as this will change if a face is hit
         const label celli = cell();
 
+        // Calculate thermal degradation at this time-step
+        updateParticle(td, dt, celli);
+
         // Track particle to a given position and returns 1.0 if the
         // trajectory is completed without hitting a face otherwise
         // stops at the face and returns the fraction of the trajectory
@@ -69,16 +72,13 @@ bool Foam::biomassParticle::move
         tEnd -= dt;
         stepFraction() = 1.0 - tEnd/trackTime;      
 
-        // Update particle variables (avoid extremely small time-steps)
-        if (dt > ROOTVSMALL)
-        {
-            updateParticle(td, dt, celli);
-        }
-
         // Remove or collapse the particle at burnout
+        if(particleState_ == 6)
+        {
+            particleVelo_ = particleVelo_ + dt * td.g();
+        }
         if(particleState_ == 7)
         {
-            // remove if completely consumed
             td.keepParticle = false;
         }
 
