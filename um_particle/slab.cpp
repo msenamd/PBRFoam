@@ -2,18 +2,16 @@
 
 slab::slab() : particleShape()
 {
-    initialHalfThickness = 0.0;
     length = 0.0;
     width = 0.0;
-    currentSize = initialHalfThickness;
+    currentSize = 0.0;
 }
 
 slab::slab(double& halfThickness_, double& length_, double& width_) : particleShape()
 {
-    initialHalfThickness = halfThickness_;
     length = length_;
     width = width_;
-    currentSize = initialHalfThickness;
+    currentSize = halfThickness_;
 }
 
 slab::~slab()
@@ -28,20 +26,18 @@ particleShape* slab::clone() const
 
 slab::slab(const slab& rhs) : particleShape(rhs)
 {
-    initialHalfThickness = rhs.initialHalfThickness;
     length = rhs.length;
     width = rhs.width;
-    currentSize = initialHalfThickness;
+    currentSize = rhs.currentSize;
 }
 
 slab& slab::operator=(const slab& rhs)
 {
     if (&rhs != this) {
         particleShape::operator=(rhs);
-        initialHalfThickness = rhs.initialHalfThickness;
         length = rhs.length;
         width = rhs.width;
-        currentSize = initialHalfThickness;
+        currentSize = rhs.currentSize;
     }; // handle self assignment
     //assignment operator
     return *this;
@@ -49,17 +45,13 @@ slab& slab::operator=(const slab& rhs)
 
 double slab::get_volume()
 {
-    return 2.0 * currentSize * length * width;
+    return currentSize * this->get_surfaceArea();
 }
 
-double slab::get_initialVolume()
-{
-    return 2.0 * initialHalfThickness * length * width;
-}
 
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double slab::get_surfaceArea()
 {
@@ -69,7 +61,7 @@ double slab::get_surfaceArea()
 /**
 * Computes particle surface area (single sided) given a size (radius or thickness).  Does not use stored currentSize of particle.
 * @param size Radius or thickness of particle (m).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double slab::get_surfaceArea(double size)
 {
@@ -82,7 +74,7 @@ double slab::get_surfaceArea(double size)
 */
 double slab::get_surfaceAreaToVolumeRatio()
 {
-    return (2.0 * (2.0 * currentSize + width) * length) / (2.0 * currentSize * width * length);
+    return this->get_surfaceArea() / this->get_volume();
 }
 
 /**
@@ -92,7 +84,7 @@ double slab::get_surfaceAreaToVolumeRatio()
 */
 double slab::computeSizeFromVolume(const double volume_)
 {
-    return volume_ / (2.0 * length * width);
+    return volume_ / this->get_surfaceArea();
 }
 
 /**
@@ -104,16 +96,11 @@ double slab::computeSizeFromVolume(const double volume_)
 */
 void slab::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive, std::vector<double>& cellVolume)
 {
-    cellVolume[0] = xFacePositive[0] * length * width;
+    cellVolume[0] = xFacePositive[0] * this->get_surfaceArea();
     for (int i = 1; i < numCells; i++)
     {
-        cellVolume[i] = (xFacePositive[i] - xFacePositive[i - 1]) * length * width;
+        cellVolume[i] = (xFacePositive[i] - xFacePositive[i - 1]) * this->get_surfaceArea();
     }
-
-    //    for (int i = 0; i < numCells; i++)
-    //    {
-    //        cellVolume[i] = sizeCell[i] * areaRectangle;
-    //    }
 }
 
 /**
@@ -201,8 +188,7 @@ double slab::get_projectedAreaRatio()
 
 void slab::setDimensions(double& halfThickness_, double& length_, double& width_)
 {
-    initialHalfThickness = halfThickness_;
     length = length_;
     width = width_;
-    currentSize = initialHalfThickness;
+    currentSize = halfThickness_;
 }

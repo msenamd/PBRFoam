@@ -17,7 +17,6 @@ public:
     double get_convectiveHeatTransferCoefficient(double T_g , double T_surf , double u_g , double particleSize);
     double get_dragCoefficient(double T_g, double u_g, double particleSize);
     double get_volume();
-    double get_initialVolume();
     double get_surfaceArea();
     double get_surfaceArea(double size);
     double get_surfaceAreaToVolumeRatio();
@@ -28,7 +27,6 @@ public:
 
     void setDimensions(double& radius_);
 
-    double initialRadius;
 };
 
 #endif // SPHERE_H

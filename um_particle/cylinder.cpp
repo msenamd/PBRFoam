@@ -2,16 +2,14 @@
 
 cylinder::cylinder() : particleShape()
 {
-    initialRadius = 0.0;
     length = 0.0;
-    currentSize = initialRadius;
+    currentSize = 0.0;
 }
 
 cylinder::cylinder(double& radius_, double& length_) : particleShape()
 {
-    initialRadius = radius_;
     length = length_;
-    currentSize = initialRadius;
+    currentSize = radius_;
 }
 
 cylinder::~cylinder()
@@ -26,18 +24,16 @@ particleShape* cylinder::clone() const
 
 cylinder::cylinder(const cylinder& rhs) : particleShape(rhs)
 {
-    initialRadius = rhs.initialRadius;
     length = rhs.length;
-    currentSize = initialRadius;
+    currentSize = rhs.currentSize;
 }
 
 cylinder& cylinder::operator=(const cylinder& rhs)
 {
     if (&rhs != this){
         particleShape::operator=(rhs);
-        initialRadius = rhs.initialRadius;
         length = rhs.length;
-        currentSize = initialRadius;
+        currentSize = rhs.currentSize;
     } ; // handle self assignment
     //assignment operator
     return *this;
@@ -48,14 +44,9 @@ double cylinder::get_volume()
     return pi * pow(currentSize, 2.0) * length;
 }
 
-double cylinder::get_initialVolume()
-{
-    return pi * pow(initialRadius, 2.0) * length;
-}
-
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double cylinder::get_surfaceArea()
 {
@@ -65,7 +56,7 @@ double cylinder::get_surfaceArea()
 /**
 * Computes particle surface area (single sided) given a size (radius or thickness).  Does not use stored currentSize of particle.
 * @param size Radius or thickness of particle (m).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double cylinder::get_surfaceArea(double size)
 {
@@ -74,11 +65,11 @@ double cylinder::get_surfaceArea(double size)
 
 /**
 * Computes particle surface area to volume ratio using the stored value of currentSize (radius).
-* @return Surface area to volume ratio of particle (m^-1).
+* @return exposed surface area to volume ratio of particle (m^-1).
 */
 double cylinder::get_surfaceAreaToVolumeRatio()
 {
-    return 2.0 / currentSize;
+    return this->get_surfaceArea() / this->get_volume();
 }
 
 /**
@@ -105,12 +96,6 @@ void cylinder::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive
     {
         cellVolume[i] = pi * (pow(xFacePositive[i] , 2.0) - pow(xFacePositive[i-1] , 2.0)) * length;
     }
-
-//    cellVolume[0] = pi * sizeCell[0] * (xFacePositive[0]) * lengthCylinder;
-//    for (int i=1; i < numCells; i++)
-//    {
-//        cellVolume[i] = pi * sizeCell[i] * (xFacePositive[i] + xFacePositive[i-1]) * lengthCylinder;
-//    }
 }
 
 /**
@@ -207,12 +192,11 @@ double cylinder::get_dragCoefficient(double T_g, double u_g, double particleSize
 */
 double cylinder::get_projectedAreaRatio()
 {
-    return 1.0/pi;
+    return 2 * currentSize * length / this->get_surfaceArea();
 }
 
 void cylinder::setDimensions(double& radius_, double& length_)
 {
-    initialRadius = radius_;
     length = length_;
-    currentSize = initialRadius;
+    currentSize = radius_;
 }

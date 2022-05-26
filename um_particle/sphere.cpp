@@ -2,14 +2,12 @@
 
 sphere::sphere() : particleShape()
 {
-    initialRadius = 0.0;
-    currentSize = initialRadius;
+    currentSize = 0.0;
 }
 
 sphere::sphere(double& radius_) : particleShape()
 {
-    initialRadius = radius_;
-    currentSize = initialRadius;
+    currentSize = radius_;
 }
 
 sphere::~sphere()
@@ -24,16 +22,14 @@ particleShape* sphere::clone() const
 
 sphere::sphere(const sphere& rhs) : particleShape(rhs)
 {
-    initialRadius = rhs.initialRadius;
-    currentSize = initialRadius;
+    currentSize = rhs.currentSize;
 }
 
 sphere& sphere::operator=(const sphere& rhs)
 {
     if (&rhs != this){
         particleShape::operator=(rhs);
-        initialRadius = rhs.initialRadius;
-        currentSize = initialRadius;
+        currentSize = rhs.currentSize;
 
     } ; // handle self assignment
     //assignment operator
@@ -45,28 +41,23 @@ double sphere::get_volume()
     return 4.0 / 3.0 * pi * pow(currentSize, 3.0);
 }
 
-double sphere::get_initialVolume()
-{
-    return 4.0 / 3.0 * pi * pow(initialRadius, 3.0);
-}
-
 /**
 * Computes particle surface area using the stored value of currentSize (radius or half-thickness).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double sphere::get_surfaceArea()
 {
-    return 4.0 * pi * pow(currentSize,2.0);
+    return 4.0 * pi * pow(currentSize, 2.0);
 }
 
 /**
 * Computes particle surface area (single sided) given a size (radius or thickness).  Does not use stored currentSize of particle.
 * @param size Radius or thickness of particle (m).
-* @return Single-sided surface area of particle (m^2).
+* @return exposed surface area of particle (m^2).
 */
 double sphere::get_surfaceArea(double size)
 {
-    return 4.0 * pi * pow(size,2.0);
+    return 4.0 * pi * pow(size, 2.0);
 }
 
 /**
@@ -75,7 +66,7 @@ double sphere::get_surfaceArea(double size)
 */
 double sphere::get_surfaceAreaToVolumeRatio()
 {
-    return 3.0 / currentSize;
+    return this->get_surfaceArea() / this->get_volume();
 }
 
 /**
@@ -102,13 +93,6 @@ void sphere::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive, 
     {
         cellVolume[i] = 4.0/3.0 * pi * (pow(xFacePositive[i] , 3.0) - pow(xFacePositive[i-1] , 3.0));
     }
-
-//    cellVolume[0] = 4.0/3.0 * pi * sizeCell[0] * pow(xFacePositive[0] , 2.0);
-//    for (int i = 1; i < numCells; i++)
-//    {
-//        cellVolume[i] = 4.0/3.0 * pi * sizeCell[i] *
-//            ( pow(xFacePositive[i] , 2.0) + xFacePositive[i] * xFacePositive[i-1] + pow(xFacePositive[i-1] , 2.0));
-//    }
 }
 
 /**
@@ -205,11 +189,10 @@ double sphere::get_dragCoefficient(double T_g, double u_g, double particleSize)
 */
 double sphere::get_projectedAreaRatio()
 {
-    return 1.0 / 4.0;
+    return pi * pow(currentSize, 2.0) / this-> get_surfaceArea();
 }
 
 void sphere::setDimensions(double& radius_)
 {
-    initialRadius = radius_;
-    currentSize = initialRadius;
+    currentSize = radius_;
 }

@@ -1470,13 +1470,13 @@ void particle_1D::moveMesh(std::vector<double>& xR, std::vector<double>& xC, std
 {
     double accumulatedVolume = 0.0;
 
-    accumulatedVolume += vol[0] * shape->correctForShape();
+    accumulatedVolume += vol[0];
     deltaX[0] = shape->computeSizeFromVolume(accumulatedVolume);
     xR[0] = deltaX[0];
     xC[0] = 0.5 * xR[0];
     for (int i = 1; i < numCells; i++)
     {
-        accumulatedVolume += vol[i] * shape->correctForShape();
+        accumulatedVolume += vol[i];
         xR[i] = shape->computeSizeFromVolume(accumulatedVolume);
         deltaX[i] = xR[i] - xR[i-1];
         xC[i] = 0.5 * (xR[i-1] + xR[i]);
@@ -1883,10 +1883,10 @@ void particle_1D::updateOutputs()
     globalHeatReleaseRate = globalHeatReleased / localTime;
 
     //calculate global reaction rates in [kg/s] (at the last local time for diagnostic objectives)
-    globalR1reactionRate = accumulate(R1reactionRate.begin(), R1reactionRate.end(), 0.0f);
-    globalR2reactionRate = accumulate(R2reactionRate.begin(), R2reactionRate.end(), 0.0f);
-    globalR3reactionRate = accumulate(R3reactionRate.begin(), R3reactionRate.end(), 0.0f);
-    globalR4reactionRate = accumulate(R4reactionRate.begin(), R4reactionRate.end(), 0.0f);
+    globalR1reactionRate = accumulate(R1reactionRate.begin(), R1reactionRate.end(), 0.0f) * shape->correctForShape();
+    globalR2reactionRate = accumulate(R2reactionRate.begin(), R2reactionRate.end(), 0.0f) * shape->correctForShape();
+    globalR3reactionRate = accumulate(R3reactionRate.begin(), R3reactionRate.end(), 0.0f) * shape->correctForShape();
+    globalR4reactionRate = accumulate(R4reactionRate.begin(), R4reactionRate.end(), 0.0f) * shape->correctForShape();
 
     //TODO: update firelab outputs
     outTime = localTime;
