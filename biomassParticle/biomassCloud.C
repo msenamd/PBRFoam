@@ -27,6 +27,7 @@ License
 #include "fvMesh.H"
 #include "volFields.H"
 #include "interpolationCellPoint.H"
+#include "interpolationCell.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -587,12 +588,12 @@ bool Foam::biomassCloud::hasWallImpactDistance() const
 void Foam::biomassCloud::evolve()
 {
 
-    interpolationCellPoint<scalar> rhoInterp(rho_);
-    interpolationCellPoint<scalar> YO2Interp(YO2_);
-    interpolationCellPoint<scalar> GInterp(G_);     
+    interpolationCell<scalar> rhoInterp(rho_);
+    interpolationCell<scalar> YO2Interp(YO2_);
+    interpolationCell<scalar> GInterp(G_);     
     interpolationCellPoint<vector> UInterp(U_);
-    interpolationCellPoint<scalar> TInterp(thermo_.thermo().T());
-    interpolationCellPoint<scalar> pInterp(thermo_.thermo().p());
+    interpolationCell<scalar> TInterp(thermo_.thermo().T());
+    interpolationCell<scalar> pInterp(thermo_.thermo().p());
 
     biomassParticle::trackingData
         td(*this, rhoInterp, YO2Interp, GInterp, UInterp, TInterp, pInterp, g_.value());
