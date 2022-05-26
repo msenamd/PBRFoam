@@ -87,11 +87,6 @@ tmp<fv::convectionScheme<scalar>> mvConvection
     {
         G_projected == mesh.lookupObject<volScalarField>("G")/4.0;
     }
-    else
-    {
-        Info << "Warning: no rad field found. Updating G_projected using gas emission only" << endl;
-        G_projected == constant::physicoChemical::sigma * Foam::pow(thermo.T(), 4.0);
-    }
 
     volScalarField& he = thermo.he();
 

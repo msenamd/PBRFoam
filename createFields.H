@@ -300,5 +300,6 @@ volScalarField G_projected
       IOobject::NO_READ,
       IOobject::AUTO_WRITE
      ),
-     constant::physicoChemical::sigma * Foam::pow(thermo.T(), 4.0)
+     mesh,
+     dimensionedScalar("G_projected", dimEnergy/dimTime/dimArea,0.0)
  );
