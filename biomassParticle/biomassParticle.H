@@ -42,6 +42,7 @@ SourceFiles
 #include "IOstream.H"
 #include "autoPtr.H"
 #include "interpolationCellPoint.H"
+#include "interpolationCell.H"
 #include "contiguous.H"
 #include "SLGThermo.H"
 
@@ -192,12 +193,12 @@ public:
     {
         // Interpolators for continuous phase fields
 
-            const interpolationCellPoint<scalar>& rhoInterp_;
-            const interpolationCellPoint<scalar>& YO2Interp_;
-            const interpolationCellPoint<scalar>& GInterp_;
+            const interpolationCell<scalar>& rhoInterp_;
+            const interpolationCell<scalar>& YO2Interp_;
+            const interpolationCell<scalar>& GInterp_;
             const interpolationCellPoint<vector>& UInterp_;
-            const interpolationCellPoint<scalar>& TInterp_;
-            const interpolationCellPoint<scalar>& pInterp_;
+            const interpolationCell<scalar>& TInterp_;
+            const interpolationCell<scalar>& pInterp_;
 
         //- Local gravitational or other body-force acceleration
         const vector& g_;
@@ -209,24 +210,24 @@ public:
             inline trackingData
             (
                 biomassCloud& bC,
-                const interpolationCellPoint<scalar>& rhoInterp,
-                const interpolationCellPoint<scalar>& YO2Interp,
-                const interpolationCellPoint<scalar>& GInterp,
+                const interpolationCell<scalar>& rhoInterp,
+                const interpolationCell<scalar>& YO2Interp,
+                const interpolationCell<scalar>& GInterp,
                 const interpolationCellPoint<vector>& UInterp,
-                const interpolationCellPoint<scalar>& TInterp,
-                const interpolationCellPoint<scalar>& pInterp,
+                const interpolationCell<scalar>& TInterp,
+                const interpolationCell<scalar>& pInterp,
                 const vector& g
             );
 
 
         // Member functions
 
-            inline const interpolationCellPoint<scalar>& rhoInterp() const;
-            inline const interpolationCellPoint<scalar>& YO2Interp() const;
-            inline const interpolationCellPoint<scalar>& GInterp() const;
+            inline const interpolationCell<scalar>& rhoInterp() const;
+            inline const interpolationCell<scalar>& YO2Interp() const;
+            inline const interpolationCell<scalar>& GInterp() const;
             inline const interpolationCellPoint<vector>& UInterp() const;
-            inline const interpolationCellPoint<scalar>& TInterp() const;
-            inline const interpolationCellPoint<scalar>& pInterp() const;
+            inline const interpolationCell<scalar>& TInterp() const;
+            inline const interpolationCell<scalar>& pInterp() const;
 
             inline const vector& g() const;
     };

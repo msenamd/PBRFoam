@@ -1804,7 +1804,7 @@ void particle_1D::updateOutputs()
 {
     //update particle size
     particleSize = shape->currentSize;
-    particleVol = shape->get_volume();
+    particleVol = shape->get_volume() * shape->correctForShape();
     particleSurfToVolRatio = shape->get_surfaceAreaToVolumeRatio();
     projectedAreaRatio = shape->get_projectedAreaRatio();
 
@@ -1916,8 +1916,6 @@ void particle_1D::remeshing()
     xCellCenter_old = xCellCenter;
 
     setMesh(numCells, cellSize);
-
-    particleVol = shape->get_volume();
 
 
     // Remeshing, step 3: interpolate solution on new computational grid
