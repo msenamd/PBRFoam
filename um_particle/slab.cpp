@@ -36,13 +36,13 @@ slab::slab(const slab& rhs) : particleShape(rhs)
 
 slab& slab::operator=(const slab& rhs)
 {
-    if (&rhs != this){
+    if (&rhs != this) {
         particleShape::operator=(rhs);
         initialHalfThickness = rhs.initialHalfThickness;
         length = rhs.length;
         width = rhs.width;
         currentSize = initialHalfThickness;
-    } ; // handle self assignment
+    }; // handle self assignment
     //assignment operator
     return *this;
 }
@@ -82,7 +82,7 @@ double slab::get_surfaceArea(double size)
 */
 double slab::get_surfaceAreaToVolumeRatio()
 {
-    return 1.0 / (2.0*currentSize);
+    return (2.0 * (2.0 * currentSize + width) * length) / (2.0 * currentSize * width * length);
 }
 
 /**
@@ -92,7 +92,7 @@ double slab::get_surfaceAreaToVolumeRatio()
 */
 double slab::computeSizeFromVolume(const double volume_)
 {
-    return volume_ / (2.0*length*width);
+    return volume_ / (2.0 * length * width);
 }
 
 /**
@@ -107,17 +107,17 @@ void slab::set_cellVolumes(int& numCells, std::vector<double>& xFacePositive, st
     cellVolume[0] = xFacePositive[0] * length * width;
     for (int i = 1; i < numCells; i++)
     {
-        cellVolume[i] = (xFacePositive[i] - xFacePositive[i-1]) * length * width;
+        cellVolume[i] = (xFacePositive[i] - xFacePositive[i - 1]) * length * width;
     }
 
-//    for (int i = 0; i < numCells; i++)
-//    {
-//        cellVolume[i] = sizeCell[i] * areaRectangle;
-//    }
+    //    for (int i = 0; i < numCells; i++)
+    //    {
+    //        cellVolume[i] = sizeCell[i] * areaRectangle;
+    //    }
 }
 
 /**
-* Computes a correction to the computed quantities based on shape.  Rectangular (slab) shapes 
+* Computes a correction to the computed quantities based on shape.  Rectangular (slab) shapes
 * are doubled to account for the two outer surfaces, other shapes (cylinder, sphere) are not doubled.
 * @param
 * @return a correction factor
@@ -135,7 +135,7 @@ double slab::correctForShape()
 * @param particleSize Radius or half-thickness of particle (m).
 * @return
 */
-double slab::get_convectiveHeatTransferCoefficient(double T_g , double T_surf , double u_g , double particleSize)
+double slab::get_convectiveHeatTransferCoefficient(double T_g, double T_surf, double u_g, double particleSize)
 {
     //    This function calculates the heat transfer coefficient from an empirical
     //     * correlation of a rectangle
@@ -144,22 +144,22 @@ double slab::get_convectiveHeatTransferCoefficient(double T_g , double T_surf , 
     //     * rectangle Ref: Churchill and Bernstein
 
 
-    double Pr, T_film , nu_g, k_g;
-    double D_eff, Re_D, Nu_D , h;
+    double Pr, T_film, nu_g, k_g;
+    double D_eff, Re_D, Nu_D, h;
 
-    T_film      = 0.5*(T_surf+T_g);         // Film temperature [K]
+    T_film = 0.5 * (T_surf + T_g);         // Film temperature [K]
 
     Pr = air->get_pr(T_film);
     nu_g = air->get_v(T_film);
     k_g = air->get_k(T_film);
 
-    D_eff       = (2*particleSize)*2/sqrt(pi); // Effective diameter of particle [m]f, calculated using equal area method
-    Re_D        = u_g*D_eff/nu_g;       // Reynolds number at film temp.
+    D_eff = (2 * particleSize) * 2 / sqrt(pi); // Effective diameter of particle [m]f, calculated using equal area method
+    Re_D = u_g * D_eff / nu_g;       // Reynolds number at film temp.
     // Nusselt number at film temp. , Ref: Churchill and Bernstein
-    Nu_D        = 0.3 + (0.62*pow(Re_D,0.5)*pow(Pr,0.3333))/pow((1+pow(0.4/Pr,2.0/3.0)),0.25)
-            * pow((1+pow(Re_D/282000,5.0/8.0)),4.0/5.0) ;
+    Nu_D = 0.3 + (0.62 * pow(Re_D, 0.5) * pow(Pr, 0.3333)) / pow((1 + pow(0.4 / Pr, 2.0 / 3.0)), 0.25)
+        * pow((1 + pow(Re_D / 282000, 5.0 / 8.0)), 4.0 / 5.0);
 
-    h    = Nu_D*k_g/D_eff;   // Convective heat transfer coef. [W/m2/K]
+    h = Nu_D * k_g / D_eff;   // Convective heat transfer coef. [W/m2/K]
 
     return h;
 }

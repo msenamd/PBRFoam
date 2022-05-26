@@ -129,7 +129,7 @@ inline Foam::biomassParticle::biomassParticle
         std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
 
         outParticle << "time(s)" << "," << "x(m)" << "," << "y(m)" << "," << "z(m)" << "," 
-                    << "state" << "," << "dt(s)" << "," << "size(m)" << ","  
+                    << "state" << "," << "dt(s)" << "," << "size(m)" << "," << "surfToVol(1/m)" << ","  
                     << "Ux(m/s)" << "," << "Uy(m/s)" << "," << "Uz(m/s)" << ","
                     << "mass(kg)" << "," << "surfaceTemp(K)"  << "," << "coreTemp(K)"  << ","
                     << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","

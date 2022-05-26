@@ -402,7 +402,7 @@ void Foam::biomassParticle::updateParticle
         std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
 
         outParticle << mesh_.time().value() << "," << this->position()[0] << "," << this->position()[1] << "," << this->position()[2] << "," 
-                    << particleState_ << "," << particledt_ << "," << particleSize_ << ","  
+                    << particleState_ << "," << particledt_ << "," << particleSize_ << ","  << p1D.particleSurfToVolRatio << "," 
                     << particleVelo_[0] << "," << particleVelo_[1] << "," << particleVelo_[2] << ","
                     << particleMass_ << "," << surfaceTemp_  << "," << coreTemp_  << ","
                     << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
