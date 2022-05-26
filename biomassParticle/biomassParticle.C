@@ -58,7 +58,7 @@ bool Foam::biomassParticle::move
         scalar dt = min(dtMax, tEnd);
 
         // Cache the parcel current cell as this will change if a face is hit
-        label celli = cell();
+        const label celli = cell();
 
         // Track particle to a given position and returns 1.0 if the
         // trajectory is completed without hitting a face otherwise
@@ -184,19 +184,19 @@ void Foam::biomassParticle::updateParticle
     // Get the external gas phase properties of this cell
     // Note: assume very small volume fraction of solid in a cell
 
-    cellPointWeight cpw(mesh_, position(), celli, face());
+    tetIndices tetIs = this->currentTetIndices();
 
     label indexFuel = (td.cloud().thermo()).carrier().species()[td.cloud().fuel];
     label indexO2   = (td.cloud().thermo()).carrier().species()["O2"];
     label indexH2O  = (td.cloud().thermo()).carrier().species()["H2O"];
     label indexCO2  = (td.cloud().thermo()).carrier().species()["CO2"];
 
-    scalar externalGasDensity     = td.rhoInterp().interpolate(cpw);
-    scalar externalGasPressure    = td.pInterp().interpolate(cpw) - 101325;
-    scalar externalGasTemp        = td.TInterp().interpolate(cpw);
-    vector externalGasVelo        = td.UInterp().interpolate(cpw);
-    scalar externalO2MassFraction = td.YO2Interp().interpolate(cpw);
-    scalar externalIrradiation    = td.GInterp().interpolate(cpw);
+    scalar externalGasDensity     = td.rhoInterp().interpolate(this->position(), tetIs);
+    scalar externalGasPressure    = td.pInterp().interpolate(this->position(), tetIs); - 101325;
+    scalar externalGasTemp        = td.TInterp().interpolate(this->position(), tetIs);;
+    vector externalGasVelo        = td.UInterp().interpolate(this->position(), tetIs);;
+    scalar externalO2MassFraction = td.YO2Interp().interpolate(this->position(), tetIs);;
+    scalar externalIrradiation    = td.GInterp().interpolate(this->position(), tetIs);;
 
     // Pre-computing step
     p1D = td.cloud().superParticle;
