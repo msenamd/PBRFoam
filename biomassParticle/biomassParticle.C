@@ -94,6 +94,48 @@ bool Foam::biomassParticle::move
         }
     }
     
+        //  Wrtie diagnostic files
+        p1D.pCurrentTime = &mesh_.time().value();
+
+        if(particleID_ > 0)
+        {
+            std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
+
+            outParticle << mesh_.time().value() << "," << this->position()[0] << "," << this->position()[1] << "," << this->position()[2] << "," 
+                        << particleState_ << "," << particledt_ << "," << particleSize_ << ","  << p1D.particleSurfToVolRatio << "," 
+                        << particleVelo_[0] << "," << particleVelo_[1] << "," << particleVelo_[2] << ","
+                        << particleMass_ << "," << surfaceTemp_  << "," << coreTemp_  << ","
+                        << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
+                        << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
+                        << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
+                        << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
+
+
+            std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);
+            p1D.writeTempLine(TempFile);
+
+            std::ofstream wetSolidFile(outputPath/ "particle" + name(particleID_) + "_wetSolid.csv", ios::app);
+            p1D.writeWetSolidLine(wetSolidFile);
+
+            std::ofstream drySolidFile(outputPath/ "particle" + name(particleID_) + "_drySolid.csv", ios::app);
+            p1D.writeDrySolidLine(drySolidFile);
+
+            std::ofstream charFile(outputPath/ "particle" + name(particleID_) + "_char.csv", ios::app);
+            p1D.writeCharLine(charFile);
+
+            std::ofstream ashFile(outputPath/ "particle" + name(particleID_) + "_ash.csv", ios::app);
+            p1D.writeAshLine(ashFile);
+
+            std::ofstream O2File(outputPath/ "particle" + name(particleID_) + "_O2.csv", ios::app);
+            p1D.writeO2Line(O2File);
+
+            std::ofstream pressureFile(outputPath/ "particle" + name(particleID_) + "_pressure.csv", ios::app);
+            p1D.writePressureLine(pressureFile); 
+
+            std::ofstream coordFile(outputPath/ "particle" + name(particleID_) + "_cellCenter.csv", ios::app);
+            p1D.writeCoordLine(coordFile);                                                       
+        }
+
     return td.keepParticle;
 }
 
@@ -279,9 +321,7 @@ void Foam::biomassParticle::updateParticle
 
     particleState_     = p1D.state;
     particledt_        = p1D.localTimeStepSize;
-    particleSize_      = p1D.particleSize;
     particleMass_      = p1D.particleMass;
-    particleVol_       = p1D.particleVol;
     surfaceTemp_       = p1D.surfaceTemp;
     coreTemp_          = p1D.coreTemp;
     convFlux_          = p1D.surfaceHeatFluxConv;
@@ -296,26 +336,33 @@ void Foam::biomassParticle::updateParticle
     massLossRate_      = p1D.globalMassLossRate;
     heatReleaseRate_   = p1D.globalHeatReleaseRate;
 
-    // update particle drag
+    // Update geometric quantities
+    particleSize_                   = p1D.particleSize;
+    particleVol_                    = p1D.particleVol * p1D.shape->correctForShape();    
+    scalar projectedAreaRatio_      = p1D.projectedAreaRatio / p1D.shape->correctForShape(); 
+    scalar surfToVolRatio_          = p1D.particleSurfToVolRatio;
+    scalar packingRatio_            = td.cloud().nParticles * particleVol_ / mesh_.cellVolumes()[celli];
+
+    // Update particle drag
     if(td.cloud().dragModel == "constant")
     {
         CD_ = td.cloud().dragCoeff;
     }
     else if (particleState_ == Particle::eState::ashed)
     {
-        CD_ = 1.0;
+        CD_ = 0.0;
     }
     else
     {
         CD_ = p1D.dragCoeff;
     }
 
-    // Update particle velocuty
+    // Update particle velocity
     if (td.cloud().firebrands)
     {
         scalar B = 0.5 * externalGasDensity * CD_
-                 * p1D.projectedAreaRatio * p1D.particleSurfToVolRatio * p1D.particleVol 
-                 / p1D.particleMass * mag(externalGasVelo - particleVelo_);
+                 * projectedAreaRatio_ * surfToVolRatio_ * particleVol_ 
+                 / particleMass_ * mag(externalGasVelo - particleVelo_);
 
         particleVelo_ = (particleVelo_ + dt_ * (B * externalGasVelo + td.g())) / (1.0 + B * dt_);
     }
@@ -332,43 +379,40 @@ void Foam::biomassParticle::updateParticle
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Packing Ratio (-)
-    td.cloud().packingRatio[celli] = td.cloud().nParticles * p1D.particleVol / mesh_.cellVolumes()[celli];
+    td.cloud().packingRatio[celli] = packingRatio_;
 
     // Species (kg/s *1/m3 *s = kg/m3)
-    td.cloud().rhoTrans(indexH2O)[celli]  += p1D.globalMoistureReleaseRate / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().rhoTrans(indexFuel)[celli] += p1D.globalGasFuelReleaseRate  / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
-    td.cloud().rhoTrans(indexCO2)[celli]  += p1D.globalCO2ReleaseRate      / p1D.particleVol * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans(indexH2O)[celli]  += packingRatio_ * p1D.globalMoistureReleaseRate / particleVol_ * dt_;
+    td.cloud().rhoTrans(indexFuel)[celli] += packingRatio_ * p1D.globalGasFuelReleaseRate  / particleVol_ * dt_;
+    td.cloud().rhoTrans(indexCO2)[celli]  += packingRatio_ * p1D.globalCO2ReleaseRate      / particleVol_ * dt_;
 
-    td.cloud().rhoTrans(indexO2)[celli]   -= p1D.h_mass * (externalO2MassFraction - p1D.surfaceO2MassFrac)
-                                            * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().rhoTrans(indexO2)[celli]   -= surfToVolRatio_ * packingRatio_ * p1D.h_mass * (externalO2MassFraction - surfaceO2MassFrac_) * dt_;
 
     // Momentum (N/m3 *s)
-    td.cloud().UTrans()[celli] -= 0.5 * externalGasDensity * CD_ * p1D.projectedAreaRatio 
-                                * mag(externalGasVelo - particleVelo_) * (externalGasVelo - particleVelo_)
-                                * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().UTrans()[celli] -= surfToVolRatio_ * packingRatio_ * CD_ * projectedAreaRatio_/2.0 * externalGasDensity 
+                                * mag(externalGasVelo - particleVelo_) * (externalGasVelo - particleVelo_) * dt_;
 
     // Energy (W/m3 *s)
-    td.cloud().QconvTrans()[celli] -= p1D.h_conv * (externalGasTemp - surfaceTemp_)
-                                    * p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * dt_;
+    td.cloud().QconvTrans()[celli] -= surfToVolRatio_ * packingRatio_ * hConv_ * (externalGasTemp - surfaceTemp_) * dt_;
 
     // RTE absorption coefficient (1/m)
-    td.cloud().absorptionCoeff()[celli] =  p1D.particleSurfToVolRatio * td.cloud().packingRatio()[celli] * p1D.surfaceEmissivity / 4.0;
+    td.cloud().absorptionCoeff()[celli] =  surfToVolRatio_ * packingRatio_ * p1D.surfaceEmissivity / 4.0;
 
     // RTE emission (W/m3 *s)
     td.cloud().emissionTrans()[celli] += 4.0 * td.cloud().absorptionCoeff()[celli] * physicoChemical::sigma.value()
-                                        * Foam::pow(surfaceTemp_, 4.0) * dt_;
+                                       * Foam::pow(surfaceTemp_, 4.0) * dt_;
 
 
-    //  Additional diagnostic fields
+    //  Vegetation bed diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // vegetaion bed state (-)
     td.cloud().state[celli] = particleState_;
 
     // vegetaion bed mass (kg)
-    td.cloud().mass[celli] = td.cloud().nParticles * p1D.particleMass;
+    td.cloud().mass[celli] = td.cloud().nParticles * particleMass_;
 
-    // Mass rates (kg/s/m3)
+    // Mass rates per unit volume of vegetation bed (kg/s/m3)
     td.cloud().massLossRatePUVbed[celli]        = td.cloud().nParticles * p1D.globalMassLossRate / mesh_.cellVolumes()[celli];
     td.cloud().gasFuelReleaseRatePUVbed[celli]  = td.cloud().nParticles * p1D.globalGasFuelReleaseRate / mesh_.cellVolumes()[celli];
     td.cloud().dryingRatePUVbed[celli]          = td.cloud().nParticles * p1D.globalR1reactionRate / mesh_.cellVolumes()[celli];
@@ -379,61 +423,15 @@ void Foam::biomassParticle::updateParticle
     // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
-    // Surface heat fluxes per unit area of vegetation bed (W/m2)
-    td.cloud().surfaceHeatFluxConv[celli] = p1D.surfaceHeatFluxConv * td.cloud().nParticles;
-    td.cloud().surfaceHeatFluxRad[celli]  = p1D.surfaceHeatFluxRad * td.cloud().nParticles;
+    // Surface heat fluxes per unit area of each particle (W/m2)
+    td.cloud().surfaceHeatFluxConv[celli] = convFlux_;
+    td.cloud().surfaceHeatFluxRad[celli]  = radFlux_;
 
     // Surface O2 mass fraction (-)
     td.cloud().surfaceO2MassFrac[celli] = surfaceO2MassFrac_;
 
     // Momentum (kg m/s)
-    td.cloud().momentum[celli] = td.cloud().nParticles * p1D.particleMass * particleVelo_;
-
-
-    //  Wrtie diagnostic files
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    p1D.pCurrentTime = &mesh_.time().value();
-
-
-    if(particleID_ > 0)
-    {
-        std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
-
-        outParticle << mesh_.time().value() << "," << this->position()[0] << "," << this->position()[1] << "," << this->position()[2] << "," 
-                    << particleState_ << "," << particledt_ << "," << particleSize_ << ","  << p1D.particleSurfToVolRatio << "," 
-                    << particleVelo_[0] << "," << particleVelo_[1] << "," << particleVelo_[2] << ","
-                    << particleMass_ << "," << surfaceTemp_  << "," << coreTemp_  << ","
-                    << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
-                    << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
-                    << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
-                    << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
-
-
-        std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);
-        p1D.writeTempLine(TempFile);
-
-        std::ofstream wetSolidFile(outputPath/ "particle" + name(particleID_) + "_wetSolid.csv", ios::app);
-        p1D.writeWetSolidLine(wetSolidFile);
-
-        std::ofstream drySolidFile(outputPath/ "particle" + name(particleID_) + "_drySolid.csv", ios::app);
-        p1D.writeDrySolidLine(drySolidFile);
-
-        std::ofstream charFile(outputPath/ "particle" + name(particleID_) + "_char.csv", ios::app);
-        p1D.writeCharLine(charFile);
-
-        std::ofstream ashFile(outputPath/ "particle" + name(particleID_) + "_ash.csv", ios::app);
-        p1D.writeAshLine(ashFile);
-
-        std::ofstream O2File(outputPath/ "particle" + name(particleID_) + "_O2.csv", ios::app);
-        p1D.writeO2Line(O2File);
-
-        std::ofstream pressureFile(outputPath/ "particle" + name(particleID_) + "_pressure.csv", ios::app);
-        p1D.writePressureLine(pressureFile); 
-
-        std::ofstream coordFile(outputPath/ "particle" + name(particleID_) + "_cellCenter.csv", ios::app);
-        p1D.writeCoordLine(coordFile);                                                       
-    }
+    td.cloud().momentum[celli] = td.cloud().nParticles * particleMass_ * particleVelo_;
 }
 
 // ************************************************************************* //

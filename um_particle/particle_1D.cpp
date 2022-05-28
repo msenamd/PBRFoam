@@ -1804,7 +1804,7 @@ void particle_1D::updateOutputs()
 {
     //update particle size
     particleSize = shape->currentSize;
-    particleVol = shape->get_volume() * shape->correctForShape();
+    particleVol = shape->get_volume();
     particleSurfToVolRatio = shape->get_surfaceAreaToVolumeRatio();
     projectedAreaRatio = shape->get_projectedAreaRatio();
 
