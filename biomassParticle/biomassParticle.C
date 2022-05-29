@@ -78,7 +78,7 @@ bool Foam::biomassParticle::move
         }
 
         // Check if particle is consumed
-        if (particleState_ == Particle::eState::consumed)
+        if (particleState_ == Particle::eState::consumed || particleState_ == Particle::eState::ashed)
         {
             // remove the particle
             td.keepParticle = false;
