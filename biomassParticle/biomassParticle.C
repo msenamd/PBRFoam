@@ -78,7 +78,7 @@ bool Foam::biomassParticle::move
         }
 
         // Check if particle is consumed
-        if (particleState_ == Particle::eState::consumed || particleState_ == Particle::eState::ashed)
+        if (particleState_ == Particle::eState::consumed)
         {
             // remove the particle
             td.keepParticle = false;
@@ -348,10 +348,10 @@ void Foam::biomassParticle::updateParticle
     {
         CD_ = td.cloud().dragCoeff;
     }
-    else if (particleState_ == Particle::eState::ashed)
-    {
-        CD_ = 0.0;
-    }
+//    else if (particleState_ == Particle::eState::ashed)
+//    {
+//        CD_ = 0.0;
+//    }
     else
     {
         CD_ = p1D.dragCoeff;
@@ -366,10 +366,10 @@ void Foam::biomassParticle::updateParticle
 
         particleVelo_ = (particleVelo_ + dt_ * (B * externalGasVelo + td.g())) / (1.0 + B * dt_);
     }
-    else if (particleState_ == Particle::eState::ashed && !onBoundary())
-    {
-        particleVelo_ = particleVelo_ + dt_ *  td.g();
-    }      
+//    else if (particleState_ == Particle::eState::ashed && !onBoundary())
+//    {
+//        particleVelo_ = particleVelo_ + dt_ *  td.g();
+//    }      
     else
     {
         particleVelo_ = Zero;
