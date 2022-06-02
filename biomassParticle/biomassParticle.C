@@ -94,47 +94,47 @@ bool Foam::biomassParticle::move
         }
     }
     
-        //  Wrtie diagnostic files
-        p1D.pCurrentTime = &mesh_.time().value();
+    //  Wrtie diagnostic files
+    p1D.pCurrentTime = &mesh_.time().value();
 
-        if(particleID_ > 0)
-        {
-            std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
+    if ( (particleID_ > 0) && (mesh_.time().timeIndex() % td.cloud().outputInterval) == 0 )
+    {
+        std::ofstream outParticle(outputPath/ "particle" + name(particleID_) + ".csv", ios::app);
 
-            outParticle << mesh_.time().value() << "," << this->position()[0] << "," << this->position()[1] << "," << this->position()[2] << "," 
-                        << particleState_ << "," << particledt_ << "," << particleSize_ << ","  << p1D.particleSurfToVolRatio << "," 
-                        << particleVelo_[0] << "," << particleVelo_[1] << "," << particleVelo_[2] << ","
-                        << particleMass_ << "," << surfaceTemp_  << "," << coreTemp_  << ","
-                        << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
-                        << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
-                        << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
-                        << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
+        outParticle << mesh_.time().value() << "," << this->position()[0] << "," << this->position()[1] << "," << this->position()[2] << "," 
+                    << particleState_ << "," << particledt_ << "," << particleSize_ << ","  << p1D.particleSurfToVolRatio << "," 
+                    << particleVelo_[0] << "," << particleVelo_[1] << "," << particleVelo_[2] << ","
+                    << particleMass_ << "," << surfaceTemp_  << "," << coreTemp_  << ","
+                    << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
+                    << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
+                    << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
+                    << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
 
 
-            std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);
-            p1D.writeTempLine(TempFile);
+        std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);
+        p1D.writeTempLine(TempFile);
 
-            std::ofstream wetSolidFile(outputPath/ "particle" + name(particleID_) + "_wetSolid.csv", ios::app);
-            p1D.writeWetSolidLine(wetSolidFile);
+        std::ofstream wetSolidFile(outputPath/ "particle" + name(particleID_) + "_wetSolid.csv", ios::app);
+        p1D.writeWetSolidLine(wetSolidFile);
 
-            std::ofstream drySolidFile(outputPath/ "particle" + name(particleID_) + "_drySolid.csv", ios::app);
-            p1D.writeDrySolidLine(drySolidFile);
+        std::ofstream drySolidFile(outputPath/ "particle" + name(particleID_) + "_drySolid.csv", ios::app);
+        p1D.writeDrySolidLine(drySolidFile);
 
-            std::ofstream charFile(outputPath/ "particle" + name(particleID_) + "_char.csv", ios::app);
-            p1D.writeCharLine(charFile);
+        std::ofstream charFile(outputPath/ "particle" + name(particleID_) + "_char.csv", ios::app);
+        p1D.writeCharLine(charFile);
 
-            std::ofstream ashFile(outputPath/ "particle" + name(particleID_) + "_ash.csv", ios::app);
-            p1D.writeAshLine(ashFile);
+        std::ofstream ashFile(outputPath/ "particle" + name(particleID_) + "_ash.csv", ios::app);
+        p1D.writeAshLine(ashFile);
 
-            std::ofstream O2File(outputPath/ "particle" + name(particleID_) + "_O2.csv", ios::app);
-            p1D.writeO2Line(O2File);
+        std::ofstream O2File(outputPath/ "particle" + name(particleID_) + "_O2.csv", ios::app);
+        p1D.writeO2Line(O2File);
 
-            std::ofstream pressureFile(outputPath/ "particle" + name(particleID_) + "_pressure.csv", ios::app);
-            p1D.writePressureLine(pressureFile); 
+        std::ofstream pressureFile(outputPath/ "particle" + name(particleID_) + "_pressure.csv", ios::app);
+        p1D.writePressureLine(pressureFile); 
 
-            std::ofstream coordFile(outputPath/ "particle" + name(particleID_) + "_cellCenter.csv", ios::app);
-            p1D.writeCoordLine(coordFile);                                                       
-        }
+        std::ofstream coordFile(outputPath/ "particle" + name(particleID_) + "_cellCenter.csv", ios::app);
+        p1D.writeCoordLine(coordFile);                                                       
+    }
 
     return td.keepParticle;
 }

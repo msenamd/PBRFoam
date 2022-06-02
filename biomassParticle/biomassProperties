@@ -24,6 +24,7 @@ particleViscosity	0.0;
 dragModel		constant; //or auto
 dragCoeff		0.0;
 
+outputInterval 		10;	    // how often to write particle data
 
 // Particle solution control
 maxIter  1000;                      // Max. number of iterations [-]

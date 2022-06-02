@@ -135,6 +135,9 @@ public:
             word dragModel;              //drag model
             scalar dragCoeff;            //particle drag coefficient [-]
 
+        // Output control
+            label outputInterval;       //time interval of writing particle data    
+
         // Particle solution control
             label maxIter;                       // Max. number of iterations [-]
             scalar meshResolution;               // Spatial resolution of the 1-D partice [m]

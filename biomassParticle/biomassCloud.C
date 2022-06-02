@@ -166,6 +166,8 @@ Foam::biomassCloud::biomassCloud
     dragModel(particleProperties_.lookup("dragModel")),
     dragCoeff(readScalar(particleProperties_.lookup("dragCoeff"))),
     
+    outputInterval(readScalar(particleProperties_.lookup("outputInterval"))),
+
     maxIter(readLabel(particleProperties_.lookup("maxIter"))),
     meshResolution(readScalar(particleProperties_.lookup("meshResolution"))),
     timeStepThreshold(readScalar(particleProperties_.lookup("timeStepThreshold"))),
