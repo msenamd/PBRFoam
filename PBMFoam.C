@@ -79,14 +79,18 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << endl;
 
-        Info<< "Evolving particles" << endl;
-        cpuTime executionTime;
-
-        particles.evolve();
-
-        Info<< "particlesCPUTime = " << executionTime.elapsedCpuTime() << " s" << endl;
-
         #include "rhoEqn.H"
+
+        radiation->correct();
+
+        if (mesh.foundObject<volScalarField>("G"))
+        {
+            G_projected == mesh.lookupObject<volScalarField>("G")/4.0;
+        }
+
+        Info<< "Evolving particles" << endl;
+        particles.evolve();
+        Info<< "particle solver CPUTime = " << setprecision(6) << runTime.cpuTimeIncrement() << " s" << endl;
 
         // --- PIMPLE loop
         while (pimple.loop())

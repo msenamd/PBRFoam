@@ -14,6 +14,18 @@ ft.max(0.0);
 ft.min(1.0);
 
 
+// Gas Radiation absorption/emission
+const volScalarField::Internal radRu = radiation->Ru();
+volScalarField::Internal& radFieldRu = dQradAbs.ref();
+radFieldRu = radRu;
+
+const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
+const volScalarField::Internal radRp = radiation->Rp().ref()*T4;
+volScalarField::Internal& radFieldRp = dQradEm.ref();
+radFieldRp = radRp;
+
+dQrad = dQradAbs - dQradEm; 
+
 // Convective heat flux
 convectiveHeatFlux = 
          - fvc::interpolate(turbulence->alphaEff())*fvc::interpolate(thermo.Cp())*fvc::snGrad(T);
@@ -28,10 +40,14 @@ forAll (mesh.C(),cellI)
 	pyrolysisFront[cellI] = 0.0;
 	smolderingFront[cellI] = 0.0;
 
+	// flame height
+	if (dQ[cellI] >= 1000 && mag(g).value())
+	{ 
+	    flameHeight[cellI] = mag(mesh.C()[cellI] & (g/mag(g)).value() );
+	}
 	// flame front
 	if (dQ[cellI] >= 1000)
 	{ 
-	    flameHeight[cellI] = mag(mesh.C()[cellI] & (g/mag(g)).value() );
 	    flameFront[cellI] = mesh.C()[cellI].x();
 	}
 	// pyrolysis front

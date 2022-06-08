@@ -70,24 +70,6 @@ tmp<fv::convectionScheme<scalar>> mvConvection
              << setw(12) << setprecision(5) << gMax(Y[i]) << nl;
     }
 
-    radiation->correct();
-
-    const volScalarField::Internal radRu = radiation->Ru();
-    volScalarField::Internal& radFieldRu = dQradAbs.ref();
-    radFieldRu = radRu;
-
-    const volScalarField::Internal T4 = pow(thermo.T(),4).ref();
-    const volScalarField::Internal radRp = radiation->Rp().ref()*T4;
-    volScalarField::Internal& radFieldRp = dQradEm.ref();
-    radFieldRp = radRp;
-
-    dQrad = dQradAbs - dQradEm;
-
-    if (mesh.foundObject<volScalarField>("G"))
-    {
-        G_projected == mesh.lookupObject<volScalarField>("G")/4.0;
-    }
-
     volScalarField& he = thermo.he();
 
     fvScalarMatrix EEqn
