@@ -348,10 +348,10 @@ void Foam::biomassParticle::updateParticle
     {
         CD_ = td.cloud().dragCoeff;
     }
-//    else if (particleState_ == Particle::eState::ashed)
-//    {
-//        CD_ = 0.0;
-//    }
+    else if (particleState_ == Particle::eState::ashed)
+    {
+        CD_ = 0.0;
+    }
     else
     {
         CD_ = p1D.dragCoeff;
