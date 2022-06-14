@@ -1,3 +1,4 @@
 biomassCloudAbsorptionEmission/biomassCloudAbsorptionEmission.C
+greyPGRF/greyPGRF.C
 
 LIB = $(FOAM_USER_LIBBIN)/libbiomassRadiation
