@@ -159,7 +159,7 @@ void solidMaterial::set_wetSolid(const double& moistureFraction, const solidMate
     bulkDensity = drySolid.get_bulkDensity(300.0) * (1.0 + moistureFraction);
     conductivity = drySolid.get_conductivity(300.0) * (1.0 + 2.1*moistureFraction);
     specificHeat = drySolid.get_specificHeat(300.0) * (1.0 + 5.0*moistureFraction);
-    porosity = 1.0 - bulkDensity / (drySolid.get_bulkDensity(300.0) / (1.0 - drySolid.get_porosity(300.0)));
+    porosity = max(0.0, 1.0 - bulkDensity / (drySolid.get_bulkDensity(300.0) / (1.0 - drySolid.get_porosity(300.0))));
 }
 
 // Set material properties from external input quantities
