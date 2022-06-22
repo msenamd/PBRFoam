@@ -78,7 +78,7 @@ bool Foam::biomassParticle::move
         }
 
         // Check if particle is consumed
-        if (particleState_ == Particle::eState::consumed)
+        if (particleState_ == Particle::eState::consumed || particleState_ == Particle::eState::ashed)
         {
             // remove the particle
             td.keepParticle = false;
@@ -347,10 +347,6 @@ void Foam::biomassParticle::updateParticle
     if(td.cloud().dragModel == "constant")
     {
         CD_ = td.cloud().dragCoeff;
-    }
-    else if (particleState_ == Particle::eState::ashed)
-    {
-        CD_ = 0.0;
     }
     else
     {
