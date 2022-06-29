@@ -35,9 +35,11 @@ convectiveHeatFlux =
 forAll (mesh.C(),cellI)
 {
 	flameHeight[cellI] = 0.0;
+	flameBack[cellI] = 1e12;
 	flameFront[cellI] = 0.0;
 	pyrolysisBack[cellI] = 1e12;
 	pyrolysisFront[cellI] = 0.0;
+	smolderingBack[cellI] = 1e12;
 	smolderingFront[cellI] = 0.0;
 
 	// flame height
@@ -48,33 +50,35 @@ forAll (mesh.C(),cellI)
 	// flame front
 	if (dQ[cellI] >= 1000)
 	{ 
-	    flameFront[cellI] = mesh.C()[cellI].x();
-	}
+	    flameBack[cellI] = mesh.C()[cellI].x();
+	    flameFront[cellI] = mesh.C()[cellI].x();	    
+	}	
 	// pyrolysis front
 	if (particles.state[cellI] == 3) 
 	{ 
+	    pyrolysisBack[cellI] = mesh.C()[cellI].x();		
 	    pyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
-	// pyrolysis back
-	if (particles.state[cellI] == 3) 
-	{ 
-	    pyrolysisBack[cellI] = mesh.C()[cellI].x();
-	}	
 	// smoldering front
 	if (particles.state[cellI] == 5) 
 	{ 
+	    smolderingBack[cellI] = mesh.C()[cellI].x();		
 	    smolderingFront[cellI] = mesh.C()[cellI].x();
 	}
 }
 
 scalar maxFlameHeight = max(flameHeight.internalField()).value();
+
+scalar maxFlameBack = min(flameBack.internalField()).value();
+scalar maxPyrolysisBack = min(pyrolysisBack.internalField()).value();
+scalar maxSmolderingBack = min(smolderingBack.internalField()).value();
+
 scalar maxFlameFront = max(flameFront.internalField()).value();
-scalar maxpyrolysisBack = min(pyrolysisBack.internalField()).value();
 scalar maxPyrolysisFront = max(pyrolysisFront.internalField()).value();
 scalar maxSmolderingFront = max(smolderingFront.internalField()).value();
 
-outFireFront << runTime.value() << "," << maxFlameHeight << "," << maxFlameFront
-<< "," << maxpyrolysisBack << "," << maxPyrolysisFront << "," << maxSmolderingFront << endl;
+outFireFront << runTime.value() << "," << maxFlameHeight << "," << maxFlameBack << "," << maxFlameFront
+<< "," << maxPyrolysisBack << "," << maxPyrolysisFront << "," << maxSmolderingBack << "," << maxSmolderingFront << endl;
 
 
 

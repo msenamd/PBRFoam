@@ -2,8 +2,8 @@
 // for outputing fire front
 OFstream outFireFront("outFireFront_"+runTime.timeName());
 
-outFireFront << "time(s)" << "," << "flameHeight(m)" << "," << "flameFront(m)" 
-<< "," << "pyrolysisBack(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingFront(m)" << endl;
+outFireFront << "time(s)" << "," << "flameHeight(m)" << "," << "flameBack(m)" << "," << "flameFront(m)"
+<< "," << "pyrolysisBack(m)" << "," << "pyrolysisFront(m)" << "," << "smolderingBack(m)"  << "," << "smolderingFront(m)" << endl;
 
 volScalarField flameHeight
 (
@@ -33,11 +33,11 @@ volScalarField flameFront
     dimensionedScalar("zero",dimLength,0.0)
 );
 
-volScalarField pyrolysisBack
+volScalarField flameBack
 (
     IOobject
     (
-        "pyrolysisBack",
+        "flameBack",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
@@ -46,6 +46,7 @@ volScalarField pyrolysisBack
     mesh,
     dimensionedScalar("zero",dimLength,0.0)
 );
+
 
 volScalarField pyrolysisFront
 (
@@ -61,11 +62,39 @@ volScalarField pyrolysisFront
     dimensionedScalar("zero",dimLength,0.0)
 );
 
+volScalarField pyrolysisBack
+(
+    IOobject
+    (
+        "pyrolysisBack",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
+
 volScalarField smolderingFront
 (
     IOobject
     (
         "smolderingFront",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("zero",dimLength,0.0)
+);
+
+volScalarField smolderingBack
+(
+    IOobject
+    (
+        "smolderingBack",
         runTime.timeName(),
         mesh,
         IOobject::NO_READ,
