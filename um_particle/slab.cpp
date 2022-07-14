@@ -74,7 +74,8 @@ double slab::get_surfaceArea(double size)
 */
 double slab::get_surfaceAreaToVolumeRatio()
 {
-    return 2 * (2*currentSize * length + width * length) / (2*currentSize * width * length);
+    return this->get_surfaceArea() / this->get_volume();
+    //return 2 * (2*currentSize * length + width * length) / (2*currentSize * width * length);
 }
 
 /**
