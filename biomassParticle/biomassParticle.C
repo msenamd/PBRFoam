@@ -415,6 +415,7 @@ void Foam::biomassParticle::updateParticle
     td.cloud().pyrolysisRatePUVbed[celli]       = td.cloud().nParticles * p1D.globalR2reactionRate / mesh_.cellVolumes()[celli];
     td.cloud().oxidPyrolysisRatePUVbed[celli]   = td.cloud().nParticles * p1D.globalR3reactionRate / mesh_.cellVolumes()[celli];
     td.cloud().charOxidRatePUVbed[celli]        = td.cloud().nParticles * p1D.globalR4reactionRate / mesh_.cellVolumes()[celli];
+    td.cloud().heatReleaseRatePUVbed[celli]     = td.cloud().nParticles * p1D.globalHeatReleaseRate / mesh_.cellVolumes()[celli];
 
     // Surface temperature (K)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;

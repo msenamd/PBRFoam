@@ -361,7 +361,20 @@ Foam::biomassCloud::biomassCloud
         ),
         mesh_,
         dimensionedScalar("zero", dimMass/dimTime , 0.0)
-    ),                                     
+    ),
+    heatReleaseRatePUVbed
+    (
+        IOobject
+        (
+            this->name() + "_heatReleaseRatePUVbed",
+            this->db().time().timeName(),
+            this->db(),
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_,
+        dimensionedScalar("zero", dimMass/dimTime , 0.0)
+    ),                                           
     surfaceTemp
     (
         IOobject
@@ -640,6 +653,7 @@ void Foam::biomassCloud::resetSourceTerms()
     pyrolysisRatePUVbed.field() = 0.0;
     oxidPyrolysisRatePUVbed.field() = 0.0;
     charOxidRatePUVbed.field() = 0.0;
+    heatReleaseRatePUVbed.field() = 0.0;
 
     surfaceTemp.field() = 0.0;  
     surfaceHeatFluxConv.field() = 0.0; 

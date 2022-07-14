@@ -234,6 +234,7 @@ public:
             volScalarField pyrolysisRatePUVbed;             // Mass reaction rate in [kg/s/m3]
             volScalarField oxidPyrolysisRatePUVbed;         // Mass reaction rate in [kg/s/m3]
             volScalarField charOxidRatePUVbed;              // Mass reaction rate in [kg/s/m3]
+            volScalarField heatReleaseRatePUVbed;           // Heterogeneous heat release rate in [W/m3]
 
             volScalarField surfaceTemp;                     // Surface temperature [K]   
             volScalarField surfaceHeatFluxConv;             // Surface convective heat flux [W/m2]   
