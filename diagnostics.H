@@ -54,13 +54,13 @@ forAll (mesh.C(),cellI)
 	    flameFront[cellI] = mesh.C()[cellI].x();	    
 	}	
 	// pyrolysis front
-	if (particles.state[cellI] == 3) 
+	if (particles.state[cellI] == Particle::eState::flaming) 
 	{ 
 	    pyrolysisBack[cellI] = mesh.C()[cellI].x();		
 	    pyrolysisFront[cellI] = mesh.C()[cellI].x();
 	}
 	// smoldering front
-	if (particles.state[cellI] == 5) 
+	if (particles.state[cellI] == Particle::eState::glowing) 
 	{ 
 	    smolderingBack[cellI] = mesh.C()[cellI].x();		
 	    smolderingFront[cellI] = mesh.C()[cellI].x();
@@ -92,7 +92,7 @@ forAll (mesh.C(),cellI)
 	QconvPUVbed[cellI] = 0.0;
 	QradPUVbed[cellI] = 0.0;
 
-	if (particles.state[cellI] == 1) 
+	if (particles.state[cellI] == (Particle::eState::preheat || Particle::eState::drying))
 	{ 
 			nCells = nCells + 1;
 	    	QconvPUVbed[cellI] = particles.surfaceHeatFluxConv[cellI] / mesh.V()[cellI];
