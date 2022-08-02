@@ -1778,7 +1778,7 @@ Particle::eState particle_1D::checkState()
         return glowing;
     }
     // charring and pyrolysis rates are insignificant, mostly composed of ash
-    else if (ashVolFraction.front() > 0.999)
+    else if (ashVolFraction.front() > 0.99)
     {
         return ashed;
     }
