@@ -26,7 +26,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
 
     combustion->correct();
 
-    dQ = combustion->Sh();
+    dQ = combustion->Sh() * heatOfCombustionFactor;
     
     volScalarField Yt(0.0*Y[0]);
 
@@ -88,7 +88,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
         )
       - fvm::laplacian(turbulence->alphaEff(), he)
      ==
-        combustion->Sh()
+        dQ
       + radiation->Sh(thermo)
       + particles.Qconv()
       + fvOptions(rho, he)

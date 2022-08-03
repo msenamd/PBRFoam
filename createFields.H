@@ -195,6 +195,10 @@ singleStepReactingMixture<gasHThermoPhysics>& singleMixture
     (thermo)
 );
 
+// correction to heat of combustion using user defined input
+scalar  heatOfCombustionFactor = readScalar(thermo.lookup("heatOfCombustionFactor"));
+Info << "adjusted heat of combustion = " << singleMixture.qFuel().value() * heatOfCombustionFactor << endl;
+
 // stoichiometric O2 to fuel ratio
 scalar s(singleMixture.s().value());
 
