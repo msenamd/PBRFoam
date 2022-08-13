@@ -16,18 +16,19 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-boxMin 		(-5 -5 0); 		// mimmum coordinates of the vegettion bed
-boxMax 		(5 5 10);		// maximum coordinates of the vegettion bed
+fuelBedRegions //single or multiple regions defined by box bounds
+(
+(0 0 -1000) (1000 0.399 1000)
+//(0 0 -1000) (10 0.399 1000) 
+//(20 0 -1000) (30 0.399 1000)  
+);
 
-ignMin 		(0 0 0); 		// mimmum coordinates for ignition zone
-ignMax 		(0 0 0);		// maximum coordinates for ignition zone
 
-initTemp 	300;
-ignTemp 	300;
+initTemp 300;
 
-initTimeStep	1e-3;
+initTimeStep	0.1;
 
-initSize 	3.8e-2;
+initSize 	1e-3;
 
 initVelo 	(0 0 0);
 
@@ -44,8 +45,16 @@ initState	0;
 
 probeLocations
 (
-	(0.0 0.0 0.0)
+(	2.5		0		0	)
+(	2.5		0.3999		0	)
+(	5		0		0	)
+(	5		0.3999		0	)
+(	10		0		0	)
+(	10		0.3999		0	)
+(	20		0		0	)
+(	20		0.3999		0	)
+(	40		0		0	)
+(	40		0.3999		0	)
 );
-
 
 // ************************************************************************* //
