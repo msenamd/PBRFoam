@@ -1,0 +1,55 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  xx                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setParticlesDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundingBoxMin		(0.0 0 -0.0125); 	// mimmum coordinates of the fuel bed
+boundingBoxMax		(8.0 0.1016 0.0125);	// maximum coordinates of the fuel bed
+
+separationStreamwise	0.0301625;
+separationSpanwise	0.012954;		
+
+
+initTemp 300;
+
+initTimeStep	0.01;
+
+initSize 	6.9850E-04;
+
+initVelo 	(0 0 0);
+
+initYO2 	0.233;
+
+initGaugeP 	0.0;
+
+initWetSolid	1.0;
+initDrySolid	0.0;
+initChar	0.0;
+initAsh		0.0;
+
+initState	1;
+
+probeLocations
+(
+(	2	0.0	0	)
+(	2	0.1	0	)
+(	4	0.0	0	)
+(	4	0.1	0	)
+(	6	0.0	0	)
+(	6	0.1	0	)
+);
+
+// ************************************************************************* //

@@ -6,5 +6,6 @@ wmake -j libso um_particle
 wmake -j libso biomassParticle
 wmake -j libso radiation
 wmake -j setParticles
+wmake -j setParticlesSeparation
 wmake -j
 #------------------------------------------------------------------------------
