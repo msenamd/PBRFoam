@@ -128,7 +128,7 @@ Foam::biomassCloud::biomassCloud
                 IOobject::NO_WRITE
             ),
             mesh_,
-            dimensionedScalar("zero", dimless/dimLength , 0.0)
+            dimensionedScalar("zero", dimTime/dimLength , 0.0)
         )
     ),        
     emissionTrans_
@@ -618,6 +618,9 @@ void Foam::biomassCloud::evolve()
 
     // evolve the cloud
     Cloud<biomassParticle>::move(td, mesh_.time().deltaTValue());
+
+    // update packing ratio
+    packingRatio /= (this->db().time().deltaTValue());
 
     Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
     << " , " << "max = " << max(packingRatio()).value() << endl;

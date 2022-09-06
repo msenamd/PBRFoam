@@ -342,7 +342,8 @@ void Foam::biomassParticle::updateParticle
     particleVol_                    = p1D.particleVol * p1D.shape->correctForShape();    
     scalar projectedAreaRatio_      = p1D.projectedAreaRatio / p1D.shape->correctForShape(); 
     scalar surfToVolRatio_          = p1D.particleSurfToVolRatio;
-    scalar packingRatio_            = td.cloud().nParticles * particleVol_ / mesh_.cellVolumes()[celli];
+
+    Info << "surfToVolRatio = " << surfToVolRatio_ << endl;
 
     // Update particle drag
     if(td.cloud().dragModel == "constant")
@@ -376,27 +377,28 @@ void Foam::biomassParticle::updateParticle
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     // Packing Ratio (-)
-    td.cloud().packingRatio[celli] = packingRatio_;
+    scalar solidVolFrac            = td.cloud().nParticles * particleVol_ / mesh_.cellVolumes()[celli];
+    td.cloud().packingRatio[celli] += solidVolFrac * dt_;
 
     // Species (kg/s *1/m3 *s = kg/m3)
-    td.cloud().rhoTrans(indexH2O)[celli]  += packingRatio_ * p1D.globalMoistureReleaseRate / particleVol_ * dt_;
-    td.cloud().rhoTrans(indexFuel)[celli] += packingRatio_ * p1D.globalGasFuelReleaseRate  / particleVol_ * dt_;
-    td.cloud().rhoTrans(indexCO2)[celli]  += packingRatio_ * p1D.globalCO2ReleaseRate      / particleVol_ * dt_;
+    td.cloud().rhoTrans(indexH2O)[celli]  += solidVolFrac * p1D.globalMoistureReleaseRate / particleVol_ * dt_;
+    td.cloud().rhoTrans(indexFuel)[celli] += solidVolFrac * p1D.globalGasFuelReleaseRate  / particleVol_ * dt_;
+    td.cloud().rhoTrans(indexCO2)[celli]  += solidVolFrac * p1D.globalCO2ReleaseRate      / particleVol_ * dt_;
 
-    td.cloud().rhoTrans(indexO2)[celli]   -= surfToVolRatio_ * packingRatio_ * p1D.h_mass * (externalO2MassFraction - surfaceO2MassFrac_) * dt_;
+    td.cloud().rhoTrans(indexO2)[celli]   -= surfToVolRatio_ * solidVolFrac * p1D.h_mass * (externalO2MassFraction - surfaceO2MassFrac_) * dt_;
 
     // Momentum (N/m3 *s)
-    td.cloud().UTrans()[celli] -= surfToVolRatio_ * packingRatio_ * CD_ * projectedAreaRatio_/2.0 * externalGasDensity 
+    td.cloud().UTrans()[celli] -= surfToVolRatio_ * solidVolFrac * CD_ * projectedAreaRatio_/2.0 * externalGasDensity 
                                 * mag(externalGasVelo - particleVelo_) * (externalGasVelo - particleVelo_) * dt_;
 
     // Energy (W/m3 *s)
-    td.cloud().QconvTrans()[celli] -= surfToVolRatio_ * packingRatio_ * hConv_ * (externalGasTemp - surfaceTemp_) * dt_;
+    td.cloud().QconvTrans()[celli] -= surfToVolRatio_ * solidVolFrac * hConv_ * (externalGasTemp - surfaceTemp_) * dt_;
 
     // RTE absorption coefficient (1/m)
-    td.cloud().absorptionCoeff()[celli] =  surfToVolRatio_ * packingRatio_ * p1D.surfaceEmissivity / 4.0;
+    td.cloud().absorptionCoeff()[celli] +=  surfToVolRatio_ * solidVolFrac * p1D.surfaceEmissivity / 4.0 * dt_;
 
     // RTE emission (W/m3 *s)
-    td.cloud().emissionTrans()[celli] += 4.0 * td.cloud().absorptionCoeff()[celli] * physicoChemical::sigma.value()
+    td.cloud().emissionTrans()[celli] += surfToVolRatio_ * solidVolFrac * p1D.surfaceEmissivity * physicoChemical::sigma.value()
                                        * Foam::pow(surfaceTemp_, 4.0) * dt_;
 
 

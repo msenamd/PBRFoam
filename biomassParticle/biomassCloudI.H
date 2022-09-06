@@ -275,7 +275,7 @@ inline Foam::tmp<Foam::volScalarField> Foam::biomassCloud::ap() const
 
         scalarField& ap = tap.ref().primitiveFieldRef();
 
-        ap = absorptionCoeff();
+        ap = absorptionCoeff() / (this->db().time().deltaTValue());
 
     return tap;
 }

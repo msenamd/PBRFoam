@@ -26,7 +26,7 @@ tmp<fv::convectionScheme<scalar>> mvConvection
 
     combustion->correct();
 
-    dQ = combustion->Sh() * heatOfCombustionFactor;
+    dQ = combustion->Sh();
     
     volScalarField Yt(0.0*Y[0]);
 
