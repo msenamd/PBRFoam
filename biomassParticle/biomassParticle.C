@@ -343,8 +343,6 @@ void Foam::biomassParticle::updateParticle
     scalar projectedAreaRatio_      = p1D.projectedAreaRatio / p1D.shape->correctForShape(); 
     scalar surfToVolRatio_          = p1D.particleSurfToVolRatio;
 
-    Info << "surfToVolRatio = " << surfToVolRatio_ << endl;
-
     // Update particle drag
     if(td.cloud().dragModel == "constant")
     {
