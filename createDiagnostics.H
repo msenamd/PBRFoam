@@ -195,3 +195,18 @@ volScalarField radEmPUVbed
      mesh,
      dimensionedScalar("radEmPUVbed", dimEnergy/dimTime/dimVolume,0.0)
  );
+
+
+volScalarField magU
+(
+    IOobject
+    (
+        "magU",
+        runTime.timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    ),
+    mesh,
+    dimensionedScalar("magU",dimLength/dimTime,0.0)
+);

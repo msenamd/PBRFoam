@@ -111,3 +111,6 @@ QradPUVbed = QradPUVbed/max(nCells,1);
 radEmPUVbed = particles.Ep();
 radAbsPUVbed = particles.ap() * 4*G_projected;
 
+
+// Velocity magnitude
+magU = mag(U);
