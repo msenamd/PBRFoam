@@ -88,6 +88,7 @@ int main(int argc, char *argv[])
     OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
     OFstream os_ID(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleID");
     OFstream os_state(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleState");
+    OFstream os_nParticlesPerSuperParticle(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"nParticlesPerSuperParticle");    
     OFstream os_dt(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particledt");
     OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
     OFstream os_velo(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleVelo");
@@ -108,6 +109,7 @@ int main(int argc, char *argv[])
     writeHeader(os_pos, "Cloud<solidParticle>", "positions");
     writeHeader(os_ID, "labelField", "particleID");
     writeHeader(os_state, "labelField", "particleState");
+    writeHeader(os_nParticlesPerSuperParticle, "labelField", "nParticlesPerSuperParticle");
     writeHeader(os_dt, "scalarField", "particledt");
     writeHeader(os_size, "scalarField", "particleSize");
     writeHeader(os_velo, "vectorField", "particleVelo");
@@ -155,6 +157,7 @@ int main(int argc, char *argv[])
     Info<< "Reading inputs" << endl;
 
     const label initState(readLabel(setParticlesDict.lookup("initState")));
+    const label nParticlesPerSuperParticle(readLabel(setParticlesDict.lookup("nParticlesPerSuperParticle")));           
     const scalar initTimeStep(readScalar(setParticlesDict.lookup("initTimeStep")));
     const scalar initSize(readScalar(setParticlesDict.lookup("initSize")));
     const vector initVelo(vector(setParticlesDict.lookup("initVelo")));
@@ -282,6 +285,8 @@ int main(int argc, char *argv[])
     writeData( os_T, mesh, initTemp, numSuperParticles, bbs);
 
     writeData( os_state, mesh, initState, numSuperParticles, bbs); 
+
+    writeData( os_nParticlesPerSuperParticle, mesh, nParticlesPerSuperParticle, numSuperParticles, bbs); 
 
     writeData( os_dt, mesh, initTimeStep, numSuperParticles, bbs);
 

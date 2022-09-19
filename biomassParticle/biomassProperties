@@ -14,8 +14,6 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-nParticlesPerCell   1; 		  //number of particles per grid cell
-
 fuelComposition CHO;
 
 firebrands  		off;

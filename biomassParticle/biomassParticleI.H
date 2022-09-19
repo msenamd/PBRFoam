@@ -59,6 +59,7 @@ inline Foam::biomassParticle::biomassParticle
     const label tetPtI,
     const label particleID,
     const label particleState,
+    const label nParticlesPerSuperParticle,    
     const scalar particledt,
     const scalar particleSize,
     const vector& particleVelo,
@@ -78,6 +79,7 @@ inline Foam::biomassParticle::biomassParticle
 
     particleID_(particleID),    
     particleState_(particleState),
+    nParticlesPerSuperParticle_(nParticlesPerSuperParticle),
     particledt_(particledt),
     particleSize_(particleSize),
     particleVelo_(particleVelo),

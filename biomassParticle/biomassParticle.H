@@ -91,6 +91,9 @@ class biomassParticle
             // Particle state 
             label particleState_;
 
+            // Number of particles per super particle (i.e., multiples of the calculated one) 
+            label nParticlesPerSuperParticle_;
+
             // Particle time step size
             scalar particledt_;
 
@@ -246,6 +249,7 @@ public:
             const label tetPtI,
             const label particleID,
             const label particleState,
+            const label nParticlesPerSuperParticle,            
             const scalar particledt,
             const scalar particleSize,
             const vector& particleVelo,

@@ -48,6 +48,7 @@ Foam::biomassParticle::biomassParticle
 
     particleID_(0),
     particleState_(0),
+    nParticlesPerSuperParticle_(0),
     particledt_(0.0),
     particleSize_(0.0),
     particleVelo_(Zero),    
@@ -181,6 +182,12 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     );
     c.checkFieldIOobject(c, particleState);
 
+    IOField<label> nParticlesPerSuperParticle
+    (
+        c.fieldIOobject("nParticlesPerSuperParticle", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, nParticlesPerSuperParticle);
+
     IOField<scalar> particledt
         (
             c.fieldIOobject("particledt", IOobject::MUST_READ)
@@ -275,6 +282,7 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
 
         bp.particleID_              = particleID[i];
         bp.particleState_           = particleState[i];
+        bp.nParticlesPerSuperParticle_ = nParticlesPerSuperParticle[i];
         bp.particledt_              = particledt[i];
         bp.particleSize_            = particleSize[i];
         bp.particleVelo_            = particleVelo[i];
@@ -318,6 +326,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
 
     IOField<label> particleID(c.fieldIOobject("particleID", IOobject::NO_READ), np);    
     IOField<label> particleState(c.fieldIOobject("particleState", IOobject::NO_READ), np);    
+    IOField<label> nParticlesPerSuperParticle(c.fieldIOobject("nParticlesPerSuperParticle", IOobject::NO_READ), np);    
     IOField<scalar> particledt(c.fieldIOobject("particledt", IOobject::NO_READ), np);
     IOField<scalar> particleSize(c.fieldIOobject("particleSize", IOobject::NO_READ), np);
     IOField<vector> particleVelo(c.fieldIOobject("particleVelo", IOobject::NO_READ), np);
@@ -358,6 +367,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
 
         particleID[i]             = bp.particleID_;
         particleState[i]          = bp.particleState_;
+        nParticlesPerSuperParticle[i] = bp.nParticlesPerSuperParticle_;
         particledt[i]             = bp.particledt_;
         particleSize[i]           = bp.particleSize_;
         particleVelo[i]           = bp.particleVelo_;
@@ -396,6 +406,7 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
 
     particleID.write();
     particleState.write();
+    nParticlesPerSuperParticle.write();
     particledt.write();
     particleSize.write();
     particleVelo.write();
@@ -441,6 +452,7 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
         os  << static_cast<const particle&>(bp)
             << token::SPACE << bp.particleID_
             << token::SPACE << bp.particleState_
+            << token::SPACE << bp.nParticlesPerSuperParticle_
             << token::SPACE << bp.particledt_
             << token::SPACE << bp.particleSize_
             << token::SPACE << bp.particleVelo_

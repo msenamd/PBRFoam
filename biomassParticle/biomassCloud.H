@@ -125,7 +125,6 @@ public:
             solidReaction R1, R2, R3, R4;
 
         // Vegetation bed Properties
-            scalar nParticles;           //number of particles in a super particle      
             word fuel;                   //composition of released fuel
 
         // Motion properties

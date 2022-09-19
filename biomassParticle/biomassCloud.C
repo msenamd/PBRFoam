@@ -157,7 +157,6 @@ Foam::biomassCloud::biomassCloud
     R3(),
     R4(),
 
-    nParticles(readScalar(particleProperties_.lookup("nParticlesPerCell"))),
     fuel(particleProperties_.lookup("fuelComposition")),
 
     firebrands(readBool(particleProperties_.lookup("firebrands"))),

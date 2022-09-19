@@ -24,6 +24,8 @@ fuelBedRegions //single or multiple regions defined by box bounds
 );
 
 
+nParticlesPerSuperParticle   1;	
+
 initTemp 300;
 
 initTimeStep	0.1;
