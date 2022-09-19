@@ -47,10 +47,12 @@ void writeHeader(OFstream& os, word className, word objectName)
 }
 
 // Auxiliary function to write data to output files
+
 template <typename objectType>
 void writeData(
-                OFstream& os, fvMesh& mesh, objectType init, int numSuperParticles, 
-                treeBoundBoxList bbs
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int numSuperParticles, 
+                treeBoundBoxList bbs,
+                scalar meshResolution, List<scalar> initSize                
                 )
 {
     os  << numSuperParticles << nl;
@@ -64,7 +66,43 @@ void writeData(
         {
             if (bbs[i].contains(ctrs[celli]))
             {
+                label numCells = round(initSize[i] / meshResolution);
+                numCells = max(5, numCells);
+
+                List<objectType> init(numCells, initValue[i]);
+
                 os  << init << nl;
+
+                break;
+            }
+        }
+    }
+
+    os  << ')' << nl;
+}
+
+
+template <typename objectType>
+void writeData(
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int numSuperParticles, 
+                treeBoundBoxList bbs              
+                )
+{
+    os  << numSuperParticles << nl;
+    os  << '(' << nl;
+
+    const pointField& ctrs = mesh.cellCentres();
+
+    forAll(ctrs, celli)
+    {
+        forAll(bbs, i)
+        {
+            if (bbs[i].contains(ctrs[celli]))
+            {
+                objectType init(initValue[i]);
+
+                os  << init << nl;
+
                 break;
             }
         }
@@ -91,7 +129,9 @@ int main(int argc, char *argv[])
     OFstream os_nParticlesPerSuperParticle(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"nParticlesPerSuperParticle");    
     OFstream os_dt(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particledt");
     OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
+
     OFstream os_velo(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleVelo");
+
     OFstream os_T(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleTemp");
     OFstream os_p(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particlePressure");
     OFstream os_O2(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleO2MassFraction");
@@ -103,6 +143,14 @@ int main(int argc, char *argv[])
     OFstream os_drySolidMass(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"integralDrySolidMass");
     OFstream os_charMass(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"integralCharMass");
 
+    OFstream os_size0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize0");
+    OFstream os_T0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleTemp0");
+    OFstream os_p0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particlePressure0");
+    OFstream os_O20(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleO2MassFraction0");
+    OFstream os_wetSolidVolFrac0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"wetSolidVolFraction0");
+    OFstream os_drySolidVolFrac0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"drySolidVolFraction0");
+    OFstream os_charVolFrac0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"charVolFraction0");
+    OFstream os_ashVolFrac0(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"ashVolFraction0");
 
 // Write headers
 
@@ -112,7 +160,9 @@ int main(int argc, char *argv[])
     writeHeader(os_nParticlesPerSuperParticle, "labelField", "nParticlesPerSuperParticle");
     writeHeader(os_dt, "scalarField", "particledt");
     writeHeader(os_size, "scalarField", "particleSize");
+
     writeHeader(os_velo, "vectorField", "particleVelo");
+
     writeHeader(os_T, "scalarFieldField", "particleTemp");
     writeHeader(os_p, "scalarFieldField", "particlePressure");
     writeHeader(os_O2, "scalarFieldField", "particleO2MassFraction");
@@ -124,6 +174,14 @@ int main(int argc, char *argv[])
     writeHeader(os_drySolidMass, "scalarFieldField", "integralDrySolidMass");
     writeHeader(os_charMass, "scalarFieldField", "integralCharMass");
 
+    writeHeader(os_size0, "scalarField", "particleSize0");
+    writeHeader(os_T0, "scalarField", "particleTemp0");
+    writeHeader(os_p0, "scalarField", "particlePressure0");
+    writeHeader(os_O20, "scalarField", "particleO2MassFraction0");
+    writeHeader(os_wetSolidVolFrac0, "scalarField", "wetSolidVolFraction0");
+    writeHeader(os_drySolidVolFrac0, "scalarField", "drySolidVolFraction0");
+    writeHeader(os_charVolFrac0, "scalarField", "charVolFraction0");
+    writeHeader(os_ashVolFrac0, "scalarField", "ashVolFraction0");
 
 // Read Auxiliary dicts
 
@@ -154,31 +212,26 @@ int main(int argc, char *argv[])
 
 // Read Input data
 
-    Info<< "Reading inputs" << endl;
-
-    const label initState(readLabel(setParticlesDict.lookup("initState")));
-    const label nParticlesPerSuperParticle(readLabel(setParticlesDict.lookup("nParticlesPerSuperParticle")));           
-    const scalar initTimeStep(readScalar(setParticlesDict.lookup("initTimeStep")));
-    const scalar initSize(readScalar(setParticlesDict.lookup("initSize")));
-    const vector initVelo(vector(setParticlesDict.lookup("initVelo")));
+    Info<< "Reading inputs" << endl; 
 
     const scalar meshResolution(readScalar(biomassProperties.lookup("meshResolution")));
 
-    int numCells = round(initSize / meshResolution);
-    numCells = max(5, numCells);
+    const List<label> initState(List<label>(setParticlesDict.lookup("initState")));
+    const List<label> nParticlesPerSuperParticle(List<label>(setParticlesDict.lookup("nParticlesPerSuperParticle")));   
+    const List<scalar> initSize(List<scalar>(setParticlesDict.lookup("initSize")));
+    const List<scalar> initTimeStep(List<scalar>(setParticlesDict.lookup("initTimeStep")));
+    const List<vector> initVelo(List<vector>(setParticlesDict.lookup("initVelo")));   
+ 
+    const List<scalar> initTemp(List<scalar>(setParticlesDict.lookup("initTemp")));
+    const List<scalar> initGaugeP(List<scalar>(setParticlesDict.lookup("initGaugeP")));
+    const List<scalar> initYO2(List<scalar>(setParticlesDict.lookup("initYO2")));
+    const List<scalar> initWetSolid(List<scalar>(setParticlesDict.lookup("initWetSolid")));
+    const List<scalar> initDrySolid(List<scalar>(setParticlesDict.lookup("initDrySolid")));
+    const List<scalar> initChar(List<scalar>(setParticlesDict.lookup("initChar")));
+    const List<scalar> initAsh(List<scalar>(setParticlesDict.lookup("initAsh")));
+    const List<scalar> Zero(initTemp.size(), 0.0); 
 
-    Info<< "Setting initial particle fields" << endl;
-    const scalarField initTemp(numCells, readScalar(setParticlesDict.lookup("initTemp")));
-    const scalarField initGaugeP(numCells,readScalar(setParticlesDict.lookup("initGaugeP")));
-    const scalarField initYO2(numCells, readScalar(setParticlesDict.lookup("initYO2")));
-    const scalarField initWetSolid(numCells, readScalar(setParticlesDict.lookup("initWetSolid")));
-    const scalarField initDrySolid(numCells, readScalar(setParticlesDict.lookup("initDrySolid")));
-    const scalarField initChar(numCells, readScalar(setParticlesDict.lookup("initChar")));
-    const scalarField initAsh(numCells, readScalar(setParticlesDict.lookup("initAsh")));
-    const scalarField Zero(numCells, 0.0);   
-
-    const pointField probeLocations = setParticlesDict.lookup("probeLocations");
-
+    const List<point> probeLocations(setParticlesDict.lookup("probeLocations"));     
 
 // Set bounding boxes
 
@@ -210,20 +263,28 @@ int main(int argc, char *argv[])
 
     Info << "total number of super particles = " << numSuperParticles << endl;
     
-
 // Write particle positions
+
+    List<vector> position(numSuperParticles);
 
     Info << "Writing particles positions " << endl;
     os_pos  << numSuperParticles << nl;
     os_pos  << '(' << nl;
 
+    int n = 0;
+    
     forAll(ctrs, celli)
     {
         forAll(bbs, i)
         {
             if (bbs[i].contains(ctrs[celli]))
             {
-                os_pos  << mesh.C()[celli] << token::SPACE << 0 << nl;
+                position[n] = mesh.C()[celli];
+                
+                os_pos  << position[n] << token::SPACE << 0 << nl;
+
+                n++;
+
                 break;
             }
         }
@@ -235,46 +296,27 @@ int main(int argc, char *argv[])
 // Write particle IDs
 
     Info << "Writing particles IDs" << endl;
-    os_ID  << numSuperParticles << nl;
-    os_ID  << '(' << nl;
 
-    label particleID = 0;
-    label diagCellID = 0;
+    List<label> particleID(numSuperParticles, 0);
+    List<scalar> magDistance(numSuperParticles, 1e12);
 
-    // search for cells containing a particle closest to the probe location
-    // assign an ID to that particle in the cell
-
-    forAll(ctrs, celli)
+    forAll(probeLocations, probeID)
     {
-        forAll(bbs, i)
+        forAll(position, i)
         {
-            if (bbs[i].contains(ctrs[celli]))
-            {
-                forAll(probeLocations, probeID)
-                {
-                    const vector& location = probeLocations[probeID];
-                    diagCellID = mesh.findCell(location);
-                    if(celli == diagCellID)
-                    {
-                        break;
-                    }
-                }
-
-                if(celli == diagCellID)
-                {
-                    particleID ++;
-                    os_ID  << particleID << nl;
-                }
-                else
-                {
-                    os_ID  << 0 << nl;
-                }
-
-                break;
-            }
+            magDistance[i] = mag(probeLocations[probeID] - position[i]);
         }
+        label k = findMin(magDistance, 0); 
+        particleID[k] = probeID + 1;
     }
 
+
+    os_ID  << numSuperParticles << nl;
+    os_ID  << '(' << nl;
+    forAll(position, i)
+    {
+            os_ID  << particleID[i] << nl;
+    }
     os_ID  << ')' << nl;
 
 
@@ -282,7 +324,8 @@ int main(int argc, char *argv[])
 
     Info << "Writing other particle data" << endl;
 
-    writeData( os_T, mesh, initTemp, numSuperParticles, bbs);
+
+    // write global quantities
 
     writeData( os_state, mesh, initState, numSuperParticles, bbs); 
 
@@ -294,23 +337,44 @@ int main(int argc, char *argv[])
 
     writeData( os_velo, mesh, initVelo, numSuperParticles, bbs); 
 
-    writeData( os_p, mesh, initGaugeP, numSuperParticles, bbs);
+    writeData( os_size0, mesh, initSize, numSuperParticles,  bbs); 
 
-    writeData( os_O2, mesh, initYO2, numSuperParticles, bbs);
+    writeData( os_T0, mesh, initTemp, numSuperParticles, bbs);
 
-    writeData( os_wetSolidVolFrac, mesh, initWetSolid, numSuperParticles, bbs);
+    writeData( os_p0, mesh, initGaugeP, numSuperParticles, bbs);
 
-    writeData( os_drySolidVolFrac, mesh, initDrySolid, numSuperParticles, bbs);
+    writeData( os_O20, mesh, initYO2, numSuperParticles, bbs);
 
-    writeData( os_charVolFrac, mesh, initChar, numSuperParticles, bbs);
+    writeData( os_wetSolidVolFrac0, mesh, initWetSolid, numSuperParticles, bbs);
 
-    writeData( os_ashVolFrac, mesh, initAsh, numSuperParticles, bbs);
+    writeData( os_drySolidVolFrac0, mesh, initDrySolid, numSuperParticles, bbs);
 
-    writeData( os_wetSolidMass, mesh, Zero, numSuperParticles, bbs);
+    writeData( os_charVolFrac0, mesh, initChar, numSuperParticles, bbs);
 
-    writeData( os_drySolidMass, mesh, Zero, numSuperParticles, bbs);
+    writeData( os_ashVolFrac0, mesh, initAsh, numSuperParticles, bbs);
 
-    writeData( os_charMass, mesh, Zero, numSuperParticles, bbs);
+
+    // write particle mesh-based quantities
+
+    writeData( os_T, mesh, initTemp, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_p, mesh, initGaugeP, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_O2, mesh, initYO2, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_wetSolidVolFrac, mesh, initWetSolid, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_drySolidVolFrac, mesh, initDrySolid, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_charVolFrac, mesh, initChar, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_ashVolFrac, mesh, initAsh, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_wetSolidMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_drySolidMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
+
+    writeData( os_charMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
 
     Info << "Done setting particles" << endl;
 

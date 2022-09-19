@@ -75,13 +75,10 @@ class biomassParticle
     public particle
 {
 
-    // Private data
+private:
 
         //- Size in bytes of the fields
         static const std::size_t sizeofFields_;
-
-        //- UMD particle model declaration
-        particle_1D p1D;
 
         // Stored particle data
 
@@ -103,6 +100,21 @@ class biomassParticle
             // Velocity of particle [m/s]
             vector particleVelo_;
 
+public:
+            //- UMD particle model declaration
+            particle_1D p1D;
+
+            // Initial conditions at time Zero
+            scalar particleSize0_;
+            scalar particleTemp0_;                        
+            scalar particlePressure0_;
+            scalar particleO2MassFraction0_;
+            scalar wetSolidVolFraction0_;
+            scalar drySolidVolFraction0_;
+            scalar charVolFraction0_;
+            scalar ashVolFraction0_;
+
+private:
             // Temperautre distribution [K]
             scalarField particleTemp_;
 

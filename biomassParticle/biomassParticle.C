@@ -240,9 +240,8 @@ void Foam::biomassParticle::updateParticle
     scalar externalIrradiation    = td.GInterp().interpolate(position(), celli);
     vector externalGasVelo        = td.UInterp().interpolate(cpw);
 
-    // Pre-computing step
-    p1D = td.cloud().superParticle;
-
+    // Pre-computing step: Passing information to the UMD particle model
+    
     particleTemp_std.resize(particleTemp_.size(), 0.0);
     wetSolidVolFraction_std.resize(wetSolidVolFraction_.size(), 0.0);
     drySolidVolFraction_std.resize(drySolidVolFraction_.size(), 0.0);

@@ -119,7 +119,6 @@ public:
     // Public data
 
         // Reactions and Material classes
-            particle_1D superParticle;
             solidMaterial wetSolid, drySolid, Char, ash;
             Air air;
             solidReaction R1, R2, R3, R4;

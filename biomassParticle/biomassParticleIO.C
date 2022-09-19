@@ -53,6 +53,15 @@ Foam::biomassParticle::biomassParticle
     particleSize_(0.0),
     particleVelo_(Zero),    
 
+    particleSize0_(0.0),
+    particleTemp0_(0.0),                        
+    particlePressure0_(0.0),
+    particleO2MassFraction0_(0.0),
+    wetSolidVolFraction0_(0.0),
+    drySolidVolFraction0_(0.0),
+    charVolFraction0_(0.0),
+    ashVolFraction0_(0.0),
+
     particleTemp_(0.0),
     particlePressure_(0.0),
     particleO2MassFraction_(0.0),    
@@ -208,12 +217,61 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     c.checkFieldIOobject(c, particleVelo);
 
 
+
+    IOField<scalar> particleSize0
+    (
+        c.fieldIOobject("particleSize0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, particleSize0); 
+
+    IOField<scalar> particleTemp0
+    (
+        c.fieldIOobject("particleTemp0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, particleTemp0); 
+
+    IOField<scalar> particlePressure0
+    (
+        c.fieldIOobject("particlePressure0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, particlePressure0); 
+
+    IOField<scalar> particleO2MassFraction0
+    (
+        c.fieldIOobject("particleO2MassFraction0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, particleO2MassFraction0);
+
+    IOField<scalar> wetSolidVolFraction0
+    (
+        c.fieldIOobject("wetSolidVolFraction0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, wetSolidVolFraction0); 
+
+    IOField<scalar> drySolidVolFraction0
+    (
+        c.fieldIOobject("drySolidVolFraction0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, drySolidVolFraction0);
+
+    IOField<scalar> charVolFraction0
+    (
+        c.fieldIOobject("charVolFraction0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, charVolFraction0);
+
+    IOField<scalar> ashVolFraction0
+    (
+        c.fieldIOobject("ashVolFraction0", IOobject::MUST_READ)
+    );
+    c.checkFieldIOobject(c, ashVolFraction0);
+  
+
     IOField<scalarField> particleTemp
     	(
     		c.fieldIOobject("particleTemp", IOobject::MUST_READ)
     	);
     c.checkFieldIOobject(c, particleTemp);
-
 
     IOField<scalarField> particlePressure
         (
@@ -272,7 +330,7 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
     (
         c.fieldIOobject("integralCharMass", IOobject::MUST_READ)
     );
-    c.checkFieldIOobject(c, integralCharMass);  
+    c.checkFieldIOobject(c, integralCharMass);    
 
 
     label i = 0;
@@ -286,6 +344,15 @@ void Foam::biomassParticle::readFields(Cloud<biomassParticle>& c)
         bp.particledt_              = particledt[i];
         bp.particleSize_            = particleSize[i];
         bp.particleVelo_            = particleVelo[i];
+
+        bp.particleSize0_           = particleSize0[i];
+        bp.particleTemp0_           = particleTemp0[i];
+        bp.particlePressure0_       = particlePressure0[i];
+        bp.particleO2MassFraction0_ = particleO2MassFraction0[i];
+        bp.wetSolidVolFraction0_    = wetSolidVolFraction0[i];
+        bp.drySolidVolFraction0_    = drySolidVolFraction0[i];
+        bp.charVolFraction0_        = charVolFraction0[i];
+        bp.ashVolFraction0_         = ashVolFraction0[i];        
 
         bp.particleTemp_            = particleTemp[i];
         bp.particlePressure_        = particlePressure[i];
@@ -330,7 +397,16 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     IOField<scalar> particledt(c.fieldIOobject("particledt", IOobject::NO_READ), np);
     IOField<scalar> particleSize(c.fieldIOobject("particleSize", IOobject::NO_READ), np);
     IOField<vector> particleVelo(c.fieldIOobject("particleVelo", IOobject::NO_READ), np);
-    
+
+    IOField<scalar> particleSize0(c.fieldIOobject("particleSize0", IOobject::NO_READ), np);
+    IOField<scalar> particleTemp0(c.fieldIOobject("particleTemp0", IOobject::NO_READ), np);
+    IOField<scalar> particlePressure0(c.fieldIOobject("particlePressure0", IOobject::NO_READ), np);
+    IOField<scalar> particleO2MassFraction0(c.fieldIOobject("particleO2MassFraction0", IOobject::NO_READ), np);
+    IOField<scalar> wetSolidVolFraction0(c.fieldIOobject("wetSolidVolFraction0", IOobject::NO_READ), np);
+    IOField<scalar> drySolidVolFraction0(c.fieldIOobject("drySolidVolFraction0", IOobject::NO_READ), np);
+    IOField<scalar> charVolFraction0(c.fieldIOobject("charVolFraction0", IOobject::NO_READ), np);
+    IOField<scalar> ashVolFraction0(c.fieldIOobject("ashVolFraction0", IOobject::NO_READ), np);
+
     IOField<scalarField> particleTemp(c.fieldIOobject("particleTemp", IOobject::NO_READ), np);
     IOField<scalarField> particlePressure(c.fieldIOobject("particlePressure", IOobject::NO_READ), np);
     IOField<scalarField> particleO2MassFraction(c.fieldIOobject("particleO2MassFraction", IOobject::NO_READ), np);
@@ -372,6 +448,15 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
         particleSize[i]           = bp.particleSize_;
         particleVelo[i]           = bp.particleVelo_;
 
+        particleSize0[i]           = bp.particleSize0_;
+        particleTemp0[i]           = bp.particleTemp0_;
+        particlePressure0[i]       = bp.particlePressure0_;
+        particleO2MassFraction0[i] = bp.particleO2MassFraction0_;
+        wetSolidVolFraction0[i]    = bp.wetSolidVolFraction0_;
+        drySolidVolFraction0[i]    = bp.drySolidVolFraction0_;
+        charVolFraction0[i]        = bp.charVolFraction0_;
+        ashVolFraction0[i]         = bp.ashVolFraction0_;
+
         particleTemp[i]           = bp.particleTemp_;
         particlePressure[i]       = bp.particlePressure_;
         particleO2MassFraction[i] = bp.particleO2MassFraction_;
@@ -410,7 +495,16 @@ void Foam::biomassParticle::writeFields(const Cloud<biomassParticle>& c)
     particledt.write();
     particleSize.write();
     particleVelo.write();
-    
+
+    particleSize0.write();
+    particleTemp0.write();
+    particlePressure0.write();
+    particleO2MassFraction0.write();
+    wetSolidVolFraction0.write();
+    drySolidVolFraction0.write();
+    charVolFraction0.write();
+    ashVolFraction0.write();
+
     particleTemp.write();
     particlePressure.write();
     particleO2MassFraction.write();
@@ -456,6 +550,16 @@ Foam::Ostream& Foam::operator<<(Ostream& os, const biomassParticle& bp)
             << token::SPACE << bp.particledt_
             << token::SPACE << bp.particleSize_
             << token::SPACE << bp.particleVelo_
+
+            << token::SPACE << bp.particleSize0_
+            << token::SPACE << bp.particleTemp0_
+            << token::SPACE << bp.particlePressure0_
+            << token::SPACE << bp.particleO2MassFraction0_
+            << token::SPACE << bp.wetSolidVolFraction0_
+            << token::SPACE << bp.drySolidVolFraction0_
+            << token::SPACE << bp.charVolFraction0_
+            << token::SPACE << bp.ashVolFraction0_
+            
             << token::SPACE << bp.particleTemp_
             << token::SPACE << bp.particlePressure_
             << token::SPACE << bp.particleO2MassFraction_

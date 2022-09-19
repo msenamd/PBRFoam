@@ -918,31 +918,31 @@ void particle_1D::calcReaction(const std::vector<double>& Temp_,
         for (int i = 0; i < numCells_old; i++)
         {
             R1reactionRate[i] = pow(wetSolid->get_bulkDensity(Temp_[i]) * wetSolidVolFraction_[i]
-                * cellVolume_old[i], R1->get_n())
-                * pow(integralWetSolidMass[i] + initWetSolidMass[i], 1.0 - R1->get_n())
-                * R1->get_A()
-                * exp(-R1->get_Ta() / Temp_[i]);
+                                    * cellVolume_old[i], R1->get_n())
+                    * pow(integralWetSolidMass[i] + initWetSolidMass[i], 1.0 - R1->get_n())
+                    * R1->get_A()
+                    * exp(-R1->get_Ta() / Temp_[i]);
 
             R2reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
-                * cellVolume_old[i], R2->get_n())
-                * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R2->get_n())
-                * R2->get_A()
-                * exp(-R2->get_Ta() / Temp_[i]);
+                                    * cellVolume_old[i], R2->get_n())
+                    * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R2->get_n())
+                    * R2->get_A()
+                    * exp(-R2->get_Ta() / Temp_[i]);
 
             R3reactionRate[i] = pow(drySolid->get_bulkDensity(Temp_[i]) * drySolidVolFraction_[i]
-                * cellVolume_old[i], R3->get_n())
-                * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R3->get_n())
-                * pow(particleO2MassFraction_[i] / 0.226, R3->get_nO2())
-                * R3->get_A()
-                * exp(-R3->get_Ta() / Temp_[i]);
+                                    * cellVolume_old[i], R3->get_n())
+                    * pow(integralDrySolidMass[i] + initDrySolidMass[i], 1.0 - R3->get_n())
+                    * pow(particleO2MassFraction_[i] / 0.226, R3->get_nO2())
+                    * R3->get_A()
+                    * exp(-R3->get_Ta() / Temp_[i]);
 
             // Safety: Avoid extremely high reaction rate at high particle temperature
             R4reactionRate[i] = pow(Char->get_bulkDensity(Temp_[i]) * charVolFraction_[i]
-                * cellVolume_old[i], R4->get_n())
-                * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
-                * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
-                * R4->get_A()
-                * exp(-R4->get_Ta() / min(Temp_[i], 1600.0)); 
+                                    * cellVolume_old[i], R4->get_n())
+                    * pow(integralCharMass[i] + initCharMass[i], 1.0 - R4->get_n())
+                    * pow(particleO2MassFraction_[i] / 0.226, R4->get_nO2())
+                    * R4->get_A()
+                    * exp(-R4->get_Ta() / min(Temp_[i], 1600.0));
         }
     }
 }

@@ -527,44 +527,46 @@ Foam::biomassCloud::biomassCloud
                     );
 
     // Pass the material and reactions to the particle model
-    superParticle.setMaterials(air, wetSolid, drySolid, Char, ash);
-    superParticle.setBurningRateModel(Particle::pyrolysisCharring, R1, R2, R3, R4);
 
+    Info << "   setting particle material, geometry and initial conditions at time zero " << endl;
+    forAllIter(biomassCloud, *this, iter)
+    {
+        iter().p1D.setMaterials(air, wetSolid, drySolid, Char, ash);
 
-    Info << "   setting particle geometry " << endl;
-    superParticle.setGeometry(
+        iter().p1D.setBurningRateModel(Particle::pyrolysisCharring, R1, R2, R3, R4);
+
+        iter().p1D.setGeometry(
                                 shapeName, 
-                                readScalar(setParticlesDict.lookup("initSize")), 
+                                iter().particleSize0_, 
                                 length, 
                                 width
                             );
 
-    Info << "   setting particle solution control " << endl;
-    superParticle.setSolutionControl(
-                                    maxIter,
-                                    meshResolution,
-                                    timeStepThreshold,
-                                    temperatureThreshold,
-                                    solidSpeciesThreshold,
-                                    O2Threshold,
-                                    pressureThreshold,
-                                    temperatureURF,
-                                    solidSpeciesURF,
-                                    O2URF,
-                                    pressureURF,
-                                    flagRemeshing
-                                );
+        iter().p1D.initialize(
+                                iter().particleTemp0_,
+                                iter().wetSolidVolFraction0_,
+                                iter().drySolidVolFraction0_,
+                                iter().charVolFraction0_,
+                                iter().ashVolFraction0_,
+                                iter().particleO2MassFraction0_,
+                                iter().particlePressure0_
+                        );
 
-    Info << "   setting particle information at time Zero  " << endl;
-    superParticle.initialize(
-                                readScalar(setParticlesDict.lookup("initTemp")),
-                                readScalar(setParticlesDict.lookup("initWetSolid")),
-                                readScalar(setParticlesDict.lookup("initDrySolid")),
-                                readScalar(setParticlesDict.lookup("initChar")),
-                                readScalar(setParticlesDict.lookup("initAsh")),
-                                readScalar(setParticlesDict.lookup("initYO2")),
-                                readScalar(setParticlesDict.lookup("initGaugeP"))
-                            );
+        iter().p1D.setSolutionControl(
+                                        maxIter,
+                                        meshResolution,
+                                        timeStepThreshold,
+                                        temperatureThreshold,
+                                        solidSpeciesThreshold,
+                                        O2Threshold,
+                                        pressureThreshold,
+                                        temperatureURF,
+                                        solidSpeciesURF,
+                                        O2URF,
+                                        pressureURF,
+                                        flagRemeshing
+                                    );        
+    }
 
     // Set storage for mass source fields and initialise to zero
     forAll(rhoTrans_, i)
