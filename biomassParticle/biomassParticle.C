@@ -109,7 +109,8 @@ bool Foam::biomassParticle::move
                     << convFlux_ << "," << radFlux_ << "," << massFlux_ << ","
                     << surfaceO2MassFrac_ << "," << hConv_ << "," << CD_ << ","
                     << dryingRate_ << "," << pyrolysisRate_ << "," << oxidPyrolysisRate_ << ","
-                    << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "\n";
+                    << charOxidRate_ << "," << massLossRate_ << "," << heatReleaseRate_ << "," 
+                    << p1D.wetSolidMass << "," << p1D.drySolidMass << "," << p1D.charMass << "\n";
 
 
         std::ofstream TempFile(outputPath/ "particle" + name(particleID_) + "_temperature.csv", ios::app);

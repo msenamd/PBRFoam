@@ -1813,6 +1813,10 @@ void particle_1D::updateOutputs()
 
     //calculate cell based quantities
     localMass_cell.assign(numCells, 0.0);
+    localWetSolidMass_cell.assign(numCells, 0.0);
+    localDrySolidMass_cell.assign(numCells, 0.0);
+    localCharMass_cell.assign(numCells, 0.0);
+
     localMassLossRate_cell.assign(numCells, 0.0);
     localGasFuelReleaseRate_cell.assign(numCells, 0.0);
     localMoistureReleaseRate_cell.assign(numCells, 0.0);
@@ -1828,6 +1832,15 @@ void particle_1D::updateOutputs()
                             + ash->get_bulkDensity(Temp[j]) * ashVolFraction[j]
                             )
                             * cellVolume[j];
+
+        localWetSolidMass_cell[j] = wetSolid->get_bulkDensity(Temp[j]) * wetSolidVolFraction[j]
+                                  * cellVolume[j];
+
+        localDrySolidMass_cell[j] = drySolid->get_bulkDensity(Temp[j]) * drySolidVolFraction[j]
+                                  * cellVolume[j];
+
+        localCharMass_cell[j] = Char->get_bulkDensity(Temp[j]) * charVolFraction[j]
+                              * cellVolume[j];
 
         localMassLossRate_cell[j] = (1.0 - R1->get_productYield()) * R1reactionRate[j]
                                   + (1.0 - R2->get_productYield()) * R2reactionRate[j]
@@ -1850,6 +1863,15 @@ void particle_1D::updateOutputs()
     //accumulate cell based quantities
     particleMass = accumulate(localMass_cell.begin(), localMass_cell.end(), 0.0f)
                    * shape->correctForShape();
+
+    wetSolidMass = accumulate(localWetSolidMass_cell.begin(), localWetSolidMass_cell.end(), 0.0f)
+                   * shape->correctForShape();
+
+    drySolidMass = accumulate(localDrySolidMass_cell.begin(), localDrySolidMass_cell.end(), 0.0f)
+                   * shape->correctForShape();
+
+    charMass = accumulate(localCharMass_cell.begin(), localCharMass_cell.end(), 0.0f)
+               * shape->correctForShape();
 
     localMassLossRate = accumulate(localMassLossRate_cell.begin(), localMassLossRate_cell.end(), 0.0f)
                         * shape->correctForShape();

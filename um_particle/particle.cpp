@@ -31,6 +31,9 @@ Particle::Particle()
     projectedAreaRatio = 0.0;
 
     particleMass = 0.0;
+    wetSolidMass = 0.0;
+    drySolidMass = 0.0;
+    charMass = 0.0;
 
     globalMassReleased = 0.0;          
     globalGasFuelReleased = 0.0; 
@@ -111,6 +114,9 @@ Particle::Particle(const Particle& rhs)
     projectedAreaRatio = rhs.projectedAreaRatio;
 
     particleMass = rhs.particleMass;
+    wetSolidMass = rhs.wetSolidMass;
+    drySolidMass = rhs.drySolidMass;
+    charMass = rhs.charMass;
 
     globalMassReleased = rhs.globalMassReleased;
     globalGasFuelReleased = rhs.globalGasFuelReleased;
@@ -208,6 +214,9 @@ Particle& Particle::operator=(const Particle& rhs)
         projectedAreaRatio = rhs.projectedAreaRatio;
 
         particleMass = rhs.particleMass;
+        wetSolidMass = rhs.wetSolidMass;
+        drySolidMass = rhs.drySolidMass;
+        charMass = rhs.charMass;
 
         globalMassReleased = rhs.globalMassReleased;
         globalGasFuelReleased = rhs.globalGasFuelReleased;

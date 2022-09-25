@@ -95,6 +95,9 @@ public:
     double projectedAreaRatio;          // Particle projected to surface area ratio [-]
 
     double particleMass;                // Mass of the particle [kg]
+    double wetSolidMass;                // Mass of wet solid inside the particle [kg]
+    double drySolidMass;                // Mass of dry solid inside the particle [kg]
+    double charMass;                    // Mass of char inside the particle [kg]
 
     double globalMassReleased;          // Integrated mass released for global time-step [kg]
     double globalGasFuelReleased;       // Integrated mass of the gaseous fuel released for global time-step [kg]

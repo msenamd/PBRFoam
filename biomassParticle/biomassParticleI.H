@@ -137,7 +137,8 @@ inline Foam::biomassParticle::biomassParticle
                     << "convFlux(W/m2)" << "," << "radFlux(W/m2)" << "," << "massFlux(kg/s/m2)" << ","
                     << "surfaceO2MassFrac(-)" << "," << "hConv(W/m2/K)" << "," << "CD(-)" << ","
                     << "dryingRate(kg/s)" << "," << "pyrolysisRate(kg/s)" << "," << "oxidPyrolysisRate(kg/s)" << ","
-                    << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "," << "heatReleaseRate(W)" << "\n";        
+                    << "charOxidRate(kg/s)" << "," << "massLossRate(kg/s)" << "," << "heatReleaseRate(W)" << ","
+                    << "wetSolidMass(kg)" << "," << "drySolidMass(kg)" << "," << "charMass(kg)" << "\n";        
     }
 
 }

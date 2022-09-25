@@ -219,7 +219,11 @@ private:
 		std::vector<double> vectD;
 
         //Quantities for calculating model output
-        std::vector<double> localMass_cell;                  // Mass of each cell during local time-step [kg]
+        std::vector<double> localMass_cell;                 // Total mass of each cell during local time-step [kg]
+        std::vector<double> localWetSolidMass_cell;         // Mass of wet solid in each cell during local time-step [kg]
+        std::vector<double> localDrySolidMass_cell;         // Mass of dry solid in each cell during local time-step [kg]
+        std::vector<double> localCharMass_cell;             // Mass of char in each cell during local time-step [kg]
+
         std::vector<double> localMassLossRate_cell;          // Mass Loss Rate of each cell during local time-step [kg/s]
         std::vector<double> localGasFuelReleaseRate_cell;    // Gaseous fuel release rate from each cell during local time-step [kg/s]     
         std::vector<double> localMoistureReleaseRate_cell;   // Moisturel release rate from each cell during local time-step [kg/s]      
