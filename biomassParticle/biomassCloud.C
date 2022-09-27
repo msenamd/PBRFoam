@@ -542,16 +542,6 @@ Foam::biomassCloud::biomassCloud
                                 width
                             );
 
-        iter().p1D.initialize(
-                                iter().particleTemp0_,
-                                iter().wetSolidVolFraction0_,
-                                iter().drySolidVolFraction0_,
-                                iter().charVolFraction0_,
-                                iter().ashVolFraction0_,
-                                iter().particleO2MassFraction0_,
-                                iter().particlePressure0_
-                        );
-
         iter().p1D.setSolutionControl(
                                         maxIter,
                                         meshResolution,
@@ -565,7 +555,18 @@ Foam::biomassCloud::biomassCloud
                                         O2URF,
                                         pressureURF,
                                         flagRemeshing
-                                    );        
+                                    );  
+        iter().p1D.initialize(
+                                iter().particleTemp0_,
+                                iter().wetSolidVolFraction0_,
+                                iter().drySolidVolFraction0_,
+                                iter().charVolFraction0_,
+                                iter().ashVolFraction0_,
+                                iter().particleO2MassFraction0_,
+                                iter().particlePressure0_
+                        );
+
+      
     }
 
     // Set storage for mass source fields and initialise to zero
