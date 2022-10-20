@@ -172,15 +172,6 @@ public:
                             const double externalIrradiation
                             ) = 0;
 
-    virtual void stepForward_noConv(
-                            const double globalTimeStepSize, 
-                            const double externalTemperature, 
-                            const double externalVelocity,
-                            const double externalO2MassFrac,
-                            const double externalPressure,
-                            const double externalIrradiation
-                            ) = 0;
-
     //clean up particle and destroy any dynamically allocated memory
     virtual void destroy() = 0;
 

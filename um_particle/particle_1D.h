@@ -56,15 +56,6 @@ public:
                             const double externalIrradiation
                         );
 
-        void stepForward_noConv(
-                            const double globalTimeStepSize,
-                            const double externalTemperature,
-                            const double externalVelocity,
-                            const double externalO2MassFrac,
-                            const double externalPressure,
-                            const double externalIrradiation
-                        );
-
         void destroy();
 
         //set convergence critera and relaxation parameters
