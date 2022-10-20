@@ -121,7 +121,7 @@ void solidReaction::set_knownReaction(std::string reactionName, const double& pr
         Ea = 12.086e4;
         n = 1.617;
         nO2 = 0.0;
-        deltaH = -130e+3;
+        deltaH = -210e+3;
         productYield = productYield_;
         O2Yield = 0.0;
     }

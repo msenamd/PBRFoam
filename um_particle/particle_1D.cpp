@@ -810,6 +810,243 @@ void particle_1D::stepForward(
     } //end time loop
 }
 
+void particle_1D::stepForward_noConv(
+    const double globalTimeStepSize,
+    const double externalTemperature,
+    const double externalVelocity,
+    const double externalO2MassFrac,
+    const double externalPressure,
+    const double externalIrradiation
+)
+{
+    // Set time
+    localTime = 0.0;
+    localTimeStepIndex = 0;
+    getNumLocalTimeSteps(globalTimeStepSize);
+
+    // Reset the time accumulated output quantities
+    globalMassReleased = 0.0;
+    globalGasFuelReleased = 0.0;
+    globalMoistureReleased = 0.0;
+    globalCO2Released = 0.0;
+    globalHeatReleased = 0.0;
+
+    // Local time loop
+    while ((localTimeStepIndex < finalTimeStepIndex) && (state != consumed))
+    {
+        localTimeStepIndex++;
+        localTime = localTime + localTimeStepSize;
+
+        // Save solution at previous local time-step
+        numCells_old = numCells;
+        cellVolume_old = cellVolume;
+        cellSize_old = cellSize;
+        Temp_old = Temp;
+        wetSolidVolFraction_old = wetSolidVolFraction;
+        drySolidVolFraction_old = drySolidVolFraction;
+        charVolFraction_old = charVolFraction;
+        ashVolFraction_old = ashVolFraction;
+        particleO2MassFraction_old = particleO2MassFraction;
+        particlePressure_old = particlePressure;
+        surfaceTemp_old = surfaceTemp;
+ 
+        // Calculate thermophyscial properties at old time-step
+        calcThermo();
+
+        // Calculate the reaction rate at old time-step
+        calcReaction(Temp_old, wetSolidVolFraction_old, drySolidVolFraction_old, 
+            charVolFraction_old, ashVolFraction_old, particleO2MassFraction_old);
+
+        // Accumulate time integration of solid species masses (used by the reaction rates)
+        accumulateSolidMass();
+
+        // Calculate the surface areas of cell boundary faces at old time-step
+        calcCellFaceArea();
+
+        // Calculate the heat transfer coefficient based on external flow state
+        h_conv = shape->get_convectiveHeatTransferCoefficient(externalTemperature, surfaceTemp_old, externalVelocity, shape->currentSize);
+        correctForBlowing();
+
+        // Initial guess for the iterative loop
+        Temp_newIter = Temp_old;
+        wetSolidVolFraction_newIter = wetSolidVolFraction_old;
+        drySolidVolFraction_newIter = drySolidVolFraction_old;
+        charVolFraction_newIter = charVolFraction_old;
+        ashVolFraction_newIter = ashVolFraction_old;
+        particleO2MassFraction_newIter = particleO2MassFraction_old;
+        particlePressure_newIter = particlePressure_old;
+        surfaceTemp_newIter = surfaceTemp_old;
+
+        Temp_oldIter = Temp_old;
+        wetSolidVolFraction_oldIter = wetSolidVolFraction_old;
+        drySolidVolFraction_oldIter = drySolidVolFraction_old;
+        charVolFraction_oldIter = charVolFraction_old;
+        ashVolFraction_oldIter = ashVolFraction_old;
+        particleO2MassFraction_oldIter = particleO2MassFraction_old;
+        particlePressure_oldIter = particlePressure_old;
+        surfaceTemp_oldIter = surfaceTemp_old;
+
+        // Begin the iterative loop
+        iter = 0;
+        iterMaxError = 1.0;
+        while ((iter < maxIter) && (iterMaxError > 0.01))
+        {
+            iter++;
+
+            // Save solution at previous iteration
+            for (int i = 0; i < numCells_old; i++)
+            { 
+                Temp_oldIter[i] = 0.5*Temp_newIter[i] + 0.5*Temp_oldIter[i];
+                wetSolidVolFraction_oldIter[i] = 0.5*wetSolidVolFraction_newIter[i] + 0.5*wetSolidVolFraction_oldIter[i];
+                drySolidVolFraction_oldIter[i] = 0.5*drySolidVolFraction_newIter[i] + 0.5*drySolidVolFraction_oldIter[i];
+                charVolFraction_oldIter[i] = 0.5*charVolFraction_newIter[i] + 0.5*charVolFraction_oldIter[i];
+                ashVolFraction_oldIter[i] = 0.5*ashVolFraction_newIter[i] + 0.5*ashVolFraction_oldIter[i];
+                particleO2MassFraction_oldIter[i] = 0.5*particleO2MassFraction_newIter[i] + 0.5*particleO2MassFraction_oldIter[i];
+                particlePressure_oldIter[i] = 0.5*particlePressure_newIter[i] + 0.5*particlePressure_oldIter[i];
+                surfaceTemp_oldIter = 0.5*surfaceTemp_newIter + 0.5*surfaceTemp_oldIter;
+            }
+
+            // Calculate reaction rates from information at old iteration
+            calcReaction(Temp_oldIter, wetSolidVolFraction_oldIter, drySolidVolFraction_oldIter,
+                charVolFraction_oldIter, ashVolFraction_oldIter, particleO2MassFraction_oldIter);
+
+            // Calculate temperature at new time step, at new iteration
+            vectA.assign(numCells_old, 0.0);
+            vectB.assign(numCells_old, 0.0);
+            vectC.assign(numCells_old, 0.0);
+            vectD.assign(numCells_old, 0.0);
+
+            energy_conservation(externalTemperature, externalIrradiation);
+            Temp_newIter = solveTriDiag(vectA, vectB, vectC, vectD);
+
+            vectA.clear();
+            vectB.clear();
+            vectC.clear();
+            vectD.clear();
+
+            // Calculate solid species volume fractions and cell volumes at new iteration
+            mass_conservation();
+
+            // Calculate O2 mass fraction at new iteration
+            vectA.assign(numCells_old, 0.0);
+            vectB.assign(numCells_old, 0.0);
+            vectC.assign(numCells_old, 0.0);
+            vectD.assign(numCells_old, 0.0);
+
+            O2_mass_conservation(externalO2MassFrac);
+            particleO2MassFraction_newIter = solveTriDiag(vectA, vectB, vectC, vectD);
+
+            vectA.clear();
+            vectB.clear();
+            vectC.clear();
+            vectD.clear();
+
+            // Calculate pressure at new iteration
+            vectA.assign(numCells_old, 0.0);
+            vectB.assign(numCells_old, 0.0);
+            vectC.assign(numCells_old, 0.0);
+            vectD.assign(numCells_old, 0.0);
+
+            pressure_equation(externalPressure);
+            particlePressure_newIter = solveTriDiag(vectA, vectB, vectC, vectD);
+
+            vectA.clear();
+            vectB.clear();
+            vectC.clear();
+            vectD.clear();
+
+            //Safety: disallow negative oxygen mass fraction or extreme temperatures
+            for (int i = 0; i < numCells_old; i++)
+            {
+                particleO2MassFraction_newIter[i] = max(0.0, min(particleO2MassFraction_newIter[i], 1.0));
+                Temp_newIter[i] = max(273.0, min(Temp_newIter[i], 3000.0));
+            }
+
+            // Calculate the numerical error of the iterative loop
+            calcIterError();
+
+            iterMaxError = max({
+                                    TempError,
+                                    wetSolidError, drySolidError, charError, ashError,
+                                    O2Error,
+                                    pressureError
+                                });
+
+        } //end iteration loop
+
+        if (iter >= maxIter)
+        {
+            cout << "**** Error. Iterative loop did not converge after " << iter << " iterations" << endl;
+            cout << "**** Iterative loop maximum error = " << iterMaxError << endl;
+            cout.precision(12);
+            cout << "--local time (s) = " << localTime << endl;
+            cout << "   --local time step size (s) = " << localTimeStepSize << endl;
+            cout << "   --local time-step index= " << localTimeStepIndex << endl;
+            cout << "   --iterative loop #iterations = " << iter << endl;
+            cout << "   --iterative loop maximum error = " << iterMaxError << endl;
+            cout << "   --temperature error = " << TempError << endl;
+            cout << "   --wetSolid error = " << wetSolidError << endl;
+            cout << "   --drySolid error = " << drySolidError << endl;
+            cout << "   --char error = " << charError << endl;
+            cout << "   --ash error = " << ashError << endl;
+            cout << "   --O2 error = " << O2Error << endl;
+            cout << "   --pressure error = " << pressureError << endl;
+            cout << "   --max temperature = " << *std::max_element(Temp_newIter.begin(), Temp_newIter.end()) << endl;
+            cout << "   --max pressure = " << *std::max_element(particlePressure_newIter.begin(), particlePressure_newIter.end()) << endl;
+            cout << "   --surface temperature = " << surfaceTemp_newIter << endl;
+            throw exception();
+        }
+
+        // Update solution at new time
+        Temp = Temp_newIter;
+        wetSolidVolFraction = wetSolidVolFraction_newIter;
+        drySolidVolFraction = drySolidVolFraction_newIter;
+        charVolFraction = charVolFraction_newIter;
+        ashVolFraction = ashVolFraction_newIter;
+        particleO2MassFraction = particleO2MassFraction_newIter;
+        particlePressure = particlePressure_newIter;
+
+        // Time-step restriction
+        adjustTimeStep(globalTimeStepSize - localTime);
+
+        // Update computational grid (in case of volume change)
+        moveMesh(xFacePositive, xCellCenter, cellSize, numCells_old, cellVolume);
+
+        // Re-mesh the particle due to size change
+        if (flagRemeshing)
+        {
+            remeshing();
+        }
+ 
+        // Update the conditions at the exposed surface
+        updateExposedSurface(externalTemperature, externalVelocity,
+                             externalO2MassFrac, externalIrradiation);
+
+        // Update model outputs
+        updateOutputs();
+
+        // Update particle state and check burnout
+        state = checkState();
+
+        // check prints
+        #if defined _DEBUG
+        cout.precision(12);
+        cout << "--local time (s) = " << localTime << endl;
+        cout << "   --local time step size (s) = " << localTimeStepSize << endl;
+        cout << "   --local time-step index= " << localTimeStepIndex << endl;
+        cout << "   --iterative loop #iterations = " << iter << endl;
+        cout << "   --iterative loop maximum error = " << iterMaxError << endl;
+        cout << "   --temperature error = " << TempError << endl;
+        cout << "   --wetSolid error = " << wetSolidError << endl;
+        cout << "   --drySolid error = " << drySolidError << endl;
+        cout << "   --char error = " << charError << endl;
+        cout << "   --ash error = " << ashError << endl;
+        cout << "   --O2 error = " << O2Error << endl;
+        cout << "   --pressure error = " << pressureError << endl;
+        #endif      
+    } //end time loop
+}
+
 /**
 * Calculation of reaction rates and thermophysical properties of the porous medium
 * @param
