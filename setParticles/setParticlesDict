@@ -17,34 +17,34 @@ FoamFile
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 fuelBedRegions //single or multiple regions defined by box bounds
 (
-(-0.5 0 -1000) (20 0.399 1000)
-(20 0 -1000) (20.05 0.399 1000) 
-(20.05 0 -1000) (1000 0.399 1000)
+(-0.5 0 -1000) (1000 0.399 1000)
+(-0.5 0 -1000) (1000 0.399 1000)
 );
 
 
-initState	(1 1 1);
+initState	(1 1);
 
-nParticlesPerSuperParticle   (8 1 8);
+nParticlesPerSuperParticle   (8 1);
 
-initTimeStep	(0.1 0.1 0.1);
+initTimeStep	(0.1 0.1);
 
-initSize 	(1e-3 1e-2 1e-3);
+initSize 	(1e-3 1e-2);
 
-initVelo 	((0 0 0) (0 0 0) (0 0 0));
+initVelo 	((0 0 0) (0 0 0));
 
-initTemp 	(300 300 300);
-initYO2 	(0.233 0.233 0.233);
-initGaugeP 	(0.0 0.0 0.0);
-initWetSolid	(1.0 1.0 1.0);
-initDrySolid	(0.0 0.0 0.0);
-initChar	(0.0 0.0 0.0);
-initAsh		(0.0 0.0 0.0);
+initTemp 	(300 300);
+initYO2 	(0.233 0.233);
+initGaugeP 	(0.0 0.0);
+initWetSolid	(1.0 1.0);
+initDrySolid	(0.0 0.0);
+initChar	(0.0 0.0);
+initAsh		(0.0 0.0);
 
 probeLocations
 (
-(	20.025		0		0	)
-(	20.025		0.3999		0	)
+(	40.025		0		0	)
+(	40.025		0.2		0	)
+(	40.025		0.3999		0	)
 );
 
 // ************************************************************************* //

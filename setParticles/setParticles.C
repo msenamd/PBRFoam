@@ -50,19 +50,19 @@ void writeHeader(OFstream& os, word className, word objectName)
 
 template <typename objectType>
 void writeData(
-                OFstream& os, fvMesh& mesh, List<objectType> initValue, int numSuperParticles, 
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int totNumSuperParticles, 
                 treeBoundBoxList bbs,
                 scalar meshResolution, List<scalar> initSize                
                 )
 {
-    os  << numSuperParticles << nl;
+    os  << totNumSuperParticles << nl;
     os  << '(' << nl;
 
     const pointField& ctrs = mesh.cellCentres();
 
-    forAll(ctrs, celli)
+    forAll(bbs, i)
     {
-        forAll(bbs, i)
+        forAll(ctrs, celli)
         {
             if (bbs[i].contains(ctrs[celli]))
             {
@@ -72,8 +72,6 @@ void writeData(
                 List<objectType> init(numCells, initValue[i]);
 
                 os  << init << nl;
-
-                break;
             }
         }
     }
@@ -84,26 +82,24 @@ void writeData(
 
 template <typename objectType>
 void writeData(
-                OFstream& os, fvMesh& mesh, List<objectType> initValue, int numSuperParticles, 
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int totNumSuperParticles, 
                 treeBoundBoxList bbs              
                 )
 {
-    os  << numSuperParticles << nl;
+    os  << totNumSuperParticles << nl;
     os  << '(' << nl;
 
     const pointField& ctrs = mesh.cellCentres();
 
-    forAll(ctrs, celli)
+    forAll(bbs, i)
     {
-        forAll(bbs, i)
+        forAll(ctrs, celli)
         {
             if (bbs[i].contains(ctrs[celli]))
             {
                 objectType init(initValue[i]);
 
                 os  << init << nl;
-
-                break;
             }
         }
     }
@@ -242,50 +238,61 @@ int main(int argc, char *argv[])
 
     Info<< "setting fuel bed in regions: " << bbs << endl;
 
+// Assign ids to groups (labeled multiples of million 1000000)
+    List<label> groupID(bbs.size(), 0);
+
+    forAll(bbs, i)
+    {
+        groupID[i] = (i+1)*1000000;
+    }
+
+    Info << "groupID = " << groupID << endl;
 
 // Set the number of super particles
 
     const pointField& ctrs = mesh.cellCentres();
 
-    int numSuperParticles = 0;
+    List<label> numSuperParticles(bbs.size(), 0);
+    label totNumSuperParticles(0);
 
-    forAll(ctrs, celli)
+    forAll(bbs, i)
     {
-        forAll(bbs, i)
+        forAll(ctrs, celli)
         {
             if (bbs[i].contains(ctrs[celli]))
             {
-                numSuperParticles += 1;
-                break;
+                numSuperParticles[i]++;
+
+                totNumSuperParticles++;
             }
         }
     }
 
-    Info << "total number of super particles = " << numSuperParticles << endl;
-    
+    Info << "number of super particles per region = " << numSuperParticles << endl;
+    Info << "total number of super particles = " << totNumSuperParticles << endl;
+
+
 // Write particle positions
 
-    List<vector> position(numSuperParticles);
+    List<List<vector>> positions(numSuperParticles);
 
     Info << "Writing particles positions " << endl;
-    os_pos  << numSuperParticles << nl;
+    os_pos  << totNumSuperParticles << nl;
     os_pos  << '(' << nl;
 
-    int n = 0;
-    
-    forAll(ctrs, celli)
+    forAll(bbs, i)
     {
-        forAll(bbs, i)
+        label n = 0;
+
+        forAll(ctrs, celli)
         {
             if (bbs[i].contains(ctrs[celli]))
             {
-                position[n] = mesh.C()[celli];
+                positions[i][n] = mesh.C()[celli];
                 
-                os_pos  << position[n] << token::SPACE << 0 << nl;
+                os_pos  << positions[i][n] << token::SPACE << 0 << nl;
 
                 n++;
-
-                break;
             }
         }
     }
@@ -297,26 +304,39 @@ int main(int argc, char *argv[])
 
     Info << "Writing particles IDs" << endl;
 
-    List<label> particleID(numSuperParticles, 0);
-    List<scalar> magDistance(numSuperParticles, 1e12);
-
-    forAll(probeLocations, probeID)
+    List<List<label>> particleID(numSuperParticles);
+    forAll(particleID, i)
     {
-        forAll(position, i)
+            particleID[i] = 0;
+    }
+
+    forAll(bbs, i)
+    {
+        List<scalar> magDistance(numSuperParticles[i], 1e12);
+        
+        forAll(probeLocations, probeID)
         {
-            magDistance[i] = mag(probeLocations[probeID] - position[i]);
+            forAll(positions[i], n)
+            {
+                magDistance[n] = mag(probeLocations[probeID] - positions[i][n]);
+            }
+
+            label k = findMin(magDistance, 0); 
+            particleID[i][k] = groupID[i] + probeID + 1;
         }
-        label k = findMin(magDistance, 0); 
-        particleID[k] = probeID + 1;
     }
 
-
-    os_ID  << numSuperParticles << nl;
+    os_ID  << totNumSuperParticles << nl;
     os_ID  << '(' << nl;
-    forAll(position, i)
+    
+    forAll(bbs, i)
     {
-            os_ID  << particleID[i] << nl;
+        forAll(positions[i], n)
+        {
+                os_ID  << particleID[i][n] << nl;
+        }
     }
+
     os_ID  << ')' << nl;
 
 
@@ -327,54 +347,54 @@ int main(int argc, char *argv[])
 
     // write global quantities
 
-    writeData( os_state, mesh, initState, numSuperParticles, bbs); 
+    writeData( os_state, mesh, initState, totNumSuperParticles, bbs); 
 
-    writeData( os_nParticlesPerSuperParticle, mesh, nParticlesPerSuperParticle, numSuperParticles, bbs); 
+    writeData( os_nParticlesPerSuperParticle, mesh, nParticlesPerSuperParticle, totNumSuperParticles, bbs); 
 
-    writeData( os_dt, mesh, initTimeStep, numSuperParticles, bbs);
+    writeData( os_dt, mesh, initTimeStep, totNumSuperParticles, bbs);
 
-    writeData( os_size, mesh, initSize, numSuperParticles,  bbs); 
+    writeData( os_size, mesh, initSize, totNumSuperParticles,  bbs); 
 
-    writeData( os_velo, mesh, initVelo, numSuperParticles, bbs); 
+    writeData( os_velo, mesh, initVelo, totNumSuperParticles, bbs); 
 
-    writeData( os_size0, mesh, initSize, numSuperParticles,  bbs); 
+    writeData( os_size0, mesh, initSize, totNumSuperParticles,  bbs); 
 
-    writeData( os_T0, mesh, initTemp, numSuperParticles, bbs);
+    writeData( os_T0, mesh, initTemp, totNumSuperParticles, bbs);
 
-    writeData( os_p0, mesh, initGaugeP, numSuperParticles, bbs);
+    writeData( os_p0, mesh, initGaugeP, totNumSuperParticles, bbs);
 
-    writeData( os_O20, mesh, initYO2, numSuperParticles, bbs);
+    writeData( os_O20, mesh, initYO2, totNumSuperParticles, bbs);
 
-    writeData( os_wetSolidVolFrac0, mesh, initWetSolid, numSuperParticles, bbs);
+    writeData( os_wetSolidVolFrac0, mesh, initWetSolid, totNumSuperParticles, bbs);
 
-    writeData( os_drySolidVolFrac0, mesh, initDrySolid, numSuperParticles, bbs);
+    writeData( os_drySolidVolFrac0, mesh, initDrySolid, totNumSuperParticles, bbs);
 
-    writeData( os_charVolFrac0, mesh, initChar, numSuperParticles, bbs);
+    writeData( os_charVolFrac0, mesh, initChar, totNumSuperParticles, bbs);
 
-    writeData( os_ashVolFrac0, mesh, initAsh, numSuperParticles, bbs);
+    writeData( os_ashVolFrac0, mesh, initAsh, totNumSuperParticles, bbs);
 
 
     // write particle mesh-based quantities
 
-    writeData( os_T, mesh, initTemp, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_T, mesh, initTemp, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_p, mesh, initGaugeP, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_p, mesh, initGaugeP, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_O2, mesh, initYO2, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_O2, mesh, initYO2, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_wetSolidVolFrac, mesh, initWetSolid, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_wetSolidVolFrac, mesh, initWetSolid, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_drySolidVolFrac, mesh, initDrySolid, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_drySolidVolFrac, mesh, initDrySolid, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_charVolFrac, mesh, initChar, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_charVolFrac, mesh, initChar, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_ashVolFrac, mesh, initAsh, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_ashVolFrac, mesh, initAsh, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_wetSolidMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_wetSolidMass, mesh, Zero, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_drySolidMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_drySolidMass, mesh, Zero, totNumSuperParticles, bbs, meshResolution, initSize);
 
-    writeData( os_charMass, mesh, Zero, numSuperParticles, bbs, meshResolution, initSize);
+    writeData( os_charMass, mesh, Zero, totNumSuperParticles, bbs, meshResolution, initSize);
 
     Info << "Done setting particles" << endl;
 
