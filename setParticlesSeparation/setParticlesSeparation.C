@@ -19,10 +19,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 Application
-    setParticlesSeparation -- written by Mohamed Ahmed
+    setParticles -- written by Mohamed Ahmed
 Description
     outputs locations of lagrangian particles
-    Reads in setParticlesDict
+    Reads in setParticlesDict.
 \*---------------------------------------------------------------------------*/
 
 
@@ -46,25 +46,57 @@ void writeHeader(OFstream& os, word className, word objectName)
     os << nl;
 }
 
-
 // Auxiliary function to write data to output files
+
 template <typename objectType>
 void writeData(
-                OFstream& os, fvMesh& mesh, objectType init, int nParticles, 
-                List<vector> position
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int totNumSuperParticles, 
+                List<List<vector>> positions,
+                scalar meshResolution, List<scalar> initSize                
                 )
 {
-    os  << nParticles << nl;
+    os  << totNumSuperParticles << nl;
     os  << '(' << nl;
 
-    forAll(position, i)
+    forAll(initValue, i)
     {
-                os  << init << nl;
+        forAll(positions[i], posI)
+        {
+            label numCells = round(initSize[i] / meshResolution);
+            numCells = max(5, numCells);
+
+            List<objectType> init(numCells, initValue[i]);
+
+            os  << init << nl;
+        }
     }
 
     os  << ')' << nl;
 }
 
+
+template <typename objectType>
+void writeData(
+                OFstream& os, fvMesh& mesh, List<objectType> initValue, int totNumSuperParticles, 
+                List<List<vector>> positions            
+                )
+{
+    os  << totNumSuperParticles << nl;
+    os  << '(' << nl;
+
+    forAll(initValue, i)
+    {
+        forAll(positions[i], posI)
+        {
+
+            objectType init(initValue[i]);
+
+            os  << init << nl;
+        }
+    }
+
+    os  << ')' << nl;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,10 +113,12 @@ int main(int argc, char *argv[])
     OFstream os_pos(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"positions");
     OFstream os_ID(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleID");
     OFstream os_state(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleState");
-    OFstream os_nParticlesPerSuperParticle(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"nParticlesPerSuperParticle");        
+    OFstream os_nParticlesPerSuperParticle(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"nParticlesPerSuperParticle");    
     OFstream os_dt(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particledt");
     OFstream os_size(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleSize");
+
     OFstream os_velo(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleVelo");
+
     OFstream os_T(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleTemp");
     OFstream os_p(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particlePressure");
     OFstream os_O2(runTime.path()/"0"/"lagrangian"/"vegetationBed"/"particleO2MassFraction");
@@ -113,7 +147,9 @@ int main(int argc, char *argv[])
     writeHeader(os_nParticlesPerSuperParticle, "labelField", "nParticlesPerSuperParticle");
     writeHeader(os_dt, "scalarField", "particledt");
     writeHeader(os_size, "scalarField", "particleSize");
+
     writeHeader(os_velo, "vectorField", "particleVelo");
+
     writeHeader(os_T, "scalarFieldField", "particleTemp");
     writeHeader(os_p, "scalarFieldField", "particlePressure");
     writeHeader(os_O2, "scalarFieldField", "particleO2MassFraction");
@@ -163,81 +199,104 @@ int main(int argc, char *argv[])
 
 // Read Input data
 
-    Info<< "Reading inputs" << endl;
+    Info<< "Reading inputs" << endl; 
 
     const scalar meshResolution(readScalar(biomassProperties.lookup("meshResolution")));
-    const scalar width(readScalar(biomassProperties.lookup("width")));
-    const scalar length(readScalar(biomassProperties.lookup("length")));
+    const scalar width(readScalar(biomassProperties.lookup("width")));      // needs to be a list
+    const scalar length(readScalar(biomassProperties.lookup("length")));    // needs to be a list
 
-    const label initState(readLabel(setParticlesDict.lookup("initState")));  
-    const label nParticlesPerSuperParticle(readLabel(setParticlesDict.lookup("nParticlesPerSuperParticle")));         
-    const scalar initTimeStep(readScalar(setParticlesDict.lookup("initTimeStep")));
-    const scalar initSize(readScalar(setParticlesDict.lookup("initSize")));
-    const vector initVelo(vector(setParticlesDict.lookup("initVelo")));
+    const List<label> initState(List<label>(setParticlesDict.lookup("initState")));
+    const List<label> nParticlesPerSuperParticle(List<label>(setParticlesDict.lookup("nParticlesPerSuperParticle")));   
+    const List<scalar> initSize(List<scalar>(setParticlesDict.lookup("initSize")));
+    const List<scalar> initTimeStep(List<scalar>(setParticlesDict.lookup("initTimeStep")));
+    const List<vector> initVelo(List<vector>(setParticlesDict.lookup("initVelo")));   
+ 
+    const List<scalar> initTemp(List<scalar>(setParticlesDict.lookup("initTemp")));
+    const List<scalar> initGaugeP(List<scalar>(setParticlesDict.lookup("initGaugeP")));
+    const List<scalar> initYO2(List<scalar>(setParticlesDict.lookup("initYO2")));
+    const List<scalar> initWetSolid(List<scalar>(setParticlesDict.lookup("initWetSolid")));
+    const List<scalar> initDrySolid(List<scalar>(setParticlesDict.lookup("initDrySolid")));
+    const List<scalar> initChar(List<scalar>(setParticlesDict.lookup("initChar")));
+    const List<scalar> initAsh(List<scalar>(setParticlesDict.lookup("initAsh")));
+    const List<scalar> Zero(initTemp.size(), 0.0); 
 
-    int numCells = round(initSize / meshResolution);
-    numCells = max(5, numCells);
+    const List<point> probeLocations(setParticlesDict.lookup("probeLocations"));     
 
-    const scalarField initTemp(numCells, readScalar(setParticlesDict.lookup("initTemp")));
-    const scalarField initGaugeP(numCells,readScalar(setParticlesDict.lookup("initGaugeP")));
-    const scalarField initYO2(numCells, readScalar(setParticlesDict.lookup("initYO2")));
-    const scalarField initWetSolid(numCells, readScalar(setParticlesDict.lookup("initWetSolid")));
-    const scalarField initDrySolid(numCells, readScalar(setParticlesDict.lookup("initDrySolid")));
-    const scalarField initChar(numCells, readScalar(setParticlesDict.lookup("initChar")));
-    const scalarField initAsh(numCells, readScalar(setParticlesDict.lookup("initAsh")));
-    const scalarField Zero(numCells, 0.0);   
+    const List<scalar> separationStreamwise(List<scalar>(setParticlesDict.lookup("separationStreamwise")));
+    const List<scalar> separationSpanwise(List<scalar>(setParticlesDict.lookup("separationSpanwise")));
 
-    const pointField probeLocations = setParticlesDict.lookup("probeLocations");
+    const List<vector> boundingBoxMin(List<vector>(setParticlesDict.lookup("boundingBoxMin")));
+    const List<vector> boundingBoxMax(List<vector>(setParticlesDict.lookup("boundingBoxMax")));
 
-    const scalar separationStreamwise(readScalar(setParticlesDict.lookup("separationStreamwise")));
-    const scalar separationSpanwise(readScalar(setParticlesDict.lookup("separationSpanwise")));
 
-    const vector boundingBoxMin(vector(setParticlesDict.lookup("boundingBoxMin")));
-    const vector boundingBoxMax(vector(setParticlesDict.lookup("boundingBoxMax")));
+// Assign ids to groups (labeled multiples of million 1000000)
+
+    List<label> groupID(boundingBoxMin.size(), 0);
+
+    forAll(boundingBoxMin, boxI)
+    {
+        groupID[boxI] = (boxI+1)*1000000;
+    }
+
+    Info << "groupID = " << groupID << endl;
 
 
 // Set the number of super particles
 
-    label nParticlesStreamwise = (boundingBoxMax.x() - boundingBoxMin.x()) / (separationStreamwise + 2*initSize);
-    label nParticlesSpanwise = (boundingBoxMax.z() - boundingBoxMin.z()) / (separationSpanwise + width);
-    label nParticlesHeight = (boundingBoxMax.y() - boundingBoxMin.y()) / (length);
+    List<label> numSuperParticles(boundingBoxMin.size(), 0);
 
-    Info << "nParticlesStreamwise = " << nParticlesStreamwise << endl;
-    Info << "nParticlesSpanwise = " << nParticlesSpanwise << endl;
-    Info << "nParticlesHeight = " << nParticlesHeight << endl;
+    List<label> nParticlesStreamwise(boundingBoxMin.size(), 0);
+    List<label> nParticlesSpanwise(boundingBoxMin.size(), 0);
+    List<label> nParticlesHeight(boundingBoxMin.size(), 0);
 
+    label totNumSuperParticles(0);
 
-    int nParticles = nParticlesStreamwise * nParticlesSpanwise * nParticlesHeight;
+    forAll(boundingBoxMin, boxI)
+    {
 
-    Info << "total number of super particles = " << nParticles << endl;
+        nParticlesStreamwise[boxI] = (boundingBoxMax[boxI].x() - boundingBoxMin[boxI].x()) / (separationStreamwise[boxI] + 2*initSize[boxI]);
+        nParticlesSpanwise[boxI] = (boundingBoxMax[boxI].z() - boundingBoxMin[boxI].z()) / (separationSpanwise[boxI] + width);
+        nParticlesHeight[boxI] = (boundingBoxMax[boxI].y() - boundingBoxMin[boxI].y()) / (length);
 
-    List<vector> position(nParticles);
+        numSuperParticles[boxI] = nParticlesStreamwise[boxI] * nParticlesSpanwise[boxI] * nParticlesHeight[boxI];
+
+        totNumSuperParticles += numSuperParticles[boxI];
+    }
+
+    Info << "number of super particles per region = " << numSuperParticles << endl;
+    Info << "total number of super particles = " << totNumSuperParticles << endl;
+
 
 // Write particle positions
 
+    List<List<vector>> positions(numSuperParticles);
+
     Info << "Writing particles positions " << endl;
-    os_pos  << nParticles << nl;
+    os_pos  << totNumSuperParticles << nl;
     os_pos  << '(' << nl;
 
-    int n = 0;
-    for (int i = 0 ; i < nParticlesStreamwise ; i++ )
+    forAll(boundingBoxMin, boxI)
     {
-        for (int j = 0 ; j < nParticlesHeight ; j++ )
+        label n = 0;
+
+        for (int i = 0 ; i < nParticlesStreamwise[boxI] ; i++ )
         {
-            for (int k = 0 ; k < nParticlesSpanwise ; k++ )
+            for (int j = 0 ; j < nParticlesHeight[boxI] ; j++ )
             {
-                position[n].x() =  boundingBoxMin.x() + initSize + i*(separationStreamwise + 2*initSize) ;
-                position[n].y() =  boundingBoxMin.y() + length/2.0 + j*length ;
-                position[n].z() =  boundingBoxMin.z() + width/2.0 + k*(separationSpanwise + width) ;
+                for (int k = 0 ; k < nParticlesSpanwise[boxI] ; k++ )
+                {
+                    positions[boxI][n].x() =  boundingBoxMin[boxI].x() + initSize[boxI] + i*(separationStreamwise[boxI] + 2*initSize[boxI]) ;
+                    positions[boxI][n].y() =  boundingBoxMin[boxI].y() + length/2.0 + j*length ;
+                    positions[boxI][n].z() =  boundingBoxMin[boxI].z() + width/2.0 + k*(separationSpanwise[boxI] + width) ;
 
-                os_pos  << position[n]
-                        << token::SPACE << 0 
-                        << nl;
+                    os_pos  << positions[boxI][n] << token::SPACE << 0 << nl;
 
-                n++;        
+                    n++;        
+                }
             }
         }
     }
+
     os_pos  << ')' << nl;
 
 
@@ -245,26 +304,39 @@ int main(int argc, char *argv[])
 
     Info << "Writing particles IDs" << endl;
 
-    List<label> particleID(nParticles, 0);
-    List<scalar> magDistance(nParticles, 1e12);
-
-    forAll(probeLocations, probeID)
+    List<List<label>> particleID(numSuperParticles);
+    forAll(particleID, i)
     {
-        forAll(position, i)
+            particleID[i] = 0;
+    }
+
+    forAll(boundingBoxMin, i)
+    {
+        List<scalar> magDistance(numSuperParticles[i], 1e12);
+        
+        forAll(probeLocations, probeID)
         {
-            magDistance[i] = mag(probeLocations[probeID] - position[i]);
+            forAll(positions[i], n)
+            {
+                magDistance[n] = mag(probeLocations[probeID] - positions[i][n]);
+            }
+
+            label k = findMin(magDistance, 0); 
+            particleID[i][k] = groupID[i] + probeID + 1;
         }
-        label k = findMin(magDistance, 0); 
-        particleID[k] = probeID + 1;
     }
 
-
-    os_ID  << nParticles << nl;
+    os_ID  << totNumSuperParticles << nl;
     os_ID  << '(' << nl;
-    forAll(position, i)
+    
+    forAll(boundingBoxMin, i)
     {
-            os_ID  << particleID[i] << nl;
+        forAll(positions[i], n)
+        {
+                os_ID  << particleID[i][n] << nl;
+        }
     }
+
     os_ID  << ')' << nl;
 
 
@@ -272,56 +344,59 @@ int main(int argc, char *argv[])
 
     Info << "Writing other particle data" << endl;
 
-    writeData( os_T, mesh, initTemp, nParticles, position);
 
-    writeData( os_state, mesh, initState, nParticles, position); 
+    // write global quantities
 
-    writeData( os_nParticlesPerSuperParticle, mesh, nParticlesPerSuperParticle, nParticles, position); 
+    writeData( os_state, mesh, initState, totNumSuperParticles, positions); 
 
-    writeData( os_dt, mesh, initTimeStep, nParticles, position);
+    writeData( os_nParticlesPerSuperParticle, mesh, nParticlesPerSuperParticle, totNumSuperParticles, positions); 
 
-    writeData( os_size, mesh, initSize, nParticles,  position); 
+    writeData( os_dt, mesh, initTimeStep, totNumSuperParticles, positions);
 
-    writeData( os_velo, mesh, initVelo, nParticles, position); 
+    writeData( os_size, mesh, initSize, totNumSuperParticles,  positions); 
 
-    writeData( os_p, mesh, initGaugeP, nParticles, position);
+    writeData( os_velo, mesh, initVelo, totNumSuperParticles, positions); 
 
-    writeData( os_O2, mesh, initYO2, nParticles, position);
+    writeData( os_size0, mesh, initSize, totNumSuperParticles,  positions); 
 
-    writeData( os_wetSolidVolFrac, mesh, initWetSolid, nParticles, position);
+    writeData( os_T0, mesh, initTemp, totNumSuperParticles, positions);
 
-    writeData( os_drySolidVolFrac, mesh, initDrySolid, nParticles, position);
+    writeData( os_p0, mesh, initGaugeP, totNumSuperParticles, positions);
 
-    writeData( os_charVolFrac, mesh, initChar, nParticles, position);
+    writeData( os_O20, mesh, initYO2, totNumSuperParticles, positions);
 
-    writeData( os_ashVolFrac, mesh, initAsh, nParticles, position);
+    writeData( os_wetSolidVolFrac0, mesh, initWetSolid, totNumSuperParticles, positions);
 
-    writeData( os_wetSolidMass, mesh, Zero, nParticles, position);
+    writeData( os_drySolidVolFrac0, mesh, initDrySolid, totNumSuperParticles, positions);
 
-    writeData( os_drySolidMass, mesh, Zero, nParticles, position);
+    writeData( os_charVolFrac0, mesh, initChar, totNumSuperParticles, positions);
 
-    writeData( os_charMass, mesh, Zero, nParticles, position);
-
+    writeData( os_ashVolFrac0, mesh, initAsh, totNumSuperParticles, positions);
 
 
-    writeData( os_size0, mesh, readScalar(setParticlesDict.lookup("initSize")), nParticles,  position); 
+    // write particle mesh-based quantities
 
-    writeData( os_T0, mesh, readScalar(setParticlesDict.lookup("initTemp")), nParticles, position);
+    writeData( os_T, mesh, initTemp, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_p0, mesh, readScalar(setParticlesDict.lookup("initGaugeP")), nParticles, position);
+    writeData( os_p, mesh, initGaugeP, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_O20, mesh, readScalar(setParticlesDict.lookup("initYO2")), nParticles, position);
+    writeData( os_O2, mesh, initYO2, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_wetSolidVolFrac0, mesh, readScalar(setParticlesDict.lookup("initWetSolid")), nParticles, position);
+    writeData( os_wetSolidVolFrac, mesh, initWetSolid, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_drySolidVolFrac0, mesh, readScalar(setParticlesDict.lookup("initDrySolid")), nParticles, position);
+    writeData( os_drySolidVolFrac, mesh, initDrySolid, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_charVolFrac0, mesh, readScalar(setParticlesDict.lookup("initChar")), nParticles, position);
+    writeData( os_charVolFrac, mesh, initChar, totNumSuperParticles, positions, meshResolution, initSize);
 
-    writeData( os_ashVolFrac0, mesh, readScalar(setParticlesDict.lookup("initAsh")), nParticles, position);
+    writeData( os_ashVolFrac, mesh, initAsh, totNumSuperParticles, positions, meshResolution, initSize);
+
+    writeData( os_wetSolidMass, mesh, Zero, totNumSuperParticles, positions, meshResolution, initSize);
+
+    writeData( os_drySolidMass, mesh, Zero, totNumSuperParticles, positions, meshResolution, initSize);
+
+    writeData( os_charMass, mesh, Zero, totNumSuperParticles, positions, meshResolution, initSize);
 
     Info << "Done setting particles" << endl;
-
 
     return(0);
 }

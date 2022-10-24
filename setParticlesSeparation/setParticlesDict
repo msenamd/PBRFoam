@@ -16,34 +16,44 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-boundingBoxMin		(-2.5 -5 0); 	// mimmum coordinates of the fuel bed
-boundingBoxMax		(2.5 5 10);	// maximum coordinates of the fuel bed
+boundingBoxMin
+(
+(-0.475 0 0)
+(38.001 0 0)
+);
 
-separationStreamwise	2.5;
-separationSpanwise	5;
+boundingBoxMax
+(
+(118 0.4 0.1)
+(42.001 0.4 0.1)
+);
 
-initState	1;
+separationStreamwise	(0.048 0.1);
+separationSpanwise	(0.1 0.1);
 
-nParticlesPerSuperParticle   1;
+initState	(1 1);
 
-initTimeStep	1e-3;
+nParticlesPerSuperParticle   (8 1);
 
-initSize 	1e-3;
+initTimeStep	(0.1 0.1);
 
-initVelo 	(0 0 0);
+initSize 	(1e-3 1e-2);
 
-initTemp 	300;
-initYO2 	0.233;
-initGaugeP 	0.0;
-initWetSolid	1.0;
-initDrySolid	0.0;
-initChar	0.0;
-initAsh		0.0;
+initVelo 	((0 0 0) (0 0 0));
+
+initTemp 	(300 300);
+initYO2 	(0.233 0.233);
+initGaugeP 	(0.0 0.0);
+initWetSolid	(1.0 1.0);
+initDrySolid	(0.0 0.0);
+initChar	(0.0 0.0);
+initAsh		(0.0 0.0);
 
 probeLocations
 (
-	(0.0 0.0 0.0)
+(	40		0		0	)
+(	40		0.2		0	)
+(	40		0.4		0	)
 );
-
 
 // ************************************************************************* //
