@@ -403,33 +403,33 @@ void Foam::biomassParticle::updateParticle
     //  Vegetation bed diagnostic fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    // vegetaion bed state (-)
+    // vegetaion bed state (-) (one representative particle)
     td.cloud().state[celli] = particleState_;
 
-    // vegetaion bed mass (kg)
-    td.cloud().mass[celli] = nParticlesPerSuperParticle_ * particleMass_;
+    // vegetaion bed mass (kg) (accumulated)
+    td.cloud().mass[celli] += nParticlesPerSuperParticle_ * particleMass_ * dt_;
 
-    // Mass rates per unit volume of vegetation bed (kg/s/m3)
-    td.cloud().massLossRatePUVbed[celli]        = nParticlesPerSuperParticle_ * p1D.globalMassLossRate / mesh_.cellVolumes()[celli];
-    td.cloud().gasFuelReleaseRatePUVbed[celli]  = nParticlesPerSuperParticle_ * p1D.globalGasFuelReleaseRate / mesh_.cellVolumes()[celli];
-    td.cloud().dryingRatePUVbed[celli]          = nParticlesPerSuperParticle_ * p1D.globalR1reactionRate / mesh_.cellVolumes()[celli];
-    td.cloud().pyrolysisRatePUVbed[celli]       = nParticlesPerSuperParticle_ * p1D.globalR2reactionRate / mesh_.cellVolumes()[celli];
-    td.cloud().oxidPyrolysisRatePUVbed[celli]   = nParticlesPerSuperParticle_ * p1D.globalR3reactionRate / mesh_.cellVolumes()[celli];
-    td.cloud().charOxidRatePUVbed[celli]        = nParticlesPerSuperParticle_ * p1D.globalR4reactionRate / mesh_.cellVolumes()[celli];
-    td.cloud().heatReleaseRatePUVbed[celli]     = nParticlesPerSuperParticle_ * p1D.globalHeatReleaseRate / mesh_.cellVolumes()[celli];
+    // Mass rates per unit volume of vegetation bed (kg/s/m3) (accumulated)
+    td.cloud().massLossRatePUVbed[celli]        += nParticlesPerSuperParticle_ * p1D.globalMassLossRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().gasFuelReleaseRatePUVbed[celli]  += nParticlesPerSuperParticle_ * p1D.globalGasFuelReleaseRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().dryingRatePUVbed[celli]          += nParticlesPerSuperParticle_ * p1D.globalR1reactionRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().pyrolysisRatePUVbed[celli]       += nParticlesPerSuperParticle_ * p1D.globalR2reactionRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().oxidPyrolysisRatePUVbed[celli]   += nParticlesPerSuperParticle_ * p1D.globalR3reactionRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().charOxidRatePUVbed[celli]        += nParticlesPerSuperParticle_ * p1D.globalR4reactionRate / mesh_.cellVolumes()[celli] * dt_;
+    td.cloud().heatReleaseRatePUVbed[celli]     += nParticlesPerSuperParticle_ * p1D.globalHeatReleaseRate / mesh_.cellVolumes()[celli] * dt_;
 
-    // Surface temperature (K)
+    // Momentum (kg m/s) (accumulated)
+    td.cloud().momentum[celli] += nParticlesPerSuperParticle_ * particleMass_ * particleVelo_ * dt_;
+
+    // Surface temperature (K) (one representative particle)
     td.cloud().surfaceTemp[celli] = surfaceTemp_;
 
-    // Surface heat fluxes per unit area of each particle (W/m2)
+    // Surface heat fluxes per unit area of each particle (W/m2) (one representative particle)
     td.cloud().surfaceHeatFluxConv[celli] = convFlux_;
     td.cloud().surfaceHeatFluxRad[celli]  = radFlux_;
 
-    // Surface O2 mass fraction (-)
+    // Surface O2 mass fraction (-) (one representative particle)
     td.cloud().surfaceO2MassFrac[celli] = surfaceO2MassFrac_;
-
-    // Momentum (kg m/s)
-    td.cloud().momentum[celli] = nParticlesPerSuperParticle_ * particleMass_ * particleVelo_;
 }
 
 // ************************************************************************* //

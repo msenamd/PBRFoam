@@ -340,6 +340,8 @@ public:
             //- Reset the cloud source terms
             void resetSourceTerms();
 
+            //- Integrate diagnostics
+            void integrateDiagnostics();
 };
 
 

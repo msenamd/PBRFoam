@@ -621,14 +621,8 @@ void Foam::biomassCloud::evolve()
     // evolve the cloud
     Cloud<biomassParticle>::move(td, mesh_.time().deltaTValue());
 
-    // update packing ratio
-    packingRatio /= (this->db().time().deltaTValue());
-
-    Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
-    << " , " << "max = " << max(packingRatio()).value() << endl;
-
-	Info << "surface temperature: " << "min = " << min(surfaceTemp()).value()
-	<< " , " << "max = " << max(surfaceTemp()).value() << endl;
+    // integrate diagnostics
+    biomassCloud::integrateDiagnostics();  
 }
 
 
@@ -669,6 +663,29 @@ void Foam::biomassCloud::resetSourceTerms()
 
 }
 
+
+void Foam::biomassCloud::integrateDiagnostics()
+{
+    packingRatio /= (this->db().time().deltaTValue());
+
+    Info << "packing ratio: " << "min = " << min(packingRatio()).value() 
+    << " , " << "max = " << max(packingRatio()).value() << endl;
+
+    Info << "surface temperature: " << "min = " << min(surfaceTemp()).value()
+    << " , " << "max = " << max(surfaceTemp()).value() << endl;
+
+    mass /= (this->db().time().deltaTValue());
+
+    massLossRatePUVbed       /= (this->db().time().deltaTValue());
+    gasFuelReleaseRatePUVbed /= (this->db().time().deltaTValue());
+    dryingRatePUVbed         /= (this->db().time().deltaTValue());
+    pyrolysisRatePUVbed      /= (this->db().time().deltaTValue());
+    oxidPyrolysisRatePUVbed  /= (this->db().time().deltaTValue());
+    charOxidRatePUVbed       /= (this->db().time().deltaTValue());
+    heatReleaseRatePUVbed    /= (this->db().time().deltaTValue());
+
+    momentum /= (this->db().time().deltaTValue());
+}
 
 
 // ************************************************************************* //
