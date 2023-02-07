@@ -83,6 +83,10 @@ public:
         void writeAshLine(ofstream& outfile);
         void writeO2Line(ofstream& outfile);
         void writePressureLine(ofstream& outfile);
+        void writeR1Line(ofstream& outfile);        
+        void writeR2Line(ofstream& outfile);        
+        void writeR3Line(ofstream& outfile);        
+        void writeR4Line(ofstream& outfile);        
 
 // Public data
         int numCells;                                // number of cells [-]

@@ -564,6 +564,66 @@ void particle_1D::writePressureLine(ofstream& outfile)
 }
 
 /**
+* Writes R1 reaction rate to a line of the file
+* @param outfile: output file
+* @return
+*/
+void particle_1D::writeR1Line(ofstream& outfile)
+{
+    outfile << *pCurrentTime;
+    for (int i = 0; i < numCells; i++)
+    {
+        outfile << "," << R1reactionRate[i];
+    }
+    outfile << endl;
+}
+
+/**
+* Writes R2 reaction rate to a line of the file
+* @param outfile: output file
+* @return
+*/
+void particle_1D::writeR2Line(ofstream& outfile)
+{
+    outfile << *pCurrentTime;
+    for (int i = 0; i < numCells; i++)
+    {
+        outfile << "," << R2reactionRate[i];
+    }
+    outfile << endl;
+}
+
+/**
+* Writes R3 reaction rate to a line of the file
+* @param outfile: output file
+* @return
+*/
+void particle_1D::writeR3Line(ofstream& outfile)
+{
+    outfile << *pCurrentTime;
+    for (int i = 0; i < numCells; i++)
+    {
+        outfile << "," << R3reactionRate[i];
+    }
+    outfile << endl;
+}
+
+/**
+* Writes R4 reaction rate to a line of the file
+* @param outfile: output file
+* @return
+*/
+void particle_1D::writeR4Line(ofstream& outfile)
+{
+    outfile << *pCurrentTime;
+    for (int i = 0; i < numCells; i++)
+    {
+        outfile << "," << R4reactionRate[i];
+    }
+    outfile << endl;
+}
+
+/**
 * Steps forward one time step, computing particle heating/cooling.
 * @param timeStepSize: Global time step size (s).
 * @param externalTemperature: Gas temperature around particle (K).

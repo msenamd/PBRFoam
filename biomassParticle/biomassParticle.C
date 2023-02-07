@@ -135,7 +135,19 @@ bool Foam::biomassParticle::move
         p1D.writePressureLine(pressureFile); 
 
         std::ofstream coordFile(outputPath/ "particle" + name(particleID_) + "_cellCenter.csv", ios::app);
-        p1D.writeCoordLine(coordFile);                                                       
+        p1D.writeCoordLine(coordFile);    
+
+        std::ofstream R1File(outputPath/ "particle" + name(particleID_) + "_R1.csv", ios::app);
+        p1D.writeR1Line(R1File); 
+
+        std::ofstream R2File(outputPath/ "particle" + name(particleID_) + "_R2.csv", ios::app);
+        p1D.writeR2Line(R2File); 
+
+        std::ofstream R3File(outputPath/ "particle" + name(particleID_) + "_R3.csv", ios::app);
+        p1D.writeR3Line(R3File); 
+
+        std::ofstream R4File(outputPath/ "particle" + name(particleID_) + "_R4.csv", ios::app);
+        p1D.writeR4Line(R4File);         
     }
 
     return td.keepParticle;
