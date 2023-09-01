@@ -1,0 +1,29 @@
+domain
+{
+        type                            volFieldValue;
+        functionObjectLibs      ("libfieldFunctionObjects.so");
+        enabled                         true;
+	outputControl   timeStep;
+	outputInterval  10;
+        writeFields             no;
+        log                                     false;
+        //regionType                      cellZone;
+        //name                    domain;
+        operation                       volIntegrate;
+        fields
+                (
+			dQ
+			dQrad
+			QconvPUVbed
+			QradPUVbed
+
+			vegetationBed_dryingRatePUVbed		
+			vegetationBed_pyrolysisRatePUVbed
+			vegetationBed_oxidPyrolysisRatePUVbed
+			vegetationBed_charOxidRatePUVbed
+
+			radAbsPUVbed
+			radEmPUVbed
+                );
+}
+

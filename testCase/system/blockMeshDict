@@ -1,0 +1,132 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.5.x                                 |
+|   \\  /    A nd           | Web:      http://www.OpenFOAM.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+vertices        
+(
+//vegetation level
+    (-2  0 -20)//0
+    (150  0 -20)//1
+    (150  0 20)//2
+    (-2  0 20)//3
+ 
+    (-2  0.8 -20)//4
+    (150  0.8 -20)//5
+    (150  0.8 20)//6
+    (-2  0.8 20)//7
+
+//above vegetation
+    (-2  40 -20)//8
+    (150  40 -20)//9
+    (150  40 20)//10
+    (-2  40 20)//11
+
+);
+
+blocks          
+(
+    hex (0 1 5 4 3 2 6 7)   (190 1 50)
+    simpleGrading
+    (
+	1		   // x-direction expansion ratio
+	1		   // y-direction expansion ratio
+        1                  // z-direction expansion ratio
+    )
+
+    hex (4 5 9 8 7 6 10 11) (190 25 50)
+    simpleGrading
+    (
+	1		   // x-direction expansion ratio
+	4		   // y-direction expansion ratio
+        1                 // z-direction expansion ratio
+    )
+
+);
+
+edges           
+(
+);
+
+boundary (
+
+    walls
+    {
+        type wall;
+        faces
+        (
+        (0 3 2 1)
+        );
+    }
+
+    front
+    {
+        type cyclic;
+        neighbourPatch  back;
+	faces
+        (
+        (1 5 4 0)
+		(5 9 8 4)
+        );
+    }
+
+    back
+    {
+        type cyclic;
+        neighbourPatch  front;
+	faces
+        (
+        (3 7 6 2)
+		(7 11 10 6)
+        );
+    }
+	
+    tunnel
+    {
+        type patch;
+	faces
+        (
+        (0 4 7 3)
+		(4 8 11 7)
+        );
+    }
+
+    outlet
+    {
+        type patch;
+        faces
+        (
+        (8 9 10 11)
+        );
+    }
+
+    entrainment
+    {
+        type patch;
+        faces
+        (
+        (1 2 6 5)
+		(5 6 10 9)
+        );
+    }	
+
+);
+
+mergePatchPairs 
+(
+);
+
+// ************************************************************************* //

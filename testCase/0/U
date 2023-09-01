@@ -1,0 +1,174 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   #codeStream //uniform (0 0 0);
+{
+    codeInclude
+    #{
+        #include "fvCFD.H"
+    #};
+
+    //! Optional:
+    codeOptions
+    #{
+        -I$(LIB_SRC)/finiteVolume/lnInclude \
+	-I$(LIB_SRC)/meshTools/lnInclude
+    #};
+	
+	codeLibs
+	#{
+		-lmeshTools \
+		-lfiniteVolume
+	#};
+
+    code
+    #{
+        const IOdictionary& d = static_cast<const IOdictionary&>(dict);
+        const fvMesh& mesh = refCast<const fvMesh>(d.db());
+        vectorField Uall(mesh.nCells() , vector(0, 0, 0));
+				
+		scalar Uinf = 5.0;
+
+		scalar Uamp = 0.01*Uinf;
+		Random rndGen(1);
+		scalar Unoise;
+	
+		forAll(mesh.C(),cellI)
+		{		
+			Unoise = Uamp * (2*rndGen.scalar01() - 1);
+			
+			Uall[cellI].component(0) = Uinf + Unoise;		
+			Uall[cellI].component(1) = 0.0;		
+			Uall[cellI].component(2) = 0.0;
+		}
+	    Uall.writeEntry("", os);
+		
+    #};
+	
+};
+
+boundaryField
+{
+    outlet
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    entrainment
+    {
+        type            pressureInletOutletVelocity;
+        value           uniform (0 0 0);
+    }
+    walls
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    burner
+    {
+        type            uniformFixedValue;
+        uniformValue    table
+        
+(
+(0  (0 0 0))
+(1  (0 0.01 0))
+(9 (0 0.01 0))
+(10 (0 0 0))
+(100 (0 0 0))
+(1000 (0 0 0))
+)
+;
+    }
+
+    grass
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    "front|back"
+    {
+        type            cyclic;
+    }
+
+    tunnel
+    {
+		type 		codedFixedValue;
+		value       uniform (0 0 0);        
+		redirectType BL;
+		
+            codeInclude
+            #{
+                #include "fvCFD.H"
+            #};
+
+            codeOptions
+            #{
+                -I$(LIB_SRC)/finiteVolume/lnInclude \
+                -I$(LIB_SRC)/meshTools/lnInclude
+            #};
+
+            codeLibs
+            #{
+                -lmeshTools \
+                -lfiniteVolume
+            #};
+
+            code
+            #{
+                const fvPatch& boundaryPatch = patch();
+				const vectorField& Cf = boundaryPatch.Cf();
+				vectorField& Ub = *this;
+                
+				scalar Uinf = 5.0;
+				scalar refHeight = 2.0;
+
+				scalar amp = 0.1;
+
+				scalar Uamp, Umean;
+
+				scalar T = 0.6;
+				scalar pi = 3.14159265359;
+				scalar t = this->db().time().value();
+				scalar tau;
+
+				Random rndGen(1);
+				scalar Unoise;
+
+                forAll(Cf,i)
+                {
+					scalar height = Cf[i].y();
+
+					Umean = Uinf*pow(height/refHeight, 1.0/7.0);
+					Uamp = amp * Umean;
+					Unoise = Umean + Uamp * (2*rndGen.scalar01() - 1);
+					tau = 1.0/(2.0*pi/T) * Foam::asin((Unoise-Umean)/Uamp);
+
+					Ub[i].component(0) = Umean + Uamp * Foam::sin(2*pi/T*(t+tau));
+					Ub[i].component(1) = 0.0;
+					Ub[i].component(2) = 0.0;
+
+                }
+            #};     
+    }
+
+
+
+// ************************************************************************* //

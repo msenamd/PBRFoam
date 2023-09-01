@@ -1,0 +1,82 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  xx                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      setParticlesDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+boundingBoxMin
+(
+(-0.45 	0 	-19.95)
+);
+
+boundingBoxMax
+(
+(150.1 		0.4 	20.05)
+);
+
+separationStreamwise	(0.098);
+separationSpanwise	(0.1);
+
+initState	(1);
+
+nParticlesPerSuperParticle   (16);
+
+initTimeStep	(0.1);
+
+initSize 	(1e-3);
+
+initVelo 	((0 0 0));
+
+initTemp 	(300);
+initYO2 	(0.233);
+initGaugeP 	(0.0);
+initWetSolid	(1.0);
+initDrySolid	(0.0);
+initChar	(0.0);
+initAsh		(0.0);
+
+
+probeLocations
+(
+(	40		0		0	)
+(	40		0.2		0	)
+(	40		0.4		0	)
+(	40		0		0.5	)
+(	40		0.2		0.5	)
+(	40		0.4		0.5	)
+(	40		0		1.0	)
+(	40		0.2		1.0	)
+(	40		0.4		1.0	)
+(	42		0		0	)
+(	42		0.2		0	)
+(	42		0.4		0	)
+(	42		0		0.5	)
+(	42		0.2		0.5	)
+(	42		0.4		0.5	)
+(	42		0		1.0	)
+(	42		0.2		1.0	)
+(	42		0.4		1.0	)
+(	44		0		0	)
+(	44		0.2		0	)
+(	44		0.4		0	)
+(	44		0		0.5	)
+(	44		0.2		0.5	)
+(	44		0.4		0.5	)
+(	44		0		1.0	)
+(	44		0.2		1.0	)
+(	44		0.4		1.0	)
+);
+
+// ************************************************************************* //

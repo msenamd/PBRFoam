@@ -1,0 +1,92 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  dev                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      IDefault;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [1 0 -3 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    outlet
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+    entrainment
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+    walls
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+    burner
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+
+    grass
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+    tunnel
+    {
+        type            greyDiffusiveRadiation;
+        refValue        uniform 0;
+        refGradient     uniform 0;
+        valueFraction   uniform 1;
+        emissivityMode  lookup;
+        emissivity      uniform 1;
+        value           uniform 0;
+    }
+    "front|back"
+    {
+        type            cyclic;
+    }
+}
+
+
+// ************************************************************************* //
