@@ -18,6 +18,7 @@ git clone https://github.com/mmahmed15/PBRFoam.git
 2. Navigate to the compile directory and compile the code
 ```
 cd ~/PBRFOAM
+chmod -R +x *
 ./Allwmake -j 6 >& log.Allwmake &
 ```
 
