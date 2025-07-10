@@ -3,7 +3,7 @@
 A coupled solver of an in-house Particle Burning Rate (PBR) model and OpenFOAM for wildland fire spread modeling at flame scale. 
 
 The solver is built on OpenFOAM version 4.x build number: dev-8dafde6048ab. 
-See this repository for help installing this version: https://github.com/mmahmed15/OpenFOAM_UMD
+See this repository for help installing this version: https://github.com/msenamd/OpenFOAM_UMD
 
 
 # Installation instructions 
