@@ -23,3 +23,8 @@ chmod -R +x *
 ```
 
 check for errors in the log.Allwmake file 
+
+# Reference Paper
+Mohamed Mohsen Ahmed , Arnaud Trouvé, Jason Forthofer, and Mark Finney. Simulations of Flaming Combustion and Flaming-to-Smoldering Transition in Wildland Fire Spread at Flame Scale. Combustion and Flame 262 (2024) 113370. https://doi.org/10.1016/j.combustflame.2024.113370
+
+
