@@ -11,7 +11,7 @@ See this repository for help installing this version: https://github.com/mmahmed
 1. Download the source files from this repository in the home directory
 ```
 cd ~
-git clone https://github.com/mmahmed15/PBRFoam.git
+git clone https://github.com/msenamd/PBRFoam.git
 ```
 
 
